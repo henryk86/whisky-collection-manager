@@ -7,7 +7,6 @@ import {createRoomDiagramModel, createShelfPanelModel, warehouseBottleLabel, cre
  */
 import {addActionLabel, arrowUpIcon, arrowDownIcon, closeIcon}
   from '../ui/action-icons.js';
-import {escapeHtml as esc} from '../ui/dom.js';
 import {imageUrl} from '../ui/format.js';
 import {routeUrl} from '../navigation/routes.js';
 import {t, formatNumber} from '../i18n/index.js';
@@ -76,14 +75,6 @@ const capacityLabel = s => s.shelves === 0 ?
       t('warehouse.capacity.onlyUnlimited', {count: s.unlimited}) : t('warehouse.capacity.partialUnlimited', {count: s.unlimited, places: s.defined});
 
 /**
- * Derives the safe result from the supplied values.
- *
- * @param {*} value Value to process.
- * @return {string} Escaped scalar value, or empty text for nullish input.
- */
-const safe = value => esc(String(value ?? ''));
-
-/**
  * Filters records according to the count selection rules.
  *
  * @param {*} w Width or value used by the calculation.
@@ -108,7 +99,7 @@ function field(name, label, value = '', type = 'text', options = {}) {
     name: name,
     type: type,
     options: options,
-    value: safe(value),
+    value: String(value ?? ''),
   });
 }
 
@@ -127,7 +118,7 @@ function choices(name, label, options, chosen = '') {
     name: name,
     options: composeMarkup(options.map(([id,
       title]) => renderTemplate('choicesOption', {
-        value: safe(id),
+        value: String(id ?? ''),
         selectedAttributes: id === chosen ? {"selected": true} : {},
         title: title,
       }))),
@@ -175,8 +166,8 @@ function bottleListFacts(bottle) {
   ];
   return composeMarkup(facts.filter(([, value]) => value !== null).map(([key, value]) =>
     renderTemplate('warehouseBottleFact', {
-      factLabel: safe(t(key)),
-      value: safe(value),
+      factLabel: t(key),
+      value: String(value ?? ''),
     })));
 }
 
@@ -200,14 +191,14 @@ function bottleRow(w, bottle, selected = false) {
   ]
     .filter(value => value != null).join(' ').toLocaleLowerCase('de');
   return renderTemplate('warehouseBottleRow', {
-    bottleSearch: safe(searchable),
-    id: safe(bottle.id),
-    ariaLabel: safe(t('warehouse.bottles.bulkSelectOne', {name: bottle.name})),
+    bottleSearch: String(searchable ?? ''),
+    id: String(bottle.id ?? ''),
+    ariaLabel: t('warehouse.bottles.bulkSelectOne', {name: bottle.name}),
     checkedAttributes: selected ? {"checked": true} : {},
-    bottleName: safe(bottleLabel(bottle)),
-    place: place ? safe(place.label) : t("detail.fields.unassigned"),
+    bottleName: String((bottleLabel(bottle)) ?? ''),
+    place: place ? String(place.label ?? '') : t("detail.fields.unassigned"),
     warehouseBottleFacts: facts ? renderTemplate('warehouseBottleFacts', {facts: facts, }) : '',
-    locationBottleId: safe(bottle.id),
+    locationBottleId: String(bottle.id ?? ''),
     assignmentLabel: place ? t("warehouse.bottles.relocate") : t("warehouse.bottles.assignAction"),
   });
 }
@@ -256,10 +247,10 @@ function roomDiagram(room, w, layer = 'all') {
     renderTemplate('warehouseDrag', {
       elevation: elevated ? 'warehouse-elevated' : 'warehouse-floor-level',
       focusFurnitureId: focused ? 'warehouse-selected' : '',
-      id: safe(f.id),
-      ariaLabel: safe(t('warehouse.view.furnitureKeyboardHint', {name: f.name})),
+      id: String(f.id ?? ''),
+      ariaLabel: t('warehouse.view.furnitureKeyboardHint', {name: f.name}),
       x, y, max: width, height, nameX, nameY,
-      furnitureName: safe(f.name.slice(0, 19)),
+      furnitureName: String((f.name.slice(0, 19)) ?? ''),
       detailsX: nameX, detailsY,
       elevationLabel: elevated ? `${t('warehouse.view.fromElevation', {height: num(f.elevation)})} · ` : '',
       abbreviatedBottleCount: t('warehouse.view.abbreviatedBottleCount', {count: assigned}),
@@ -267,8 +258,8 @@ function roomDiagram(room, w, layer = 'all') {
   return renderTemplate('warehouseMapWrap', {
     vbW: vbW,
     vbH: vbH,
-    roomId: safe(room.id),
-    ariaLabel: safe(t("warehouse.view.roomPlanAria", {name: room.name})),
+    roomId: String(room.id ?? ''),
+    ariaLabel: t("warehouse.view.roomPlanAria", {name: room.name}),
     width: vbW - 2,
     height: vbH - 2,
     grid: grid,
@@ -299,7 +290,7 @@ function bottleSymbol(
   // unaffected.
   const showPlaceholder = placeholderImage && !b.photoPath;
   const photo = b.photoPath ?
-    renderTemplate('warehouseBottlePhoto', {src: safe(imageUrl(b.photoPath)), })
+    renderTemplate('warehouseBottlePhoto', {src: String((imageUrl(b.photoPath)) ?? ''), })
     : showPlaceholder ? renderTemplate('warehouseBottlePhoto2') : '';
   // In the shelf content dialog the picture is decorative. Selection and
   // relocation are intentionally handled outside this picture (actions below).
@@ -318,10 +309,10 @@ function bottleSymbol(
   return renderTemplate('warehouseBottleSymbol2', {
     showPlaceholder: showPlaceholder ? ' has-photo' : '',
     action: action,
-    id: safe(b.id),
+    id: String(b.id ?? ''),
     ariaPressedAttributes: selectable ? {"aria-pressed": selected, "data-select-label": selectLabel, "data-deselect-label": deselectLabel} : {},
-    title: safe(accessible),
-    ariaLabel: safe(accessible),
+    title: String(accessible ?? ''),
+    ariaLabel: String(accessible ?? ''),
     content: content,
   });
 }
@@ -338,14 +329,14 @@ function bottleActionButtons(bottle, {detailLabelKey =
   'warehouse.bottles.goToDetails'} = {}) {
   const detailsLink = bottle.bottlingId
     ? renderTemplate('primaryButton', {
-      href: safe(routeUrl('detail', bottle.bottlingId)),
-      id: safe(bottle.bottlingId),
-      bottleId: safe(bottle.id),
+      href: String((routeUrl('detail', bottle.bottlingId)) ?? ''),
+      id: String(bottle.bottlingId ?? ''),
+      bottleId: String(bottle.id ?? ''),
       t: t(detailLabelKey),
     })
     : '';
   return renderTemplate('warehouseAssign', {
-    id: safe(bottle.id),
+    id: String(bottle.id ?? ''),
     detailsLink: detailsLink,
   });
 }
@@ -363,20 +354,20 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
   const fields = createBottlePreviewFacts(w, bottle, bottling, physicalBottle);
   const photo = bottle.photoPath
     ? renderTemplate('img', {
-      src: safe(imageUrl(bottle.photoPath)),
-      alt: safe(bottle.name),
+      src: String((imageUrl(bottle.photoPath)) ?? ''),
+      alt: String(bottle.name ?? ''),
     })
     : renderTemplate('img2');
   return renderTemplate('warehouseBottlePreview', {
     photo: photo,
-    name: safe(bottle.name),
+    name: String(bottle.name ?? ''),
     fields: composeMarkup(fields.map(([label,
       value]) => renderTemplate('bottlePreviewDiv', {
-        label: safe(label),
-        value: safe(value),
+        label: String(label ?? ''),
+        value: String(value ?? ''),
       }))),
     warehouseBottlePreviewComment: physicalBottle?.comment ?
-      renderTemplate('warehouseBottlePreviewComment', {comment: safe(physicalBottle.comment), }) : '',
+      renderTemplate('warehouseBottlePreviewComment', {comment: String(physicalBottle.comment ?? ''), }) : '',
     bottleActionButtons: bottleActionButtons(bottle, {detailLabelKey: 'warehouse.bottles.goToBottleDetails'}),
   });
 }
@@ -399,35 +390,35 @@ function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
       range ? t('warehouse.shelves.doorAcross', {from: range.from, to: range.to}) : '',
     ].filter(Boolean).map(label => ` · ${label}`).join('') : '';
     return renderTemplate('warehouseShelf', {
-      shelfId: safe(shelf.id),
+      shelfId: String(shelf.id ?? ''),
       capacity: shelf.capacity ?? 'unlimited',
-      name: safe(shelf.name),
-      front: safe(t(FRONT_KEYS[front])),
+      name: String(shelf.name ?? ''),
+      front: t(FRONT_KEYS[front]),
       doorLabel: doorLabel,
       num: num(height),
       heightCm: shelf.heightCm == null ? ` ${t('warehouse.shelves.automaticHeight')}` : '',
       occupancyLabel: shelf.capacity === 0 ? '' : ` · ${occupied}${shelf.capacity === null ? '' : ` / ${shelf.capacity}`} ${t("forms.bottle.plural")}`,
-      id: safe(shelf.id),
+      id: String(shelf.id ?? ''),
       disabledAttributes: canMoveUp ? {} : {"disabled": true},
       arrowUpIcon: arrowUpIcon,
-      moveDownShelfId: safe(shelf.id),
+      moveDownShelfId: String(shelf.id ?? ''),
       moveUpDisabled: canMoveDown ? {} : {"disabled": true},
       arrowDownIcon: arrowDownIcon,
-      copyShelfId: safe(shelf.id),
-      editShelfId: safe(shelf.id),
-      deleteShelfId: safe(shelf.id),
+      copyShelfId: String(shelf.id ?? ''),
+      editShelfId: String(shelf.id ?? ''),
+      deleteShelfId: String(shelf.id ?? ''),
       occupants: composeMarkup(occupants.map(b => bottleSymbol(b))),
       warehouseShelfView: overflow ?
         renderTemplate('warehouseShelfView', {
-          id: safe(shelf.id),
+          id: String(shelf.id ?? ''),
           length: overflow,
         }) : '',
       hint: !occupied && shelf.capacity !== 0 ? renderTemplate('hint') : '',
     });
   }));
   return renderTemplate('panel', {
-    name: safe(furniture.name),
-    furnitureType: safe(typeName(furniture.type)),
+    name: String(furniture.name ?? ''),
+    furnitureType: String((typeName(furniture.type)) ?? ''),
     sizeDescription: t(
       "warehouse.furniture.sizeDescription",
       {
@@ -439,29 +430,29 @@ function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
         shelves: furniture.shelves.length,
       }
     ),
-    id: safe(furniture.id),
-    editFurnitureId: safe(furniture.id),
-    deleteFurnitureId: safe(furniture.id),
+    id: String(furniture.id ?? ''),
+    editFurnitureId: String(furniture.id ?? ''),
+    deleteFurnitureId: String(furniture.id ?? ''),
     hint: topSpace >= 1 ? renderTemplate('hint2', {remainingHeight: t("warehouse.shelves.remainingHeight", {height: num(topSpace)}), }) : '',
     managementOnly: managementOnly ? ' warehouse-shelves--management' : '',
     shelves: shelves || renderTemplate('hint3'),
-    addShelfFurnitureId: safe(furniture.id),
+    addShelfFurnitureId: String(furniture.id ?? ''),
     addActionLabel: addActionLabel(t("warehouse.shelves.addWithPlus")),
     warehouseFurniturePhotos: managementOnly ?
       renderTemplate('warehouseFurniturePhotos', {
         photos: composeMarkup((furniture.photos || []).map((photo) =>
           renderTemplate('warehousePhotoOpen', {
-            path: safe(photo.path),
-            title: safe(furniture.name),
-            src: safe(photo.path),
-            alt: safe(furniture.name),
-            id: safe(furniture.id),
-            photoId: safe(photo.id),
+            path: String(photo.path ?? ''),
+            title: String(furniture.name ?? ''),
+            src: String(photo.path ?? ''),
+            alt: String(furniture.name ?? ''),
+            id: String(furniture.id ?? ''),
+            photoId: String(photo.id ?? ''),
             closeIcon: closeIcon,
           }))),
         addActionLabel: addActionLabel(t('warehouse.photos.add')),
-        furniturePhotos: safe(furniture.id),
-        uploadFurnitureId: safe(furniture.id),
+        furniturePhotos: String(furniture.id ?? ''),
+        uploadFurnitureId: String(furniture.id ?? ''),
       }) : '',
   });
 }
@@ -469,7 +460,7 @@ function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
 
 export {
   bottleSymbol, FRONT_KEYS, CAMERA_KEYS, ROOM_SECTION_KEYS, typeChoices,
-  typeName, num, capacityLabel, safe, count, field, choices, footer,
+  typeName, num, capacityLabel, count, field, choices, footer,
   bottleLabel, bottleListFacts, bottleRow, bottlePreview,
   bottleActionButtons, roomOptions, findFurniture, roomDiagram, shelfPanel
 };

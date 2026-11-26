@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDetailView} from '../../public/js/views/detail.js';
@@ -99,10 +99,7 @@ test(
   'detail headline without distillery shows status only, no separator',
   () => {
     const html = renderDetail([]);
-    assert.match(
-      renderedText(html),
-      new RegExp('<div class="detail-heading-meta"><span cla' + 'ss="muted">Unvollständig<\\/span><\\/div>')
-    );
+    assert.equal(domElements(html, '.detail-heading-meta > span.muted')[0].text.trim(), 'Unvollständig');
     assert.doesNotMatch(renderedText(html), /detail-heading-separator/);
   }
 );
@@ -119,7 +116,7 @@ test(
   'detail offers a right-aligned map link with location icon for one or several assigned distilleries, but not for an unassigned bottling',
   () => {
     const single = renderDetail(['distillery-laphroaig']);
-    assert.match(renderedText(single), /class="actions ds-header-actions detail-head-actions"/);
+    assert.ok(domElements(single, '[class="actions ds-header-actions detail-head-actions"]').length > 0);
     assert.match(
       renderedText(single),
       new RegExp(
@@ -127,7 +124,7 @@ test(
         'nzeigen<\\/span><\\/button>'
       )
     );
-    assert.match(renderedText(single), /<header class="section-head ds-page-header detail-page-head">/);
+    assert.ok(domElements(single, 'header[class="section-head ds-page-header detail-page-head"]').length > 0);
     const multiple = renderDetail(['distillery-laphroaig', 'distillery-ardbeg']);
     assert.match(
       renderedText(multiple),
@@ -136,6 +133,6 @@ test(
         'andkarte<\\/span><\\/button>'
       )
     );
-    assert.doesNotMatch(renderedText(renderDetail([])), /data-act="bottling-map"/);
+    assert.equal(domElements(renderDetail([]), '[data-act="bottling-map"]').length, 0);
   }
 );

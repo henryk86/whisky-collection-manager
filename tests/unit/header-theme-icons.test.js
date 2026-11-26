@@ -1,4 +1,4 @@
-import {renderedText, captureContent} from '../helpers/rendering.js';
+import {renderedText, captureContent, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {themeMoonIcon, themeSunIcon} from '../../public/js/ui/action-icons.js';
@@ -10,10 +10,10 @@ test(
   () => {
     for (const icon of [themeMoonIcon, themeSunIcon]) {
       assert.match(renderedText(icon), /^<svg class="theme-icon" /);
-      assert.match(renderedText(icon), /viewBox="0 0 24 24"/);
-      assert.match(renderedText(icon), /stroke="currentColor"/);
-      assert.match(renderedText(icon), /aria-hidden="true"/);
-      assert.equal((renderedText(icon).match(/<svg/g) || []).length, 1);
+      assert.ok(domElements(icon, '[viewBox="0 0 24 24"]').length > 0);
+      assert.ok(domElements(icon, '[stroke="currentColor"]').length > 0);
+      assert.ok(domElements(icon, '[aria-hidden="true"]').length > 0);
+      assert.equal(domElements(icon, 'svg').length, 1);
       assert.equal((renderedText(icon).match(/<\/svg>/g) || []).length, 1);
     }
     assert.notEqual(renderedText(themeMoonIcon), renderedText(themeSunIcon));

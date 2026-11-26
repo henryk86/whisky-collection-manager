@@ -5,10 +5,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 /**
- * Derives the files result from the supplied values.
- *
- * @param {*} directory Directory containing the requested data.
- * @return {*} Combined text from the input values.
+ * Recursively locates JavaScript modules and returns absolute paths.
+ * @param {string} directory Root of the directory scan.
+ * @return {string[]} Absolute JavaScript paths.
  */
 function files(directory) {
   return fs.readdirSync(directory, {withFileTypes: true, }).flatMap(entry => {
@@ -67,10 +66,9 @@ for (const [file, imports] of graph) {
 }
 const visited = new Set();
 /**
- * Transforms the entries used by visit.
- *
- * @param {*} file File resource to read, write or inspect.
- * @param {!Array<*>=} stack Value used by this operation.
+ * Traverses the module import graph, rejecting cycles and skipping already visited modules.
+ * @param {string} file Absolute path of the current module.
+ * @param {string[]=} stack Active ancestor path used to detect a circular import.
  */
 function visit(file, stack = []) {
   if (stack.includes(file)) {
@@ -261,6 +259,7 @@ for (const script of [
   'format-css.js',
   'check-jsdoc.js',
   'check-jsdoc-complete.js',
+  'check-js-types.js',
 ]) {
   const validation = spawnSync(process.execPath, [`scripts/${script}`], {encoding: 'utf8', });
   if (validation.status !== 0) {

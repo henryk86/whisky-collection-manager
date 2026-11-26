@@ -5,11 +5,10 @@ import {detachTastings} from '../../shared/tasting-flights.js';
 import {normalizeTastingRecord, sortedTastings}
   from '../../shared/tasting-records.js';
 /**
- * Enforces the bottling precondition.
- *
- * @param {*} collection Collection data to process.
- * @param {*} id Identifier of the affected record.
- * @return {*} Result computed from the supplied inputs.
+ * Resolves the owned bottling for a tasting operation, or raises a not-found error.
+ * @param {import('../../shared/types.js').Collection} collection Collection containing bottlings.
+ * @param {string} id Bottling ID.
+ * @return {import('../../shared/types.js').Bottling} Matching bottling.
  */
 function requireBottling(collection, id) {
   const bottling = collection.bottlings.find(b => b.id === id);
@@ -18,11 +17,10 @@ function requireBottling(collection, id) {
 }
 
 /**
- * Enforces the tasting precondition.
- *
- * @param {*} bottling Bottling record being inspected or updated.
- * @param {*} tastingId Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Finds a tasting nested in the specified bottling or raises a not-found error.
+ * @param {import('../../shared/types.js').Bottling} bottling Parent bottling.
+ * @param {string} tastingId Tasting record ID.
+ * @return {import('../../shared/types.js').Tasting} Matching owned tasting.
  */
 function requireTasting(bottling, tastingId) {
   const tasting = (bottling.tastings || []).find(entry => entry.id === tastingId);
@@ -31,11 +29,10 @@ function requireTasting(bottling, tastingId) {
 }
 
 /**
- * Validates the clean state and rejects invalid inputs.
- *
- * @param {*} input Input element or value to inspect.
- * @param {*} old Value used by this operation.
- * @return {*} Value returned by the delegated operation.
+ * Normalizes owned tasting fields and converts validation errors into HTTP 400.
+ * @param {*} input Incoming tasting fields.
+ * @param {Object} old Previous tasting fields.
+ * @return {Object} Normalized tasting fields.
  */
 function clean(input, old) {
   try {return normalizeTastingRecord(input, old);}

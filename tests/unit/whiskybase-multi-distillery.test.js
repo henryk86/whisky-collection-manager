@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {splitDistilleryNames, matchImportedDistilleries}
@@ -70,10 +70,10 @@ test(
       label: 'Destillerie', value: matches[1].name,
       distillery: true, disabled: true,
     });
-    assert.match(renderedText(known), /name="import-distillery" value="d-ard" checked/);
-    assert.match(renderedText(unknown), /name="import-distillery" disabled/);
+    assert.ok(domElements(known, '[name="import-distillery"][value="d-ard"][checked]').length > 0);
+    assert.ok(domElements(unknown, '[name="import-distillery"][disabled]').length > 0);
     assert.match(renderedText(unknown), /New &amp; &lt;Scotch&gt; Works/);
-    assert.doesNotMatch(renderedText(unknown), /<Scotch>/);
+    assert.equal(domElements(unknown, 'Scotch').length, 0);
     assert.match(renderedText(unknown), /Nicht gefunden/);
   }
 );

@@ -1,7 +1,7 @@
 import {composeMarkup} from './render-plan.js';
 import {replaceContent} from './dom-renderer.js';
 import {t} from '../i18n/index.js';
-import {escapeHtml, query} from './dom.js';
+import {query} from './dom.js';
 import {actionButton} from './buttons.js';
 import {modalFrame, modalFooter} from './modal-layout.js';
 import {loadTemplates} from './templates.js';
@@ -252,7 +252,7 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
    * dismissal. The default focus is on the cancel action.
    *
    * @param {string} title Dialog heading.
-   * @param {string} message Plain text, escaped before rendering.
+   * @param {string} message Literal text, never interpreted as markup.
    * @param {string} acceptLabel Label of the primary confirmation button.
    * @param {string=} cancelLabel Label of the dismissal button.
    * @return {!Promise<boolean>} True on acceptance; false on dismissal.
@@ -299,7 +299,7 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
    * on dismissal.
    *
    * @param {string} title Dialog heading.
-   * @param {string} message Plain text, escaped before rendering.
+   * @param {string} message Literal text, never interpreted as markup.
    * @param {!Array<{id: string, label: string, primary: boolean}>} options
    *     Buttons to display; accepted action IDs are save, discard and cancel.
    * @return {!Promise<string>} Selected action ID or cancel.

@@ -51,7 +51,6 @@ const FACT_KEYS = Object.freeze({
  * @return {*} Result computed from the supplied inputs.
  */
 const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
-import {escapeHtml} from '../ui/dom.js';
 import {
   editIcon, deleteIcon, arrowDownIcon, locationIcon, newBottlingIcon,
   addActionLabel, closeIcon, arrowLeftIcon, arrowRightIcon, gripIcon,
@@ -138,7 +137,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
           bottleMainSource: firstPhoto.source === 'whiskybase' ? renderTemplate('bottleMainSource') : '',
           bottleMainCutout: firstPhoto.cutout ? renderTemplate('bottleMainCutout', {sparkleIcon: sparkleIcon, }) : '',
         }) : '',
-        inventoryNumber: entry.inventoryNumber ? `#${escapeHtml(entry.inventoryNumber)}` : t('imports.bottles.noInventoryNumber'),
+        inventoryNumber: entry.inventoryNumber ? `#${String(entry.inventoryNumber ?? '')}` : t('imports.bottles.noInventoryNumber'),
         status: entry.status,
         bottleStatusText: bottleStatusText(entry.status),
         badge: entry.volumeType === 'sample' ? renderTemplate('badge') : '',
@@ -230,7 +229,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
         bottlePhotos: t('detail.sections.bottlePhotos', {count: entryPhotos.length}),
         galleryHeading: t('detail.sections.bottlePhotos', {count: entryPhotos.length}),
         photoGallery: photoGallery,
-        replace: t("detail.statistics.attachmentCount", {count: (entry.files || []).length}).replace("&", "&amp;"),
+        replace: t("detail.statistics.attachmentCount", {count: (entry.files || []).length}),
         length: (entry.files || []).length ? documentList(entry.files.map(file =>
           documentItem(renderTemplate('previewFile', {
             id: entry.id,
@@ -306,7 +305,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             composeMarkup(facts.map(([label, value, suffix = '']) =>
               detailField({
                 label: factLabel(label),
-                value: `${formatValue(value === "Ja" ? t("common.choices.yes") : value === "Nein" ? t("common.choices.no") : value)}${suffix ? ` ${escapeHtml(suffix === "Jahre" ? t("detail.facts.yearSuffix") : suffix)}` : ''}`,
+                value: `${formatValue(value === "Ja" ? t("common.choices.yes") : value === "Nein" ? t("common.choices.no") : value)}${suffix ? ` ${String((suffix === "Jahre" ? t("detail.facts.yearSuffix") : suffix) ?? '')}` : ''}`,
                 valueHtml: true, variant: 'fact',
               }))),
             {columns: 2, className: 'forms'}
@@ -358,7 +357,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
                   })
                 )),
               }) : '',
-            rating: latest.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(latest.rating)} / 100`,
+            rating: latest.rating == null ? t('tasting.unrated') : `${String(latest.rating ?? '')} / 100`,
             formatDate: formatDate(latest.tastedOn),
             count: t('tastings.count', {count: tastingCount}),
             tastingsOpenButton: actionButton({

@@ -1,4 +1,4 @@
-import {fixtureMarkup, renderedText} from '../helpers/rendering.js';
+import {fixtureMarkup, renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -24,11 +24,11 @@ test(
   () => {
     const definition = detailField({label: 'Kaufpreis', value: '49,90 €'});
     assert.match(renderedText(definition), /<dt>Kaufpreis<\/dt><dd>49,90 €<\/dd>/);
-    assert.match(renderedText(definition), /data-ds-detail-field="definition"/);
-    assert.equal((renderedText(definition).match(/<dt>/g) || []).length, 1);
+    assert.ok(domElements(definition, '[data-ds-detail-field="definition"]').length > 0);
+    assert.equal(domElements(definition, 'dt').length, 1);
     const facts = detailGrid(definition, {columns: 3, tag: 'dl', className: 'bottle-entry-facts'});
     assert.match(renderedText(facts), /^<dl class="bottle-entry-facts" data-ds-detail-grid="3">/);
-    assert.match(renderedText(detailGrid(definition, {columns: 2})), /data-ds-detail-grid="2"/);
+    assert.ok(domElements(detailGrid(definition, {columns: 2}), '[data-ds-detail-grid="2"]').length > 0);
     const note = detailField({
       label: 'Nase',
       value: 'Smoke <script>alert(1)</script> & fruit',
@@ -36,7 +36,7 @@ test(
       labelClass: 'tasting-readonly-label',
     });
     assert.match(renderedText(note), /Smoke &lt;script&gt;alert\(1\)&lt;\/script&gt; &amp; fruit/);
-    assert.doesNotMatch(renderedText(note), /<script>/);
+    assert.equal(domElements(note, 'script').length, 0);
     assert.match(
       renderedText(detailField({
         label: 'Land',
@@ -54,18 +54,18 @@ test(
   'M4: empty states distinguish collection onboarding from absent optional content',
   () => {
     const quiet = emptyState({description: 'Noch keine Notizen'});
-    assert.match(renderedText(quiet), /class="hint" data-ds-empty-state="subtle"/);
+    assert.ok(domElements(quiet, '[class="hint"][data-ds-empty-state="subtle"]').length > 0);
     assert.doesNotMatch(renderedText(quiet), /class="panel"|border/);
     const inline = emptyState({description: 'Keine Daten', variant: 'inline'});
-    assert.match(renderedText(inline), /class="analytics-empty" data-ds-empty-state="inline"/);
+    assert.ok(domElements(inline, '[class="analytics-empty"][data-ds-empty-state="inline"]').length > 0);
     const collection = emptyState({
       title: 'Leere Sammlung',
       description: 'Ersten Whisky anlegen',
       variant: 'collection',
       actions: fixtureMarkup('<button data-act="new">Neu</button>'),
     });
-    assert.match(renderedText(collection), /^<div class="empty-state" data-ds-empty-state="collection">/);
-    assert.match(renderedText(collection), /data-act="new"/);
+    assert.equal(domElements(collection, 'div.empty-state[data-ds-empty-state="collection"]').length, 1);
+    assert.ok(domElements(collection, '[data-act="new"]').length > 0);
     assert.throws(() => emptyState({variant: 'highlighted'}), RangeError);
   }
 );
@@ -73,15 +73,11 @@ test(
 test(
   'M4: divider and action toolbar have explicit axes and preserve action delegation',
   () => {
-    assert.equal(renderedText(divider()), '<hr class="divider" data-ds-divider="horizontal">');
-    assert.match(renderedText(divider({orientation: 'vertical'})), /data-ds-divider="vertical" aria-hidden="true"/);
-    assert.match(
-      renderedText(actionToolbar(fixtureMarkup('<button data-act="edit-bottle">Edit</button>'))),
-      new RegExp(
-        'class="actions" data-ds-action-toolbar="in' + 'line"><button data-act="edit-bottle">Edit<' + '\\/button>'
-      )
-    );
-    assert.match(renderedText(actionToolbar('X', {variant: 'filters'})), /class="toolbar" data-ds-action-toolbar="filters"/);
+    assert.equal(domElements(divider(), 'hr.divider[data-ds-divider="horizontal"]').length, 1);
+    assert.ok(domElements(divider({orientation: 'vertical'}), '[data-ds-divider="vertical"][aria-hidden="true"]').length > 0);
+    const toolbar = actionToolbar(fixtureMarkup('<button data-act="edit-bottle">Edit</button>'));
+    assert.equal(domElements(toolbar, '.actions[data-ds-action-toolbar="inline"] > button[data-act="edit-bottle"]')[0].text, 'Edit');
+    assert.ok(domElements(actionToolbar('X', {variant: 'filters'}), '[class="toolbar"][data-ds-action-toolbar="filters"]').length > 0);
     assert.throws(() => actionToolbar('', {variant: 'erase'}), RangeError);
   }
 );
@@ -91,10 +87,10 @@ test(
   () => {
     const item = documentItem(fixtureMarkup('<button data-act="preview-file">Datei</button><a download>Download</a>'));
     const list = documentList([item]);
-    assert.equal((renderedText(list).match(/<ul/g) || []).length, 1);
-    assert.equal((renderedText(list).match(/<li>/g) || []).length, 1);
-    assert.match(renderedText(list), /class="document-list" data-ds-document-list/);
-    assert.match(renderedText(list), /data-act="preview-file"/);
+    assert.equal(domElements(list, 'ul').length, 1);
+    assert.equal(domElements(list, 'li').length, 1);
+    assert.ok(domElements(list, '[class="document-list"][data-ds-document-list]').length > 0);
+    assert.ok(domElements(list, '[data-act="preview-file"]').length > 0);
     assert.match(renderedText(list), /download/);
   }
 );

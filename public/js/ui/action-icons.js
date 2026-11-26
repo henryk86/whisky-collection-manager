@@ -1,4 +1,3 @@
-import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('icons/action-icons.html');

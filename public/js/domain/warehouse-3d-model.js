@@ -8,10 +8,10 @@ export const WAREHOUSE_CAMERAS = Object.freeze([
   ['nw', 'Nordwest'], ['ne', 'Nordost'], ['se', 'Südost'], ['sw', 'Südwest'],
 ]);
 /**
- * Derives the rotate result from the supplied values.
+ * Normalizes a furniture rotation to the interval from zero to just below 360 degrees.
  *
- * @param {*} item Current item under consideration.
- * @return {number} Calculated numeric value.
+ * @param {*} item Furniture record with an optional rotation in degrees.
+ * @return {number} Normalized rotation in degrees.
  */
 const rotate = item => ((Number(item.rotation) || 0) % 360 + 360) % 360;
 
@@ -42,10 +42,10 @@ export function cameraForFurniture(item, previous = 'nw') {
 }
 
 /**
- * Computes the camera-facing direction for the 3D scene.
+ * Resolves the horizontal viewing direction from the selected room corner.
  *
- * @param {*} corner Corner of the furniture footprint.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} corner Room corner key, defaulting to northwest for unknown values.
+ * @return {*} Two horizontal direction components along X and Z.
  */
 export const cameraDirection = corner => ({
   nw: [-1, -1], ne: [1, -1], se: [1, 1], sw: [-1, 1],
@@ -137,27 +137,27 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
       shelfCount: shelves.length,
     };
     /**
-     * Appends entries to the box result collection.
+     * Appends one box to the furniture geometry model.
      *
-     * @param {*} px Horizontal position in pixels.
-     * @param {*} py Vertical position in pixels.
-     * @param {*} pz Depth position in pixels.
-     * @param {*} w Width or value used by the calculation.
-     * @param {*} h Value used by this operation.
-     * @param {*} d Value used by this operation.
-     * @param {*} style Visual style or rendering properties.
-     * @param {string=} role Value used by this operation.
+     * @param {*} px Centre X in metres.
+     * @param {*} py Centre Y in metres.
+     * @param {*} pz Centre Z in metres.
+     * @param {*} w Width in metres.
+     * @param {*} h Height in metres.
+     * @param {*} d Depth in metres.
+     * @param {*} style Material or visual style key.
+     * @param {string=} role Optional semantic role of the part.
      */
     const box = (px, py, pz, w, h, d, style, role = '') => {
       result.parts.push({center: [px, py, pz], size: [w, h, d], style, role});
     };
 
     /**
-     * Derives the board result from the supplied values.
+     * Adds a shelf board at the specified physical height.
      *
-     * @param {*} level Value used by this operation.
-          * @return {*} Result of this expression.
-*/
+     * @param {*} level Board centre height in metres.
+     * @return {void} Appends the board to the geometry model.
+     */
     const board = level => box(x, level, z, width, t, depth, 'board', 'shelf-board');
 
     /**
@@ -180,15 +180,15 @@ export function warehouse3DGeometry(room, warehouse, isolatedId = null) {
     const top = base + height;
     const {normal: [frontX, frontZ], tangent: [sideX, sideZ]} = furnitureFront(item);
     /**
-     * Calculates the front plane numeric value.
+     * Adds a front-facing rectangular part at the furniture's rotated physical front.
      *
-     * @param {*} offset Value used by this operation.
-     * @param {*} py Vertical position in pixels.
-     * @param {*} faceWidth Value used by this operation.
-     * @param {*} faceHeight Value used by this operation.
-     * @param {*} thickness Value used by this operation.
-     * @param {*} style Visual style or rendering properties.
-     * @param {*} role Value used by this operation.
+     * @param {*} offset Lateral offset from the front centre in metres.
+     * @param {*} py Vertical centre in metres.
+     * @param {*} faceWidth Front part width in metres.
+     * @param {*} faceHeight Front part height in metres.
+     * @param {*} thickness Part thickness in metres.
+     * @param {*} style Material or visual style key.
+     * @param {*} role Semantic role of the part.
      */
     const frontPlane = (offset, py, faceWidth, faceHeight, thickness, style,
       role) => {

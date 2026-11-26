@@ -1,4 +1,4 @@
-import {renderedText, captureContent, captureAppend} from '../helpers/rendering.js';
+import {renderedText, captureContent, captureAppend, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -12,11 +12,11 @@ test(
       value: 46, checked: true,
     });
     assert.match(renderedText(html), /^<label class="import-choice">/);
-    assert.match(renderedText(html), /<input type="checkbox" data-import-field="abv" checked>/);
-    assert.match(renderedText(html), /class="import-choice-copy"/);
+    assert.ok(domElements(html, 'input[type="checkbox"][data-import-field="abv"][checked]').length > 0);
+    assert.ok(domElements(html, '[class="import-choice-copy"]').length > 0);
     assert.match(renderedText(html), /class="import-choice-label">Alkoholgehalt \(%\)<\/span>/);
     assert.match(renderedText(html), /class="import-choice-value">46<\/span>/);
-    assert.equal((renderedText(html).match(/type="checkbox"/g) || []).length, 1);
+    assert.equal(domElements(html, '[type="checkbox"]').length, 1);
   }
 );
 
@@ -46,7 +46,7 @@ test(
       value: 'Neue Brennerei',
       disabled: true,
     });
-    assert.match(renderedText(html), /name="import-distillery" disabled/);
+    assert.ok(domElements(html, '[name="import-distillery"][disabled]').length > 0);
     assert.match(renderedText(html), /Nicht gefunden/);
   }
 );
@@ -124,12 +124,12 @@ test(
       });
       assert.equal(renderedText(panel.id), 'import-panel', 'preview holder created only after payload arrives');
       assert.match(renderedText(panel.className), /import-area/);
-      assert.match(renderedText(panel.innerHTML), /class="import-choice-list" role="group"/);
-      assert.match(renderedText(panel.innerHTML), /name="import-distillery" value="d-1" checked/);
-      assert.match(renderedText(panel.innerHTML), /data-import-field="name" checked/);
-      assert.match(renderedText(panel.innerHTML), /data-import-field="abv">/); // Existing value: unchecked by default
+      assert.ok(domElements(panel.innerHTML, '[class="import-choice-list"][role="group"]').length > 0);
+      assert.ok(domElements(panel.innerHTML, '[name="import-distillery"][value="d-1"][checked]').length > 0);
+      assert.ok(domElements(panel.innerHTML, '[data-import-field="name"][checked]').length > 0);
+      assert.ok(domElements(panel.innerHTML, '[data-import-field="abv"]').length > 0); // Existing value: unchecked by default
       assert.match(renderedText(panel.innerHTML), /Aktuell: 43/);
-      assert.match(renderedText(panel.innerHTML), /data-act="import-apply"/);
+      assert.ok(domElements(panel.innerHTML, '[data-act="import-apply"]').length > 0);
       assert.equal((renderedText(panel.innerHTML).match(/<label class="import-choice">/g) ?? []).length, 6);
     } finally {
       if (oldDocument === undefined) delete globalThis.document;

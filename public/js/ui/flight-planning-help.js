@@ -1,7 +1,6 @@
 import {composeMarkup} from './render-plan.js';
 import {actionButton} from './buttons.js';
 import {headingTitle} from './headers.js';
-import {escapeHtml} from './dom.js';
 import {CASK_GROUPS} from '../domain/flight-casks.js';
 import {loadTemplates} from './templates.js';
 
@@ -54,9 +53,9 @@ export function flightPlanningHelpHtml(t) {
    * Builds the localized tx text for the current language.
    *
    * @param {*} key Key used to select or group values.
-   * @return {string} Escaped translation of the requested flight-planning help entry.
+   * @return {string} Literal translation of the requested flight-planning help entry.
    */
-  const tx = key => escapeHtml(t(`flightPlan.help.${key}`));
+  const tx = key => t(`flightPlan.help.${key}`);
 
   /**
    * Prepares localized help paragraph with an optional CSS class.
@@ -140,7 +139,7 @@ export function flightPlanningHelpHtml(t) {
     caskAgeHeading: heading('caskAge.title'),
     classificationIntro: p('caskAge.classification'),
     groupsLabel: tx('caskAge.groups'),
-    caskGroupLabels: CASK_GROUPS.map(group => escapeHtml(t(`flightPlan.caskAge.group.${group}`))).join(' · '),
+    caskGroupLabels: CASK_GROUPS.map(group => t(`flightPlan.caskAge.group.${group}`)).join(' · '),
     selectionIntro: p('caskAge.selection'),
     examples: p('caskAge.examples'),
     coverage: p('caskAge.coverage'),

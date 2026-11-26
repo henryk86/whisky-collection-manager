@@ -3,10 +3,9 @@ import {requireField} from '../domain/validation.js';
 import {uid} from '../domain/collection.js';
 import {fail} from '../domain/errors.js';
 /**
- * Derives the location from input numeric value from its input.
- *
- * @param {*} input Input element or value to inspect.
- * @return {!Object} Structured result assembled from the input data.
+ * Accepts an absent coordinate pair or validates latitude and longitude bounds.
+ * @param {Object} input Untrusted distillery location fields.
+ * @return {{latitude: (?number), longitude: (?number)}} Validated coordinates or two nulls.
  */
 function locationFromInput(input) {
   const lat = input.latitude, lon = input.longitude;
@@ -23,12 +22,11 @@ function locationFromInput(input) {
 }
 
 /**
- * Normalizes the unique name text for subsequent processing.
- *
- * @param {*} collection Collection data to process.
- * @param {*} value Value to process.
- * @param {*=} currentId Value used by this operation.
- * @return {*} Whether the requested condition is met.
+ * Normalizes the proposed distillery name and rejects a case-insensitive duplicate.
+ * @param {import('../../shared/types.js').Collection} collection Current collection.
+ * @param {*} value Proposed name.
+ * @param {?string=} currentId Distillery ID excluded during rename.
+ * @return {string} Trimmed unique distillery name.
  */
 function uniqueName(collection, value, currentId = null) {
   const name = requireField(value, 'distilleryName');

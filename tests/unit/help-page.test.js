@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -37,13 +37,13 @@ test(
     );
     // Long help text belongs inside the first topic panel, not under the page
     // heading.
-    assert.match(renderedText(helpView()), /class="analytics-page help-page"/);
-    assert.match(renderedText(helpView()), /class="section-workspace"/);
-    assert.match(renderedText(helpView()), /class="section-nav-desktop"/);
-    assert.match(renderedText(helpView()), /data-section-switch="help"/);
-    assert.match(renderedText(helpView()), /class="help-description muted"/);
+    assert.ok(domElements(helpView(), '[class="analytics-page help-page"]').length > 0);
+    assert.ok(domElements(helpView(), '[class="section-workspace"]').length > 0);
+    assert.ok(domElements(helpView(), '[class="section-nav-desktop"]').length > 0);
+    assert.ok(domElements(helpView(), '[data-section-switch="help"]').length > 0);
+    assert.ok(domElements(helpView(), '[class="help-description muted"]').length > 0);
     assert.ok(de['help.intro'].length < 75 && en['help.intro'].length < 75);
-    assert.match(renderedText(helpView()), /class="help-description muted"/);
+    assert.ok(domElements(helpView(), '[class="help-description muted"]').length > 0);
     for (const topic of HELP_TOPICS) {
       for (const catalog of [de, en]) {
         assert.ok(catalog[`help.${topic.id}.title`]);
@@ -56,21 +56,21 @@ test(
       assert.match(renderedText(html), new RegExp(`id="help-panel-${topic.id}"`));
       assert.match(renderedText(html), new RegExp(`data-help-topic="${topic.id}"`));
     }
-    assert.equal((renderedText(html).match(/class="help-section"/g) || []).length, HELP_TOPICS.length);
-    assert.equal((renderedText(html).match(/class="help-section"[^>]+hidden/g) || []).length, HELP_TOPICS.length - 1);
-    assert.doesNotMatch(renderedText(html), /class="panel help-section"/, 'help articles must not render as cards');
+    assert.equal(domElements(html, '[class="help-section"]').length, HELP_TOPICS.length);
+    assert.equal(domElements(html, '[class="help-section"][hidden]').length, HELP_TOPICS.length - 1);
+    assert.equal(domElements(html, '[class="panel help-section"]').length, 0, 'help articles must not render as cards');
     // Approved layout: the right-hand article alone gets a flat content panel,
     // while its section heading and the left navigation remain outside.
-    assert.equal((renderedText(html).match(/class="help-content-panel"/g) || []).length, HELP_TOPICS.length);
+    assert.equal(domElements(html, '[class="help-content-panel"]').length, HELP_TOPICS.length);
     assert.match(
       renderedText(html),
       new RegExp(
         'class="analytics-section-title" id="help-t' + 'itle-basics">[^<]+<\\/h2>\\s*<div class="h' + 'elp-content-panel">'
       )
     );
-    assert.match(renderedText(html), /data-help-topic="basics" aria-current="page"/);
-    assert.match(renderedText(html), /id="help-panel-basics"/);
-    assert.match(renderedText(html), /data-act="goto-home"/);
+    assert.ok(domElements(html, '[data-help-topic="basics"][aria-current="page"]').length > 0);
+    assert.ok(domElements(html, '[id="help-panel-basics"]').length > 0);
+    assert.ok(domElements(html, '[data-act="goto-home"]').length > 0);
   }
 );
 
@@ -93,9 +93,9 @@ test(
       assert.doesNotMatch(renderedText(catalog['help.bottlings.6']), /directly in the second|direkt im zweiten/);
     }
     const html = helpView('tastings');
-    assert.match(renderedText(html), /id="help-panel-tastings"/);
-    assert.match(renderedText(html), /data-help-topic="tastings" aria-current="page"/);
-    assert.match(renderedText(helpView('flights')), /data-help-topic="flights" aria-current="page"/);
+    assert.ok(domElements(html, '[id="help-panel-tastings"]').length > 0);
+    assert.ok(domElements(html, '[data-help-topic="tastings"][aria-current="page"]').length > 0);
+    assert.ok(domElements(helpView('flights'), '[data-help-topic="flights"][aria-current="page"]').length > 0);
     assert.match(renderedText(html), /Glencairn/);
   }
 );

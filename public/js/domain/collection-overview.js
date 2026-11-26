@@ -25,11 +25,11 @@ export function availableOverviewDistilleries(collection) {
 }
 
 /**
- * Checks whether matching bottle type applies.
+ * Tests the requested physical bottle type, treating absent legacy types as standard bottles.
  *
- * @param {*} bottle Physical bottle record under consideration.
- * @param {*} volumeType Value used by this operation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @param {*} bottle Physical inventory record.
+ * @param {*} volumeType Standard, sample, or all types.
+ * @return {boolean} True if this bottle satisfies the type filter.
  */
 function isMatchingBottleType(bottle, volumeType) {
   return volumeType === 'all' || (bottle.volumeType || 'standard') === volumeType;
@@ -52,11 +52,11 @@ export function matchesOverviewRating(bottling, filter = 'all') {
 }
 
 /**
- * Derives the matching bottling text result from the supplied values.
+ * Collects searchable metadata from the release, including its resolved distillery names.
  *
- * @param {*} bottling Bottling record being inspected or updated.
- * @param {*} distilleryNames Value used by this operation.
- * @return {!Array<*>} Resulting entries in their output order.
+ * @param {*} bottling Release whose metadata should be searched.
+ * @param {*} distilleryNames Callback resolving the release's distillery names.
+ * @return {!Array<*>} Searchable field values, including absent metadata.
  */
 function matchingBottlingText(bottling, distilleryNames) {
   return [
@@ -69,10 +69,10 @@ function matchingBottlingText(bottling, distilleryNames) {
 }
 
 /**
- * Derives the matching bottle text result from the supplied values.
+ * Collects searchable physical inventory fields without changing their stored values.
  *
- * @param {*} bottle Physical bottle record under consideration.
- * @return {!Array<*>} Resulting entries in their output order.
+ * @param {*} bottle Physical inventory record.
+ * @return {!Array<*>} Inventory identifier, localized type and status, volume, purchase date and merchant.
  */
 function matchingBottleText(bottle) {
   return [
@@ -119,12 +119,12 @@ export function latestUpdate(entry) {
 }
 
 /**
- * Orders or compares present values.
+ * Compares supplied values while keeping missing values last in either sort direction.
  *
- * @param {*} left Left-hand operand or entry.
- * @param {*} right Right-hand operand or entry.
- * @param {boolean=} descending Value used by this operation.
- * @return {number} Calculated numeric value.
+ * @param {*} left First sortable value.
+ * @param {*} right Second sortable value.
+ * @param {boolean=} descending True for descending order of present values.
+ * @return {number} Comparator result; negative sorts the first value earlier.
  */
 function comparePresent(left, right, descending = false) {
   // Blank dates, missing prices and unrated tastings always belong at the end.
@@ -149,13 +149,13 @@ function asNumber(value) {
 const STATUS_ORDER = Object.freeze({closed: 0, open: 1, empty: 2});
 
 /**
- * Orders or compares entries values.
+ * Compares overview entries by the selected sort key using underlying collection values.
  *
- * @param {*} left Left-hand operand or entry.
- * @param {*} right Right-hand operand or entry.
- * @param {*} sort Sort direction or ordering rule.
- * @param {*} distilleryNames Value used by this operation.
- * @return {*} Value returned by the delegated operation.
+ * @param {*} left First overview row.
+ * @param {*} right Second overview row.
+ * @param {*} sort Selected overview sort key.
+ * @param {*} distilleryNames Callback resolving the release's distillery names.
+ * @return {*} Comparator result for the configured sort key.
  */
 function compareEntries(left, right, sort, distilleryNames) {
   const a = left.bottling;

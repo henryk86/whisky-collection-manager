@@ -6,21 +6,19 @@ for (let i = 0; i < 256; i++) {
   let n = i; for (let j = 0; j < 8; j++) n = n & 1 ? 0xedb88320 ^ (n >>> 1) : n >>> 1; crcTable[i] = n >>> 0;
 }
 /**
- * Derives the crc32 result from the supplied values.
- *
- * @param {*} data Input data to process.
- * @return {number} Calculated numeric value.
+ * Calculates the PNG chunk checksum with the PNG CRC-32 polynomial.
+ * @param {Uint8Array} data Bytes covered by the checksum.
+ * @return {number} Unsigned 32-bit CRC.
  */
 function crc32(data) {
   let crc = 0xffffffff; for (const byte of data) crc = crcTable[(crc ^ byte) & 255] ^ (crc >>> 8); return (crc ^ 0xffffffff) >>> 0;
 }
 
 /**
- * Derives the chunk result from the supplied values.
- *
- * @param {*} type Type or category used to select behavior.
- * @param {*} data Input data to process.
- * @return {*} Result computed from the supplied inputs.
+ * Encodes a PNG chunk with its length, type, data and CRC.
+ * @param {string} type Four-character chunk type.
+ * @param {Buffer} data Chunk payload.
+ * @return {Buffer} Complete binary chunk.
  */
 function chunk(type, data) {
   const header = Buffer.from(type, 'ascii'); const length = Buffer.alloc(4); length.writeUInt32BE(data.length);
@@ -72,12 +70,11 @@ export function decodePNG(bytes) {
 }
 
 /**
- * Serializes rgb for visual png.
- *
- * @param {number} width Width in pixels.
- * @param {number} height Height in pixels.
- * @param {*} rgb Rgb used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Encodes packed RGB pixels as a PNG image.
+ * @param {number} width Image width in pixels.
+ * @param {number} height Image height in pixels.
+ * @param {Buffer} rgb Packed RGB data in row order.
+ * @return {Buffer} Encoded PNG bytes.
  */
 export function encodeRGB(width, height, rgb) {
   const header = Buffer.alloc(13); header.writeUInt32BE(width);

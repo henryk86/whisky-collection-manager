@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -296,8 +296,8 @@ test('analytics: date range applies to actual days, not entire months', () => {
   assert.match(renderedText(registered), /Für diese Auswertung sind keine passenden Daten vorhanden/);
   const opened = renderedText(html).split('<h3>Geöffnete Flaschen</h3>')[1]?.split('</section>')[0] || '';
   assert.match(renderedText(opened), /2025-04/);
-  assert.match(renderedText(html), /type="date" id="analytics-start-date"/);
-  assert.match(renderedText(html), /value="2025-04-10"/);
+  assert.ok(domElements(html, '[type="date"][id="analytics-start-date"]').length > 0);
+  assert.ok(domElements(html, '[value="2025-04-10"]').length > 0);
 });
 
 test('analytics: last ranked distillery stays an interactive link', () => {
@@ -345,7 +345,7 @@ test('analytics: last ranked distillery stays an interactive link', () => {
     new RegExp('<button[^>]*class="analytics-bar-label ana' + 'lytics-link"[^>]*>([^<]*)<\\/button>', 'g'))];
   assert.equal(links.length, distilleries.length, 'every ranked distillery is a button, including the final one');
   assert.equal(renderedText(links.at(-1)[1]), 'Springbank');
-  assert.match(renderedText(links.at(-1)[0]), /data-id="site-6"/);
+  assert.ok(domElements(links.at(-1)[0], '[data-id="site-6"]').length > 0);
 });
 
 

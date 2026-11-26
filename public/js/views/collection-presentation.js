@@ -1,7 +1,6 @@
 import {composeMarkup} from '../ui/render-plan.js';
 import {t, currentLanguage} from '../i18n/index.js';
 import {chevronLeftIcon, chevronRightIcon, chevronsLeftIcon, chevronsRightIcon} from '../ui/action-icons.js';
-import {escapeHtml} from '../ui/dom.js';
 import {inventoryCountGroups} from '../domain/inventory-counts.js';
 import {hasBottlingDetail} from '../domain/bottling-details.js';
 import {visiblePages, PAGE_SIZE_OPTIONS} from '../domain/pagination.js';
@@ -41,10 +40,10 @@ export function inventoryBadges(physicalBottles) {
  *
  * @param {*} value Input value to process.
  * @param {string=} suffix Suffix used by this operation.
- * @return {string} Escaped known metadata with its supplied suffix, or empty text when missing.
+ * @return {string} Known metadata with its supplied suffix, or empty text when missing.
  */
 export function overviewField(value, suffix = '') {
-  return hasBottlingDetail(value) ? `${escapeHtml(value)}${suffix}` : '';
+  return hasBottlingDetail(value) ? `${String(value ?? '')}${suffix}` : '';
 }
 
 /**
@@ -73,8 +72,8 @@ export function collectionTableCell(columnId, model) {
   let value = '';
   switch (columnId) {
     case 'name': value = renderTemplate('strong', {name: bottling.name, }); break;
-    case 'inventory': value = bottle?.inventoryNumber ? `#${escapeHtml(bottle.inventoryNumber)}` : t('imports.bottles.noInventoryNumber'); break;
-    case 'distillery': value = escapeHtml(origin); break;
+    case 'inventory': value = bottle?.inventoryNumber ? `#${String(bottle.inventoryNumber ?? '')}` : t('imports.bottles.noInventoryNumber'); break;
+    case 'distillery': value = String(origin ?? ''); break;
     case 'age': value = overviewField(bottling.ageYears); break;
     case 'abv': value = overviewField(bottling.abv, ' %'); break;
     case 'year': value = overviewField(bottling.releaseYear); break;
@@ -82,12 +81,12 @@ export function collectionTableCell(columnId, model) {
     case 'editing': value = bottling.completionStatus === 'complete' ? t('detail.status.complete') : t('detail.status.incomplete'); break;
     case 'rating': {
       value = score == null ? '–' :
-        escapeHtml(t(
+        t(
           'home.table.scoreValue',
           {
             score: new Intl.NumberFormat(currentLanguage() === 'de' ? 'de-DE' : 'en-US', {maximumFractionDigits: 2}).format(Number(score)),
           }
-        ));
+        );
       break;
     }
     case 'status': value = bottle ?
@@ -96,7 +95,7 @@ export function collectionTableCell(columnId, model) {
         statusText: statusText(bottle.status),
       }) : ''; break;
     case 'type': value = bottle ? t(bottle.volumeType === 'sample' ? 'imports.bottles.sample' : 'imports.bottles.standard') : ''; break;
-    case 'size': value = bottle?.volumeMl != null ? `${escapeHtml(bottle.volumeMl)} ml` : ''; break;
+    case 'size': value = bottle?.volumeMl != null ? `${String(bottle.volumeMl ?? '')} ml` : ''; break;
     case 'price': {
       value = price ? new Intl.NumberFormat(
         currentLanguage() === 'de' ? 'de-DE' : 'en-US',
@@ -108,7 +107,7 @@ export function collectionTableCell(columnId, model) {
     case 'tasted': {
       const date = columnId === 'updated' ? updated : tasted;
       value = date && Number.isFinite(new Date(date).getTime()) ?
-        escapeHtml(new Date(date).toLocaleDateString(currentLanguage())) : '–';
+        String((new Date(date).toLocaleDateString(currentLanguage())) ?? '') : '–';
       break;
     }
   }

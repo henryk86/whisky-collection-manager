@@ -1,4 +1,4 @@
-import {renderedText, captureContent, captureAppend} from '../helpers/rendering.js';
+import {renderedText, captureContent, captureAppend, domElements} from '../helpers/rendering.js';
 import {createBottleForm} from '../../public/js/features/forms/bottle.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -140,8 +140,8 @@ test(
         fields: {name: 'Example', abv: 48},
       });
       assert.equal(renderedText(panel.id), 'import-panel');
-      assert.match(renderedText(panel.innerHTML), /data-import-field="name"/);
-      assert.match(renderedText(panel.innerHTML), /name="import-distillery" value="local-d"/);
+      assert.ok(domElements(panel.innerHTML, '[data-import-field="name"]').length > 0);
+      assert.ok(domElements(panel.innerHTML, '[name="import-distillery"][value="local-d"]').length > 0);
       controller.applyImport();
       assert.equal(renderedText(form.elements.name.value), 'Example');
       assert.equal(renderedText(form.elements.abv.value), 48);
@@ -199,8 +199,8 @@ test(
       getPendingImageToken: () => 'valid-pending-token',
     });
     editor.newBottle(true);
-    assert.match(renderedText(modals[0].html), /name="importReferencePhoto" checked/);
-    assert.match(renderedText(modals[0].html), /class="import-photo form-field full"/);
+    assert.ok(domElements(modals[0].html, '[name="importReferencePhoto"][checked]').length > 0);
+    assert.ok(domElements(modals[0].html, '[class="import-photo form-field full"]').length > 0);
     editor.newBottle(false);
     assert.doesNotMatch(renderedText(modals[1].html), /importReferencePhoto/);
   }

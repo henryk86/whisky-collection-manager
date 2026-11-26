@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -110,10 +110,10 @@ test(
     finally {
       if (originalDocument === undefined) delete globalThis.document; else globalThis.document = originalDocument;
     }
-    assert.match(renderedText(html), /class="warehouse-floor"/);
+    assert.ok(domElements(html, '[class="warehouse-floor"]').length > 0);
     assert.match(renderedText(html), /Regal A/);
     assert.match(renderedText(html), /Test &lt;Room&gt;/);
-    assert.doesNotMatch(renderedText(html), /<Room>/);
+    assert.equal(domElements(html, 'Room').length, 0);
   }
 );
 
@@ -173,7 +173,7 @@ test(
       for (const [id, title] of Object.entries(expectedTabs)) {
         state.selected = id;
         view.render();
-        assert.match(renderedText(html), /class="analytics-page warehouse-page"/);
+        assert.ok(domElements(html, '[class="analytics-page warehouse-page"]').length > 0);
         assert.match(
           renderedText(html),
           new RegExp(
@@ -184,8 +184,8 @@ test(
             'n="true">\\.<\\/span><\\/h2>'
           )
         );
-        assert.match(renderedText(html), /class="section-nav-desktop warehouse-tabs"/);
-        assert.match(renderedText(html), /data-section-switch="warehouse"/);
+        assert.ok(domElements(html, '[class="section-nav-desktop warehouse-tabs"]').length > 0);
+        assert.ok(domElements(html, '[data-section-switch="warehouse"]').length > 0);
         const active = renderedText(html).match(/<button[^>]*class="section-nav-item active"[^>]*>/g) || [];
         assert.equal(active.length, 1, `exactly one active warehouse section for ${id}`);
         assert.match(renderedText(active[0]), new RegExp(`data-section="${id}" aria-current="page"`));
@@ -282,19 +282,19 @@ test(
     };
     try {
       view.render();
-      assert.doesNotMatch(renderedText(html), /data-act="warehouse-furniture-copy" data-id="f"/);
+      assert.equal(domElements(html, '[data-act="warehouse-furniture-copy"][data-id="f"]').length, 0);
       view.openFurnitureManager('f');
-      assert.match(renderedText(forms.at(-1).content), /data-act="warehouse-furniture-copy" data-id="f"/);
-      assert.match(renderedText(forms.at(-1).content), /data-act="warehouse-shelf-copy" data-id="s"/);
-      assert.match(renderedText(html), /class="warehouse-bottle-photo" src="\/images\/b1\/sample.jpg"/);
+      assert.ok(domElements(forms.at(-1).content, '[data-act="warehouse-furniture-copy"][data-id="f"]').length > 0);
+      assert.ok(domElements(forms.at(-1).content, '[data-act="warehouse-shelf-copy"][data-id="s"]').length > 0);
+      assert.equal(domElements(html, 'img.warehouse-bottle-photo[src="/images/b1/sample.jpg"]').length, 1);
       assert.equal(
-        (renderedText(html).match(/class="warehouse-bottle-photo"/g) || []).length,
+        domElements(html, '[class="warehouse-bottle-photo"]').length,
         1,
         'the permanently visible wall displays the photo only once'
       );
       assert.doesNotMatch(renderedText(html), /\|\| '<span class=\"hint\">Fach ist leer/, 'no unrendered template suffixes');
       assert.equal(
-        (renderedText(html).match(/class="warehouse-bottle-symbol"/g) || []).length,
+        domElements(html, '[class="warehouse-bottle-symbol"]').length,
         2,
         'the page renders each bottle silhouette once'
       );
@@ -308,24 +308,24 @@ test(
         renderedText(forms.at(0).content),
         new RegExp('class="warehouse-bottle-symbol" data-act="' + 'warehouse-bottle-preview" data-id="b1"')
       );
-      assert.match(renderedText(forms.at(0).content), /class="warehouse-bottle-photo" src="\/images\/b1\/sample.jpg"/);
-      assert.match(renderedText(forms.at(0).content), /data-act="warehouse-bottle-preview" data-id="b2"/);
+      assert.equal(domElements(forms.at(0).content, 'img.warehouse-bottle-photo[src="/images/b1/sample.jpg"]').length, 1);
+      assert.ok(domElements(forms.at(0).content, '[data-act="warehouse-bottle-preview"][data-id="b2"]').length > 0);
       assert.doesNotMatch(renderedText(forms.at(0).content), />Flaschen anzeigen<\/button>/);
       view.openBottlePreview('b1');
       assert.match(renderedText(forms.at(-1).content), /warehouse-bottle-preview/);
-      assert.match(renderedText(forms.at(-1).content), /data-act="warehouse-assign" data-id="b1"/);
+      assert.ok(domElements(forms.at(-1).content, '[data-act="warehouse-assign"][data-id="b1"]').length > 0);
       view.openShelfDetails('s');
       assert.match(renderedText(forms.at(-1).content), /Whisky mit Foto/);
-      assert.match(renderedText(forms.at(-1).content), /data-act="warehouse-assign" data-id="b1"/);
-      assert.match(renderedText(html), /data-act="warehouse-bottles-preview-selected"/);
-      assert.match(renderedText(html), /data-act="warehouse-bottle-select" data-id="b1"/);
-      assert.doesNotMatch(renderedText(html), /data-act="warehouse-assign" data-id="b1"/);
+      assert.ok(domElements(forms.at(-1).content, '[data-act="warehouse-assign"][data-id="b1"]').length > 0);
+      assert.ok(domElements(html, '[data-act="warehouse-bottles-preview-selected"]').length > 0);
+      assert.ok(domElements(html, '[data-act="warehouse-bottle-select"][data-id="b1"]').length > 0);
+      assert.equal(domElements(html, '[data-act="warehouse-assign"][data-id="b1"]').length, 0);
       view.openForm('furniture-copy', 'f');
-      assert.match(renderedText(forms.at(-1).content), /name="withShelves" checked/);
-      assert.match(renderedText(forms.at(-1).content), /data-endpoint="\/api\/warehouse\/furniture\/f\/copy"/);
+      assert.ok(domElements(forms.at(-1).content, '[name="withShelves"][checked]').length > 0);
+      assert.ok(domElements(forms.at(-1).content, '[data-endpoint="/api/warehouse/furniture/f/copy"]').length > 0);
       view.openForm('shelf-copy', 's');
-      assert.match(renderedText(forms.at(-1).content), /name="furnitureId"/);
-      assert.match(renderedText(forms.at(-1).content), /data-endpoint="\/api\/warehouse\/shelves\/s\/copy"/);
+      assert.ok(domElements(forms.at(-1).content, '[name="furnitureId"]').length > 0);
+      assert.ok(domElements(forms.at(-1).content, '[data-endpoint="/api/warehouse/shelves/s/copy"]').length > 0);
     } finally {
       if (savedDocument === undefined) delete globalThis.document;
       else globalThis.document = savedDocument;
@@ -409,15 +409,10 @@ test(
     assert.match(renderedText(dialog.html), /Shop &lt;City&gt;/);
     assert.match(renderedText(dialog.html), /My &lt;comment&gt;/);
     assert.doesNotMatch(renderedText(dialog.html), /<Whisky>|<City>|<comment>/);
-    assert.match(renderedText(dialog.html), /class="warehouse-bottle-preview-photo"/);
+    assert.ok(domElements(dialog.html, '[class="warehouse-bottle-preview-photo"]').length > 0);
     assert.match(renderedText(dialog.html), />Zu den Flaschendetails<\/a>/);
-    assert.match(renderedText(dialog.html), /data-act="warehouse-assign" data-id="bottle-123"/);
-    assert.match(
-      renderedText(dialog.html),
-      new RegExp(
-        'href="\\/\\?bottling=bottling-456" data-ac' + 't="open" data-id="bottling-456" data-bottl' + 'e-id="bottle-123"'
-      )
-    );
+    assert.ok(domElements(dialog.html, '[data-act="warehouse-assign"][data-id="bottle-123"]').length > 0);
+    assert.equal(domElements(dialog.html, 'a[href="/?bottling=bottling-456"][data-act="open"][data-id="bottling-456"][data-bottle-id="bottle-123"]').length, 1);
   }
 );
 
@@ -511,17 +506,17 @@ test(
       assert.match(renderedText(html), /Belegt: 1 Flasche/);
       state.selected = 'rooms';
       view.render();
-      assert.match(renderedText(html), /id="warehouse-plan-layer"/);
+      assert.ok(domElements(html, '[id="warehouse-plan-layer"]').length > 0);
       assert.match(renderedText(html), /class="warehouse-drag warehouse-elevated/);
       assert.match(renderedText(html), /ab 1,9 m/);
       state.warehousePlanLevel = 'floor';
       view.render();
-      assert.match(renderedText(html), /data-id="cab"/);
-      assert.doesNotMatch(renderedText(html), /<g[^>]*data-id="wall"/);
+      assert.ok(domElements(html, '[data-id="cab"]').length > 0);
+      assert.equal(domElements(html, 'g[data-id="wall"]').length, 0);
       state.warehousePlanLevel = 'elevated';
       view.render();
-      assert.match(renderedText(html), /data-id="wall"/);
-      assert.doesNotMatch(renderedText(html), /<g[^>]*data-id="cab"/);
+      assert.ok(domElements(html, '[data-id="wall"]').length > 0);
+      assert.equal(domElements(html, 'g[data-id="cab"]').length, 0);
       view.openForm('furniture', 'wall');
       assert.match(renderedText(dialog), /Unterkante über Boden/);
       assert.match(renderedText(dialog), /Möbelhöhe/);
@@ -599,13 +594,13 @@ test(
     finally {
       if (savedDocument === undefined) delete globalThis.document; else globalThis.document = savedDocument;
     }
-    assert.match(renderedText(html), /class="warehouse-plan-grid" aria-hidden="true"/);
-    assert.match(renderedText(html), /class="warehouse-grid-fine" x1="30" y1="0" x2="30" y2="450"/);
-    assert.match(renderedText(html), /class="warehouse-grid-fine" x1="60" y1="0" x2="60" y2="450"/);
-    assert.match(renderedText(html), /class="warehouse-grid-minor" x1="150" y1="0" x2="150" y2="450"/);
-    assert.match(renderedText(html), /class="warehouse-grid-major" x1="300" y1="0" x2="300" y2="450"/);
-    assert.match(renderedText(html), /class="warehouse-grid-major" x1="0" y1="300" x2="600" y2="300"/);
-    assert.match(renderedText(html), /class="warehouse-grid-fine" x1="0" y1="30" x2="600" y2="30"/);
+    assert.ok(domElements(html, '[class="warehouse-plan-grid"][aria-hidden="true"]').length > 0);
+    assert.ok(domElements(html, '[class="warehouse-grid-fine"][x1="30"][y1="0"][x2="30"][y2="450"]').length > 0);
+    assert.ok(domElements(html, '[class="warehouse-grid-fine"][x1="60"][y1="0"][x2="60"][y2="450"]').length > 0);
+    assert.ok(domElements(html, '[class="warehouse-grid-minor"][x1="150"][y1="0"][x2="150"][y2="450"]').length > 0);
+    assert.ok(domElements(html, '[class="warehouse-grid-major"][x1="300"][y1="0"][x2="300"][y2="450"]').length > 0);
+    assert.ok(domElements(html, '[class="warehouse-grid-major"][x1="0"][y1="300"][x2="600"][y2="300"]').length > 0);
+    assert.ok(domElements(html, '[class="warehouse-grid-fine"][x1="0"][y1="30"][x2="600"][y2="30"]').length > 0);
     assert.ok(
       renderedText(html).indexOf('warehouse-plan-grid') < renderedText(html).indexOf('class="warehouse-drag'),
       'grid must be under furniture'
@@ -660,7 +655,7 @@ test(
         refresh: async () => {},
       });
       view.render();
-      assert.match(renderedText(html), /id="warehouse-room-select"/, 'room selection remains available while editing shelves');
+      assert.ok(domElements(html, '[id="warehouse-room-select"]').length > 0, 'room selection remains available while editing shelves');
       for (const action of ['warehouse-room-new', 'warehouse-room-edit',
         'warehouse-room-delete']) {
         assert.doesNotMatch(renderedText(html), new RegExp(`data-act="${action}"`), `${action} must be absent from Regale & Fächer`);
@@ -834,20 +829,14 @@ test(
     finally {
       if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
     }
-    assert.match(
-      renderedText(html),
-      new RegExp(
-        '<header class="warehouse-room-summary"><di' + 'v class="warehouse-room-identity"><h3(?: d' +
-        'ata-i18n-ignore)?>Whiskyzimmer<\\/h3><span' +
-        '>3 × 4 m<\\/span>'
-      )
-    );
+    assert.equal(domElements(html, 'header.warehouse-room-summary > .warehouse-room-identity > h3')[0].text.trim(), 'Whiskyzimmer');
+    assert.equal(domElements(html, 'header.warehouse-room-summary > .warehouse-room-identity > span')[0].text.trim(), '3 × 4 m');
     assert.equal((renderedText(html).match(/Gesamtkapazität:/g) || []).length, 1);
     const toolbar = renderedText(html).match(/<div class="warehouse-plan-tools"[^>]*>(.*?)<\/div><\/div>/s)?.[0] || '';
-    assert.match(renderedText(toolbar), /data-mode="2d"/);
-    assert.match(renderedText(toolbar), /data-mode="3d"/);
+    assert.ok(domElements(toolbar, '[data-mode="2d"]').length > 0);
+    assert.ok(domElements(toolbar, '[data-mode="3d"]').length > 0);
     assert.match(renderedText(toolbar), /warehouse-camera-toolbar/);
-    assert.match(renderedText(toolbar), /id="warehouse-plan-zoom"/);
+    assert.ok(domElements(toolbar, '[id="warehouse-plan-zoom"]').length > 0);
     assert.ok(renderedText(html).indexOf('warehouse-plan-tools') < renderedText(html).indexOf('warehouse-three-viewport'));
     assert.doesNotMatch(renderedText(html), /class="warehouse-subtitle">Whiskyzimmer/);
   }
@@ -932,10 +921,10 @@ test(
       if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
     }
     assert.match(renderedText(html), /fieldset class="warehouse-wall-options"/);
-    assert.equal((renderedText(html).match(/class="warehouse-wall-toggle"/g) || []).length, 3);
-    assert.match(renderedText(html), /name="leftSidePanel" checked/);
-    assert.match(renderedText(html), /name="rightSidePanel" (?!checked)/);
-    assert.match(renderedText(html), /name="backPanel" checked/);
+    assert.equal(domElements(html, '[class="warehouse-wall-toggle"]').length, 3);
+    assert.ok(domElements(html, '[name="leftSidePanel"][checked]').length > 0);
+    assert.equal(domElements(html, 'input[name="rightSidePanel"]')[0].checked, false);
+    assert.ok(domElements(html, '[name="backPanel"][checked]').length > 0);
   }
 );
 
@@ -1009,14 +998,10 @@ test(
         refresh: async () => {},
       });
       view.render();
-      assert.match(renderedText(html), /class="warehouse-floor"/);
-      assert.match(renderedText(html), /data-act="warehouse-open-shelves"/);
-      assert.match(renderedText(html), /data-act="warehouse-furniture-new"/, 'place furniture without leaving the room plan');
-      assert.match(
-        renderedText(html),
-        /data-act="warehouse-furniture-manage"/,
-        'selected furniture can manage compartments in a modal'
-      );
+      assert.ok(domElements(html, '[class="warehouse-floor"]').length > 0);
+      assert.ok(domElements(html, '[data-act="warehouse-open-shelves"]').length > 0);
+      assert.ok(domElements(html, '[data-act="warehouse-furniture-new"]').length > 0, 'place furniture without leaving the room plan');
+      assert.ok(domElements(html, '[data-act="warehouse-furniture-manage"]').length > 0, 'selected furniture can manage compartments in a modal');
       assert.doesNotMatch(
         renderedText(html),
         new RegExp(
@@ -1027,10 +1012,10 @@ test(
       state.selected = 'shelves';
       state.warehouseFurnitureId = 'f';
       view.render();
-      assert.match(renderedText(html), /class="warehouse-room-wall"/);
-      assert.match(renderedText(html), /data-act="warehouse-furniture-new"/);
-      assert.match(renderedText(html), /data-act="warehouse-furniture-bulk"/);
-      assert.match(renderedText(html), /data-act="warehouse-furniture-manage"/);
+      assert.ok(domElements(html, '[class="warehouse-room-wall"]').length > 0);
+      assert.ok(domElements(html, '[data-act="warehouse-furniture-new"]').length > 0);
+      assert.ok(domElements(html, '[data-act="warehouse-furniture-bulk"]').length > 0);
+      assert.ok(domElements(html, '[data-act="warehouse-furniture-manage"]').length > 0);
       assert.doesNotMatch(renderedText(html), /warehouse-bulk-edit|warehouse-furniture-panel/);
       assert.match(renderedText(html), /warehouse-bottle-select/);
       assert.doesNotMatch(
@@ -1113,10 +1098,10 @@ test(
     finally {
       if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
     }
-    assert.match(renderedText(html), /class="warehouse-section-boundary warehouse-plan-focus"/);
+    assert.ok(domElements(html, '[class="warehouse-section-boundary warehouse-plan-focus"]').length > 0);
     assert.match(renderedText(html), /Top unit/);
     assert.match(renderedText(html), /X: 1,2 m/);
-    assert.match(renderedText(html), /data-act="warehouse-open-shelves"/);
+    assert.ok(domElements(html, '[data-act="warehouse-open-shelves"]').length > 0);
     assert.doesNotMatch(renderedText(html), /class="warehouse-management-drawer"|warehouse-furniture-panel/);
   }
 );
@@ -1195,18 +1180,18 @@ test(
         refresh: async () => {},
       });
       view.render();
-      assert.match(renderedText(html), /data-act="warehouse-furniture-manage"/);
+      assert.ok(domElements(html, '[data-act="warehouse-furniture-manage"]').length > 0);
       assert.doesNotMatch(
         renderedText(html),
         new RegExp('warehouse-management-drawer|warehouse-furn' + 'iture-panel|warehouse-shelf-edit')
       );
-      assert.equal((renderedText(html).match(/class="warehouse-bottle-symbol"/g) || []).length, 1);
+      assert.equal(domElements(html, '[class="warehouse-bottle-symbol"]').length, 1);
       view.openFurnitureManager('f');
       assert.equal(renderedText(wide), true);
-      assert.match(renderedText(manager), /class="warehouse-furniture-manager warehouse-shelves-management"/);
-      assert.match(renderedText(manager), /data-act="warehouse-shelf-edit"/);
-      assert.match(renderedText(manager), /data-act="warehouse-furniture-edit"/);
-      assert.match(renderedText(manager), /data-act="warehouse-bottle-preview" data-id="b"/);
+      assert.ok(domElements(manager, '[class="warehouse-furniture-manager warehouse-shelves-management"]').length > 0);
+      assert.ok(domElements(manager, '[data-act="warehouse-shelf-edit"]').length > 0);
+      assert.ok(domElements(manager, '[data-act="warehouse-furniture-edit"]').length > 0);
+      assert.ok(domElements(manager, '[data-act="warehouse-bottle-preview"][data-id="b"]').length > 0);
       const actionIndex = renderedText(manager).indexOf('class="actions warehouse-furniture-actions"');
       const photosIndex = renderedText(manager).indexOf('class="warehouse-furniture-photos bottle-entry-gallery"');
       assert.ok(
@@ -1220,11 +1205,11 @@ test(
         )
       );
       assert.equal(
-        (renderedText(manager).match(/data-furniture-photos="f"/g) || []).length,
+        domElements(manager, '[data-furniture-photos="f"]').length,
         2,
         'upload and camera inputs remain available'
       );
-      assert.doesNotMatch(renderedText(manager), /class="photo-edit-trigger"/, 'furniture photos have no photo editor icon');
+      assert.equal(domElements(manager, '[class="photo-edit-trigger"]').length, 0, 'furniture photos have no photo editor icon');
       assert.equal(
         (renderedText(manager).match(/class="warehouse-bottle-symbol/g) || []).length,
         1,
@@ -1331,7 +1316,7 @@ test(
       view.openFurnitureManager('a');
       assert.equal(renderedText(title), 'Left cabinet');
       assert.match(renderedText(dialog), /Left shelf/);
-      assert.match(renderedText(dialog), /data-act="warehouse-bottle-preview" data-id="left-bottle"/);
+      assert.ok(domElements(dialog, '[data-act="warehouse-bottle-preview"][data-id="left-bottle"]').length > 0);
       assert.doesNotMatch(
         renderedText(dialog),
         new RegExp('right-bottle|Right shelf|warehouse-bulk-li' + 'st|warehouse-bulk-check|warehouse-bulk-pic' + 'k')
@@ -1340,16 +1325,16 @@ test(
       view.openFurnitureManager('b');
       assert.equal(renderedText(title), 'Right cabinet');
       assert.match(renderedText(dialog), /Right shelf/);
-      assert.match(renderedText(dialog), /data-act="warehouse-bottle-preview" data-id="right-bottle"/);
+      assert.ok(domElements(dialog, '[data-act="warehouse-bottle-preview"][data-id="right-bottle"]').length > 0);
       assert.doesNotMatch(renderedText(dialog), /left-bottle|Left shelf|warehouse-bulk-list/);
       assert.equal(renderedText(viewport.scrollLeft), 275);
       view.openFurnitureBulkManager();
       assert.match(renderedText(dialog), /warehouse-furniture-bulk-manager/);
-      assert.match(renderedText(dialog), /data-act="warehouse-toggle-furniture"/);
+      assert.ok(domElements(dialog, '[data-act="warehouse-toggle-furniture"]').length > 0);
       assert.doesNotMatch(renderedText(dialog), /warehouse-furniture-panel|warehouse-shelf-edit|type="checkbox"/);
       view.toggleFurnitureBulkSelection('a');
       view.openFurnitureBulkManager();
-      assert.match(renderedText(dialog), /aria-pressed="true"/);
+      assert.ok(domElements(dialog, '[aria-pressed="true"]').length > 0);
       assert.doesNotMatch(renderedText(page), /warehouse-furniture-panel|warehouse-management-drawer/);
     } finally {
       if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
@@ -1411,13 +1396,13 @@ test(
     assert.match(renderedText(dialogs.at(-1).title), /Raum/);
     assert.match(renderedText(dialogs.at(-1).html), /2 Flaschen/);
     assert.match(renderedText(dialogs.at(-1).html), /My &lt;Room&gt;/);
-    assert.doesNotMatch(renderedText(dialogs.at(-1).html), /<Room>/);
-    assert.match(renderedText(dialogs.at(-1).html), /data-act="close-modal"/);
-    assert.match(renderedText(dialogs.at(-1).html), /data-act="warehouse-confirm-delete-unassign"/);
-    assert.doesNotMatch(renderedText(dialogs.at(-1).html), /data-act="warehouse-confirm-delete"/);
+    assert.equal(domElements(dialogs.at(-1).html, 'Room').length, 0);
+    assert.ok(domElements(dialogs.at(-1).html, '[data-act="close-modal"]').length > 0);
+    assert.ok(domElements(dialogs.at(-1).html, '[data-act="warehouse-confirm-delete-unassign"]').length > 0);
+    assert.equal(domElements(dialogs.at(-1).html, '[data-act="warehouse-confirm-delete"]').length, 0);
     state.warehouse.assignments = {b3: 'other-shelf'};
     view.askDelete('room', 'r');
-    assert.match(renderedText(dialogs.at(-1).html), /data-act="warehouse-confirm-delete"/);
+    assert.ok(domElements(dialogs.at(-1).html, '[data-act="warehouse-confirm-delete"]').length > 0);
     assert.doesNotMatch(renderedText(dialogs.at(-1).html), /warehouse-confirm-delete-unassign/);
   }
 );
@@ -1431,9 +1416,9 @@ test(
       embedded: true,
       expanded: true,
     });
-    assert.match(renderedText(html), /id="warehouse-unassigned-wall-search"/);
-    assert.match(renderedText(html), /class="warehouse-unassigned-page-search"/);
-    assert.match(renderedText(html), /placeholder="Flaschenname oder Inventarnummer suchen"/);
+    assert.ok(domElements(html, '[id="warehouse-unassigned-wall-search"]').length > 0);
+    assert.ok(domElements(html, '[class="warehouse-unassigned-page-search"]').length > 0);
+    assert.ok(domElements(html, '[placeholder="Flaschenname oder Inventarnummer suchen"]').length > 0);
     const footer = renderedText(html).match(new RegExp('<div class="warehouse-unassigned-paginatio' + 'n">([\\s\\S]*?)<\\/div>\\s*<\\/div>'))?.[1] || '';
     assert.ok(renderedText(footer).includes('warehouse-unassigned-page-summary'), 'item counter must appear in footer');
     assert.ok(
@@ -1445,7 +1430,7 @@ test(
       'search must precede pagination buttons'
     );
     assert.doesNotMatch(renderedText(html), /warehouse-unassigned-search-label/);
-    assert.match(renderedText(html), /aria-label="Flaschen suchen"/);
+    assert.ok(domElements(html, '[aria-label="Flaschen suchen"]').length > 0);
     assert.doesNotMatch(renderedText(html), /Virtuelles Ablageregal|höchstens 24 Flaschen|unassignedHint/);
     const locale = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
     assert.equal(Object.hasOwn(locale, 'warehouse.wall.unassignedHint'), false);
@@ -1522,7 +1507,7 @@ test(
       view.render();
       assert.match(renderedText(html), /warehouse-unconfigured-furniture/);
       assert.match(renderedText(html), /Neue Vitrine/);
-      assert.match(renderedText(html), /data-act="warehouse-shelf-new" data-id="unconfigured"/);
+      assert.ok(domElements(html, '[data-act="warehouse-shelf-new"][data-id="unconfigured"]').length > 0);
       let form = '';
       const formView = createWarehouseView({
         state,
@@ -1550,7 +1535,7 @@ test(
         refresh: async () => {},
       });
       formView.openForm('shelf', 'unconfigured');
-      assert.match(renderedText(form), /data-endpoint="\/api\/warehouse\/furniture\/unconfigured\/shelves"/);
+      assert.ok(domElements(form, '[data-endpoint="/api/warehouse/furniture/unconfigured/shelves"]').length > 0);
     } finally {
       if (original === undefined) delete globalThis.document;
       else globalThis.document = original;
@@ -1581,17 +1566,17 @@ test(
     };
     const warehouse = {rooms: [room], bottles: [], assignments: {}};
     const html = shelfPanel(warehouse, room, furniture, {managementOnly: true});
-    assert.match(renderedText(html), /class="warehouse-furniture-photos bottle-entry-gallery"/);
-    assert.match(renderedText(html), /class="warehouse-furniture-photo-list bottle-photos"/);
-    assert.equal((renderedText(html).match(/class="warehouse-furniture-photo photo-tile"/g) || []).length, 2);
-    assert.equal((renderedText(html).match(/class="warehouse-photo-open photo-open"/g) || []).length, 2);
-    assert.equal((renderedText(html).match(/class="photo-remove" data-act="warehouse-photo-delete"/g) || []).length, 2);
+    assert.ok(domElements(html, '[class="warehouse-furniture-photos bottle-entry-gallery"]').length > 0);
+    assert.ok(domElements(html, '[class="warehouse-furniture-photo-list bottle-photos"]').length > 0);
+    assert.equal(domElements(html, '[class="warehouse-furniture-photo photo-tile"]').length, 2);
+    assert.equal(domElements(html, '[class="warehouse-photo-open photo-open"]').length, 2);
+    assert.equal(domElements(html, '[class="photo-remove"][data-act="warehouse-photo-delete"]').length, 2);
     assert.doesNotMatch(
       renderedText(html),
       new RegExp('data-act="warehouse-photo-move"|class="pho' + 'to-controls"|class="photo-move"')
     );
     assert.doesNotMatch(renderedText(html), /photo-edit-trigger|data-photo-drag/);
-    assert.match(renderedText(html), /class="warehouse-furniture-photo-actions bottle-photo-add-actions"/);
-    assert.equal((renderedText(html).match(/data-furniture-photos="f"/g) || []).length, 2);
+    assert.ok(domElements(html, '[class="warehouse-furniture-photo-actions bottle-photo-add-actions"]').length > 0);
+    assert.equal(domElements(html, '[data-furniture-photos="f"]').length, 2);
   }
 );

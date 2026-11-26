@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -83,10 +83,10 @@ test(
     const section = renderedText(html).match(new RegExp('<section[^>]*class="section tasting-summar' + 'y is-empty"[\\s\\S]*?<\\/section>'))?.[0];
     assert.ok(section);
     assert.match(renderedText(section), /data-act="tastings-new"[^>]*><svg class="new-icon"/);
-    assert.doesNotMatch(renderedText(section), /class="panel tasting-summary-card"/);
+    assert.equal(domElements(section, '[class="panel tasting-summary-card"]').length, 0);
     assert.match(renderedText(section), /class="hint tasting-summary-empty">Noch keine Verkostung<\/p>/);
     assert.match(renderedText(section), /<button[^>]*data-act="tastings-open"[\s\S]*?tastings-new"/);
-    assert.equal((renderedText(section).match(/data-act="tastings-new"/g) || []).length, 1);
+    assert.equal(domElements(section, '[data-act="tastings-new"]').length, 1);
     assert.match(renderedText(html), /data-act="add-bottle"><svg class="new-icon"/);
   }
 );
@@ -106,9 +106,9 @@ test(
         '<div class="tasting-summary-score">[\\s\\S' + ']*?<div class="tasting-summary-rating">[^<' + ']*<\\/div>'
       ))?.[0];
     assert.ok(row);
-    assert.equal((renderedText(row).match(/class="glencairn-symbol glencairn-rating-symbol"/g) || []).length, 5);
+    assert.equal(domElements(row, '[class="glencairn-symbol glencairn-rating-symbol"]').length, 5);
     assert.match(renderedText(row), /tasting-summary-glasses[\s\S]*?85 \/ 100/);
-    assert.match(renderedText(html), /data-act="tastings-open" data-tasting-id="note-1"/);
+    assert.ok(domElements(html, '[data-act="tastings-open"][data-tasting-id="note-1"]').length > 0);
   }
 );
 
@@ -120,7 +120,7 @@ test(
       {id: 'newer', tastedOn: '2026-11-22', rating: 80},
     ]);
     const section = renderedText(html).split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    assert.match(renderedText(section), /data-act="tastings-open" data-tasting-id="newer"/);
+    assert.ok(domElements(section, '[data-act="tastings-open"][data-tasting-id="newer"]').length > 0);
     assert.match(renderedText(section), /22\.11\.2026 · 2 Verkostungsnotizen/);
     assert.doesNotMatch(renderedText(section), /Alle Verkostungsnotizen/);
   }
@@ -132,11 +132,11 @@ test(
     const html = detailHtml();
     assert.match(renderedText(html), /data-act="tastings-open"(?=\s|>)/);
     assert.doesNotMatch(renderedText(html), /data-act="tastings-open"[^>]*data-tasting-id=/);
-    assert.match(renderedText(html), /class="section tasting-summary is-empty"/);
+    assert.ok(domElements(html, '[class="section tasting-summary is-empty"]').length > 0);
     assert.match(renderedText(html), /<p class="hint tasting-summary-empty">Noch keine Verkostung<\/p>/);
     assert.match(renderedText(html), /<button[^>]*data-act="tastings-open"[^>]*>Alle Verkostungsnotizen/);
     assert.doesNotMatch(renderedText(html), /class="panel tasting-summary-card"|class="tasting-summary-rating"/);
-    assert.equal((renderedText(html).match(/data-act="tastings-open"/g) || []).length, 1);
+    assert.equal(domElements(html, '[data-act="tastings-open"]').length, 1);
   }
 );
 
@@ -175,7 +175,7 @@ test(
         't-choice"[^>]*><svg class="new-icon"'
       )
     );
-    assert.doesNotMatch(renderedText(html), /class="tasting-add-action"/);
+    assert.equal(domElements(html, '[class="tasting-add-action"]').length, 0);
   }
 );
 
@@ -272,10 +272,10 @@ test(
     const end = renderedText(html).indexOf('class="tasting-top-row"', start);
     assert.ok(start > -1 && end > start);
     const recordPanel = renderedText(html).slice(start, end);
-    assert.match(renderedText(recordPanel), /data-act="tasting-edit-start"/);
-    assert.match(renderedText(recordPanel), /class="actions tasting-readonly-meta-actions"/);
+    assert.ok(domElements(recordPanel, '[data-act="tasting-edit-start"]').length > 0);
+    assert.ok(domElements(recordPanel, '[class="actions tasting-readonly-meta-actions"]').length > 0);
     assert.doesNotMatch(renderedText(html), /<div class="section-head"><h3>Eindrücke<\/h3>\s*<div class="actions">/);
-    assert.equal((renderedText(html).match(/data-act="tasting-edit-start"/g) || []).length, 1);
+    assert.equal(domElements(html, '[data-act="tasting-edit-start"]').length, 1);
   }
 );
 
@@ -317,11 +317,11 @@ test(
       },
     ]);
     const summary = renderedText(html).split('<section data-region="detail-tastings"')[1].split('</section>')[0];
-    assert.match(renderedText(summary), /class="tasting-summary-content"/);
+    assert.ok(domElements(summary, '[class="tasting-summary-content"]').length > 0);
     assert.doesNotMatch(renderedText(summary), /tasting-summary-color|tasting-readonly-color|glencairn-liquid/);
-    assert.match(renderedText(summary), /class="tasting-summary-radar"/);
-    assert.match(renderedText(summary), /class="flavor-editor is-preview"/);
-    assert.equal((renderedText(summary).match(/class="flavor-axis-text"/g) || []).length, 10);
+    assert.ok(domElements(summary, '[class="tasting-summary-radar"]').length > 0);
+    assert.ok(domElements(summary, '[class="flavor-editor is-preview"]').length > 0);
+    assert.equal(domElements(summary, '[class="flavor-axis-text"]').length, 10);
     assert.doesNotMatch(renderedText(summary), /flavor-sliders|data-flavor-range/);
     assert.match(
       renderedText(summary),
@@ -339,7 +339,7 @@ test(
       )
     );
     assert.doesNotMatch(renderedText(summary), /Old note|>Abgang<\/span>/);
-    assert.match(renderedText(summary), /data-act="tastings-open"/);
+    assert.ok(domElements(summary, '[data-act="tastings-open"]').length > 0);
   }
 );
 
@@ -375,7 +375,7 @@ test(
         'class="muted tasting-summary-meta"[^>]*>[^' + '<]*<\\/span>\\s*<div class="actions tastin' + 'g-summary-actions">'
       )
     );
-    assert.match(renderedText(section), /data-act="tastings-open" data-tasting-id="compact"/);
+    assert.ok(domElements(section, '[data-act="tastings-open"][data-tasting-id="compact"]').length > 0);
     assert.match(
       renderedText(section),
       new RegExp(

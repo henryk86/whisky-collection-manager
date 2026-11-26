@@ -1,5 +1,4 @@
 import {displayedTastingRating, latestTasting} from '../../../../shared/tasting-records.js';
-import {escapeHtml} from '../../ui/dom.js';
 import {bottlingOriginLabel} from '../../domain/bottling-origin.js';
 import {hasBottlingDetail} from '../../domain/bottling-details.js';
 import {displayPhotoPath} from '../../../../shared/photo-images.js';
@@ -66,8 +65,8 @@ export function createCollectionEntryModels(entries, selectors) {
     const abv = hasBottlingDetail(bottling.abv) ? `${bottling.abv} % Vol.` : '';
     const bottleAccessibleName = bottle ? t('home.image.bottleAccessibleName', {name: bottling.name, number: bottle.inventoryNumber || t('home.inventory.withoutInventoryNumber')}) : null;
     const bottleInfo = bottle ? [
-      bottle.inventoryNumber ? `#${escapeHtml(bottle.inventoryNumber)}` : t('imports.bottles.noInventoryNumber'),
-      bottle.volumeMl != null ? `${escapeHtml(bottle.volumeMl)} ml` : '',
+      bottle.inventoryNumber ? `#${String(bottle.inventoryNumber ?? '')}` : t('imports.bottles.noInventoryNumber'),
+      bottle.volumeMl != null ? `${String(bottle.volumeMl ?? '')} ml` : '',
     ].filter(Boolean).join(' · ') : '';
     const physicalBottles = bottle ? [bottle] : bottles(bottling.id);
     const origin = bottlingOriginLabel(bottling, distilleryNames);
@@ -75,7 +74,7 @@ export function createCollectionEntryModels(entries, selectors) {
       bottling, bottle, physicalBottles, origin,
       table: createCollectionTableModel({bottling, bottle}, physicalBottles, origin),
       age, abv,
-      facts: [age, abv ? escapeHtml(abv) : ''].filter(Boolean).join(' · '),
+      facts: [age, abv ? String(abv ?? '') : ''].filter(Boolean).join(' · '),
       bottleInfo, bottleAccessibleName,
       photo: displayPhotoPath((bottle?.photos || [])[0]) || coverPhoto(bottling.id),
     };

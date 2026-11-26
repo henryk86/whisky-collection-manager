@@ -5,7 +5,6 @@ import {actionButton} from '../ui/buttons.js';
 import {checkboxInput} from '../ui/fields.js';
 import {helpIconButton, sectionHeader, headingTitle} from '../ui/headers.js';
 import {t} from '../i18n/index.js';
-import {escapeHtml} from '../ui/dom.js';
 
 import {formatDate, imageUrl} from '../ui/format.js';
 import {request} from '../api.js';
@@ -77,7 +76,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
               id: item.id,
               name: item.name,
               formatDate: formatDate(item.date),
-              phase: item.phase ? escapeHtml(t(`flightPlan.phase.${item.phase}`)) + ' · ' : '',
+              phase: item.phase ? t(`flightPlan.phase.${item.phase}`) + ' · ' : '',
               t: t(
                 item.phase === 'planned' ? 'flightPlan.countSelected' :
                   item.tastingIds.length === 1 ? 'tastingFlights.oneEntry' : 'tastingFlights.entriesCount',
@@ -376,8 +375,8 @@ export function createTastingFlightController({state, selectors, shell, navigate
           index: index + 1,
           flightPlanMemberPhoto: photo ? renderTemplate('flightPlanMemberPhoto', {imageUrl: imageUrl(photo), }) : '',
           label: label,
-          unavailable: unavailable ? t('flightPlan.missing') : escapeHtml(t(`flightPlan.reason.${item.reason || 'manual'}`)),
-          bottle: bottle ? ' · ' + escapeHtml(t(bottle.status === 'open' ? 'analytics.inventory.openedStatus' : 'home.status.closed')) : '',
+          unavailable: unavailable ? t('flightPlan.missing') : t(`flightPlan.reason.${item.reason || 'manual'}`),
+          bottle: bottle ? ' · ' + t(bottle.status === 'open' ? 'analytics.inventory.openedStatus' : 'home.status.closed') : '',
           flightPlanLocation: place ?
             renderTemplate('flightPlanLocation', {
               bottleId: item.bottleId,

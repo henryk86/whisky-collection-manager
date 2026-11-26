@@ -61,25 +61,24 @@ function format(file, original) {
        */
       getScriptVersion: () => '0',
       /**
-       * Retrieves script snapshot from the available state.
-       * @return {*} Result computed from the supplied inputs.
+       * Supplies the current JavaScript source to the TypeScript formatter.
+       * @return {import('typescript').IScriptSnapshot} Immutable source snapshot.
        */
       getScriptSnapshot: () => ts.ScriptSnapshot.fromString(source),
       /**
-       * Retrieves compilation settings from the available state.
-       * @return {!Object} Result computed from the supplied inputs.
+       * Configures the formatting language service for JavaScript without semantic checking.
+       * @return {import('typescript').CompilerOptions} Language-service options.
        */
       getCompilationSettings: () => ({allowJs: true, checkJs: false}),
       /**
-       * Retrieves current directory from the available state.
-       * @return {*} Result computed from the supplied inputs.
+       * Provides the process working directory to the formatter host.
+       * @return {string} Current absolute directory.
        */
       getCurrentDirectory: () => process.cwd(),
       /**
-       * Retrieves default lib file name from the available state.
-       *
-       * @param {*} settings Configuration settings to apply.
-       * @return {*} Result computed from the supplied inputs.
+       * Resolves TypeScript's standard library for the formatter options.
+       * @param {import('typescript').CompilerOptions} settings Active compiler options.
+       * @return {string} Resolved standard-library path.
        */
       getDefaultLibFileName: settings => ts.getDefaultLibFilePath(settings),
       fileExists: ts.sys.fileExists,

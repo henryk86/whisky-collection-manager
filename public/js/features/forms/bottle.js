@@ -1,7 +1,6 @@
 import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
-import {escapeHtml} from '../../ui/dom.js';
 import {inventoryScanIcon} from '../../ui/action-icons.js';
 import {textInput, selectInput, areaInput} from '../../ui/fields.js';
 import {bottleStatusLabels, whiskyTypeName, photoAccept}

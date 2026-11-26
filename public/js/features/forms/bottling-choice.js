@@ -1,7 +1,6 @@
 import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
-import {escapeHtml} from '../../ui/dom.js';
 import {loadTemplates} from '../../ui/templates.js';
 
 const renderTemplate = await loadTemplates('forms/bottling-choice.html');
@@ -48,7 +47,7 @@ export function bottlingChoiceOptions(collection, search = '') {
     return renderTemplate('bottlingChoiceOptionsOption', {
       id: bottling.id,
       name: bottling.name,
-      details: details ? ` · ${escapeHtml(details)}` : '',
+      details: details ? ` · ${String(details ?? '')}` : '',
     });
   })));
 }

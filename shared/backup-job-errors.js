@@ -1,11 +1,8 @@
 /**
- * Stable worker-to-UI diagnostics. Never serialize the original exception
- * text, command output, local paths, credentials or a stack trace into job
- * status.
- *
- * @param {string} code Stable identifier used for error handling.
- * @param {!Object=} params Named values used when formatting the message.
- * @return {!Error} Result computed from the supplied inputs.
+ * Creates an error carrying a stable backup job code and interpolation values.
+ * @param {string} code Backup job error code.
+ * @param {Object=} params Error message interpolation parameters.
+ * @return {Error & {backupJobCode: string, backupJobParams: Object}} Error carrying structured backup details.
  */
 export function backupJobError(code, params = {}) {
   const error = new Error(code);

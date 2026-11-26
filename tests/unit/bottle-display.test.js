@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {bottleMeta} from '../../public/js/domain/bottle-display.js';
@@ -40,12 +40,9 @@ test(
     assert.match(renderedText(context), /Example Bottler/);
     assert.match(renderedText(context), /schreibgesch\u00fctzt/);
     assert.doesNotMatch(renderedText(context), /<input|<select|<textarea/);
-    assert.equal((renderedText(html).match(/name="inventoryNumber"/g) || []).length, 1);
+    assert.equal(domElements(html, '[name="inventoryNumber"]').length, 1);
     assert.match(renderedText(html), /Leerdatum<input\s+name="emptiedAt" type="date"/);
-    assert.match(
-      renderedText(bottle({...state.collection.bottlings[0].bottles[0], emptiedAt: '2026-11-20'}, 'bottling-a')),
-      /name="emptiedAt" type="date"[^>]*value="2026-11-20"/
-    );
+    assert.ok(domElements(bottle({...state.collection.bottlings[0].bottles[0], emptiedAt: '2026-11-20'}, 'bottling-a'), '[name="emptiedAt"][type="date"][value="2026-11-20"]').length > 0);
     assert.doesNotMatch(renderedText(html), /labelCode|labelType|Etikettentyp|Etikettencode/);
   }
 );
@@ -60,7 +57,7 @@ test('forms escape user data instead of treating it as HTML', () => {
 test('new bottling form has no extra label identifier or label type', () => {
   const {bottling} = forms();
   const html = bottling();
-  assert.equal((renderedText(html).match(/name="firstInventoryNumber"/g) || []).length, 1);
+  assert.equal(domElements(html, '[name="firstInventoryNumber"]').length, 1);
   assert.doesNotMatch(renderedText(html), /labelCode|labelType|firstLabelCode|Etikettencode/);
 });
 
@@ -72,13 +69,13 @@ test('sample type and size are editable only on physical bottles', () => {
   };
   const bottleHtml = bottle(sample, 'bottling-a');
   const bottlingHtml = bottling(state.collection.bottlings[0]);
-  assert.match(renderedText(bottleHtml), /name="volumeType"/);
-  assert.match(renderedText(bottleHtml), /name="volumeMl"/);
-  assert.match(renderedText(bottleHtml), /<option value="sample" selected/);
-  assert.doesNotMatch(renderedText(bottlingHtml), /name="volumeType"/);
+  assert.ok(domElements(bottleHtml, '[name="volumeType"]').length > 0);
+  assert.ok(domElements(bottleHtml, '[name="volumeMl"]').length > 0);
+  assert.ok(domElements(bottleHtml, 'option[value="sample"][selected]').length > 0);
+  assert.equal(domElements(bottlingHtml, '[name="volumeType"]').length, 0);
   assert.match(renderedText(bottlingHtml), /Nennfüllmenge der Abfüllung/);
-  assert.match(renderedText(bottlingHtml), /name="volumeMl"/);
+  assert.ok(domElements(bottlingHtml, '[name="volumeMl"]').length > 0);
   const first = bottling();
-  assert.match(renderedText(first), /name="firstVolumeType"/);
-  assert.match(renderedText(first), /name="firstVolumeMl"/);
+  assert.ok(domElements(first, '[name="firstVolumeType"]').length > 0);
+  assert.ok(domElements(first, '[name="firstVolumeMl"]').length > 0);
 });

@@ -1,4 +1,4 @@
-import {fixtureMarkup, renderedText} from '../helpers/rendering.js';
+import {fixtureMarkup, renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {sectionWorkspace} from '../../public/js/ui/section-navigation.js';
@@ -17,10 +17,10 @@ test(
       label: 'Hilfethemen', switchKind: 'help',
     };
     const markup = sectionWorkspace(config, fixtureMarkup('<article>Testinhalt</article>'));
-    assert.match(renderedText(markup), /data-help-topic="other" aria-current="page"/);
+    assert.ok(domElements(markup, '[data-help-topic="other"][aria-current="page"]').length > 0);
     assert.doesNotMatch(renderedText(markup), /data-help-topic="intro" aria-current/);
-    assert.match(renderedText(markup), /data-section-switch="help"/);
-    assert.match(renderedText(markup), /<option value="other" selected>/);
+    assert.ok(domElements(markup, '[data-section-switch="help"]').length > 0);
+    assert.ok(domElements(markup, 'option[value="other"][selected]').length > 0);
     assert.match(renderedText(markup), /<article>Testinhalt<\/article>/);
 
   }
@@ -35,8 +35,8 @@ test('shared section navigation escapes all external values', () => {
     label: '<nav>',
     switchKind: 'analytics',
   }, 'CONTENT');
-  assert.doesNotMatch(renderedText(html), /<script>/);
-  assert.doesNotMatch(renderedText(html), /<id>/);
+  assert.equal(domElements(html, 'script').length, 0);
+  assert.equal(domElements(html, 'id').length, 0);
   assert.match(renderedText(html), /&lt;script&gt;/);
   assert.match(renderedText(html), /CONTENT/);
 });
@@ -60,14 +60,14 @@ test(
     })();
     const help = helpView();
     for (const html of [analysis, help]) {
-      assert.match(renderedText(html), /class="section-workspace"/);
-      assert.match(renderedText(html), /class="section-nav-desktop"/);
-      assert.match(renderedText(html), /class="section-nav-mobile"/);
+      assert.ok(domElements(html, '[class="section-workspace"]').length > 0);
+      assert.ok(domElements(html, '[class="section-nav-desktop"]').length > 0);
+      assert.ok(domElements(html, '[class="section-nav-mobile"]').length > 0);
     }
     assert.match(renderedText(analysis), /Das Wichtigste auf einen Blick\./);
-    assert.match(renderedText(help), /class="help-steps"/);
-    assert.match(renderedText(analysis), /data-section-switch="analytics"/);
-    assert.match(renderedText(help), /data-section-switch="help"/);
+    assert.ok(domElements(help, '[class="help-steps"]').length > 0);
+    assert.ok(domElements(analysis, '[data-section-switch="analytics"]').length > 0);
+    assert.ok(domElements(help, '[data-section-switch="help"]').length > 0);
     assert.match(renderedText(help), /data\/warehouse\.json/);
   }
 );

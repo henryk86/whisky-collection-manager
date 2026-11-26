@@ -29,10 +29,9 @@ export const SHARED_BROWSER_FILES = new Set([
   'photo-adjustments.js',
 ]);
 /**
- * Parses path from its input.
- *
- * @param {*} encoded Value used by this operation.
- * @return {string} Decoded URI path; invalid percent escapes cause a validation error.
+ * Decodes a URL path and converts malformed percent encoding into a bad-request error.
+ * @param {string} encoded Encoded request path.
+ * @return {string} Decoded path.
  */
 function decodePath(encoded) {
   try {return decodeURIComponent(encoded);}

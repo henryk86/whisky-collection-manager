@@ -67,10 +67,9 @@ function isValidContent(extension, bytes) {
 }
 
 /**
- * Derives the file location result from the supplied values.
- *
- * @param {*} relativePath Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Validates a relative document path and confines it to document storage.
+ * @param {string} relativePath Relative document path from a record.
+ * @return {string} Validated absolute document path.
  */
 function fileLocation(relativePath) {
   assert(isDocumentPath(relativePath), 'Ungueltiger Dokumentpfad', 400, "api.errors.invalidDocumentPath");
@@ -146,10 +145,9 @@ export function saveDocument(bottleId, {filename, data}) {
 }
 
 /**
- * Parses document for documents.
- *
- * @param {*} relativePath Relative path used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Reads a stored attachment after verifying its path and existence.
+ * @param {string} relativePath Relative document path from a record.
+ * @return {Buffer} Document bytes.
  */
 export function readDocument(relativePath) {
   const file = fileLocation(relativePath);

@@ -70,3 +70,19 @@ test('browser: native rendering validates typed attributes and preserves literal
     });
   });
 });
+
+
+test('browser: scalar bindings preserve literal entities without reparsing text', async () => {
+  await session(async ({page, open, base}) => {
+    await open();
+    const value = '&lt;img&gt; &amp; &#39; &quot; <script>alert(1)</script> "';
+    const actual = await page.evaluate(async ({base, value}) => {
+      const {RenderPlan} = await import(`${base}/js/ui/render-plan.js`);
+      const {materialize} = await import(`${base}/js/ui/dom-renderer.js`);
+      const plan = new RenderPlan('<section title="A &amp; {{attr:value}} &#x26; B" {{attrs:attributes}}><p>{{content:value}}</p><span>{{text:value}}</span><textarea>{{text:value}}</textarea></section>', {value, attributes: {'aria-label': value}});
+      const section = materialize(plan, document).firstElementChild;
+      return {title: section.title, label: section.getAttribute('aria-label'), content: section.querySelector('p').textContent, text: section.querySelector('span').textContent, textarea: section.querySelector('textarea').value, injected: section.querySelectorAll('script,img').length};
+    }, {base, value});
+    assert.deepEqual(actual, {title: `A & ${value} & B`, label: value, content: value, text: value, textarea: value, injected: 0});
+  });
+});

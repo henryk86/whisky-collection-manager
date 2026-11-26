@@ -18,17 +18,16 @@ import {
 } from '../domain/warehouse-fields.js';
 
 /**
- * Derives the new id result from the supplied values.
- * @return {*} Result computed from the supplied inputs.
+ * Generates an identifier for a new storage record.
+ * @return {string} Random UUID.
  */
 const newId = () => crypto.randomUUID();
 
 /**
- * Validates the room by id state and rejects invalid inputs.
- *
- * @param {*} data Input data to process.
- * @param {*} id Identifier of the affected record.
- * @return {*} Result computed from the supplied inputs.
+ * Finds a room in the storage document or raises a not-found error.
+ * @param {Object} data Warehouse document containing rooms.
+ * @param {string} id Room ID.
+ * @return {Object} Matching room reference.
  */
 function roomById(data, id) {
   const room = data.rooms.find(entry => entry.id === id);
@@ -37,11 +36,10 @@ function roomById(data, id) {
 }
 
 /**
- * Validates the furnishing by id state and rejects invalid inputs.
- *
- * @param {*} data Input data to process.
- * @param {*} id Identifier of the affected record.
- * @return {!Object} Structured result assembled from the input data.
+ * Locates furniture together with its containing room, or raises a not-found error.
+ * @param {Object} data Warehouse document containing rooms and furniture.
+ * @param {string} id Furniture ID.
+ * @return {{room: Object, furniture: Object}} Matching room and furniture references.
  */
 function furnishingById(data, id) {
   for (const room of data.rooms) {
@@ -52,11 +50,10 @@ function furnishingById(data, id) {
 }
 
 /**
- * Validates the shelf by id state and rejects invalid inputs.
- *
- * @param {*} data Input data to process.
- * @param {*} id Identifier of the affected record.
- * @return {!Object} Structured result assembled from the input data.
+ * Locates a compartment and its owning furniture and room, or raises a not-found error.
+ * @param {Object} data Warehouse document.
+ * @param {string} id Compartment ID.
+ * @return {{room: Object, furniture: Object, shelf: Object}} Matching hierarchy references.
  */
 function shelfById(data, id) {
   for (const room of data.rooms) for (const furniture of room.furniture) {
@@ -67,10 +64,9 @@ function shelfById(data, id) {
 }
 
 /**
- * Transforms the entries used by refuse occupied.
- *
- * @param {*} data Input data to process.
- * @param {*} shelfIds Value used by this operation.
+ * Removes stale bottle assignments, then rejects deletion of any still occupied compartment.
+ * @param {Object} data Mutable warehouse document.
+ * @param {string[]} shelfIds Compartment IDs scheduled for deletion.
  */
 function refuseOccupied(data, shelfIds) {
   // Deleting a physical bottle only changes collection.json. Old warehouse
@@ -85,8 +81,8 @@ function refuseOccupied(data, shelfIds) {
 }
 
 /**
- * Derives the physical bottles result from the supplied values.
- * @return {*} Value returned by the delegated operation.
+ * Projects physical bottle records from the current persisted collection into the storage model.
+ * @return {Object[]} Projected physical bottle records.
  */
 function physicalBottles() {return projectedWarehouseBottles(read());}
 
@@ -486,11 +482,10 @@ function copiedName(source, siblings) {
 }
 
 /**
- * Enforces the no furniture collision precondition.
- *
- * @param {*} room Warehouse room being inspected or modified.
- * @param {*} item Current item under consideration.
- * @param {*=} others Value used by this operation.
+ * Rejects intersecting furniture footprints that also overlap in height.
+ * @param {Object} room Room being edited.
+ * @param {Object} item Candidate furniture geometry.
+ * @param {Object[]=} others Other furniture to test; defaults to the room's furniture.
  */
 function ensureNoFurnitureCollision(room, item, others = room.furniture) {
   const conflict = furnitureCollision(room, item, others);

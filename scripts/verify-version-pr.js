@@ -6,10 +6,9 @@
 import {execFileSync} from 'node:child_process';
 import {releaseRefs, RELEASE_METADATA} from './sync-release-branches.js';
 /**
- * Normalizes the git text for subsequent processing.
- *
- * @param {!Array<*>} args Arguments forwarded to the operation.
- * @return {*} Result computed from the supplied inputs.
+ * Runs Git to inspect the proposed version change.
+ * @param {...string} args Git arguments.
+ * @return {string} Trimmed standard output.
  */
 const git = (...args) => execFileSync('git', args, {encoding: 'utf8'}).trim();
 

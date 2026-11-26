@@ -22,11 +22,10 @@ import {fail} from '../domain/errors.js';
 const isCorrectionImage = data => typeof data === 'string' && /^data:image\/(?:webp|png);base64,/.test(data);
 
 /**
- * Enforces the bottle precondition.
- *
- * @param {*} collection Collection data to process.
- * @param {*} id Identifier of the affected record.
- * @return {*} Result computed from the supplied inputs.
+ * Resolves an existing physical bottle and its parent bottling or raises a not-found error.
+ * @param {import('../../shared/types.js').Collection} collection Collection to search.
+ * @param {string} id Physical bottle ID.
+ * @return {Object} Matching bottle and parent reference.
  */
 function requireBottle(collection, id) {
   const result = findBottle(collection, id);

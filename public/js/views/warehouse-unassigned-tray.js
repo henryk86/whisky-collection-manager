@@ -5,10 +5,7 @@ import {composeMarkup} from '../ui/render-plan.js';
  */
 import {unassignedWallPage} from '../domain/warehouse-unassigned-tray.js';
 import {t} from '../i18n/index.js';
-import {
-  bottleLabel, bottleListFacts, bottleSymbol,
-  safe
-} from './warehouse-presentation.js';
+import {bottleLabel, bottleListFacts, bottleSymbol} from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('warehouse/warehouse-unassigned-tray.html');
@@ -31,10 +28,10 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
     const facts = bottleListFacts(bottle);
     return renderTemplate('warehouseUnassignedBottle', {
       checked: checked ? ' is-selected' : '',
-      unassignedId: safe(bottle.id),
+      unassignedId: String(bottle.id ?? ''),
       bottleSymbol: bottleSymbol(bottle, {selectable: true, selected: checked}),
-      title: safe(bottleLabel(bottle)),
-      bottleName: safe(bottleLabel(bottle)),
+      title: bottleLabel(bottle),
+      bottleName: bottleLabel(bottle),
       warehouseUnassignedFacts: facts ? renderTemplate('warehouseUnassignedFacts', {facts: facts, }) : '',
     });
   }));
@@ -42,9 +39,9 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
   return renderTemplate('warehouseUnassignedResults', {
     cards: cards || renderTemplate('hint', {t: t(empty), }),
     unassignedShown: t('warehouse.wall.unassignedShown', {shown: data.filtered, total: data.total}),
-    value: safe(query),
-    placeholder: safe(t('warehouse.wall.unassignedSearchPlaceholder')),
-    ariaLabel: safe(t('warehouse.wall.unassignedSearch')),
+    value: String(query ?? ''),
+    placeholder: t('warehouse.wall.unassignedSearchPlaceholder'),
+    ariaLabel: t('warehouse.wall.unassignedSearch'),
     disabledAttributes: data.page === 1 ? {"disabled": true} : {},
     pageOf: t('home.pagination.pageOf', {page: data.page, total: data.pages}),
     nextDisabled: data.page === data.pages ? {"disabled": true} : {},
@@ -62,7 +59,7 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
 export function renderUnassignedTray(warehouse, selectedIds = [],
   options = {}) {
   const total = unassignedWallPage(warehouse).total;
-  const label = safe(t('warehouse.wall.unassignedTitle', {count: total}));
+  const label = t('warehouse.wall.unassignedTitle', {count: total});
   const content = renderTemplate('warehouseUnassignedContent', {
     unassignedTrayPage: renderUnassignedTrayPage(warehouse, selectedIds, options),
   });

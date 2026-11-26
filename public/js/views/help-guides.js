@@ -1,6 +1,5 @@
 import {composeMarkup} from '../ui/render-plan.js';
 import {t} from '../i18n/index.js';
-import {escapeHtml} from '../ui/dom.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('help/help-guides.html');

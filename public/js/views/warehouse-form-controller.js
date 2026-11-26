@@ -4,7 +4,7 @@ import {t} from '../i18n/index.js';
 import {toast} from '../ui/notifications.js';
 import {addActionLabel, arrowLeftIcon, arrowRightIcon} from '../ui/action-icons.js';
 import {renderWarehouseAssignment, mountWarehouseAssignment} from '../ui/warehouse-assignment.js';
-import {FRONT_KEYS, typeChoices, typeName, safe, count, field, choices, footer, findFurniture} from './warehouse-presentation.js';
+import {FRONT_KEYS, typeChoices, typeName, count, field, choices, footer, findFurniture} from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('warehouse/warehouse.html');
@@ -154,7 +154,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
        */
       const optionalNumber = (key, label, constraints) =>
         renderTemplate('formField', {
-          label: safe(label),
+          label: String(label ?? ''),
           key: key,
           constraints: constraints,
         });
@@ -163,7 +163,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
           bulkDescription: t(
             "warehouse.selection.bulkDescription",
             {
-              names: ids.map(id => room.furniture.find(f => f.id === id)?.name).map(safe).join(', '),
+              names: ids.map(id => room.furniture.find(f => f.id === id)?.name).map(name => String(name ?? '')).join(', '),
             }
           ),
         }),
@@ -226,11 +226,11 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
         const index = order.findIndex(shelf => shelf.id === id);
         shelfNavigation =
           renderTemplate('warehouseShelfEditorNavigation', {
-            target: safe(order[index - 1]?.id || ''),
+            target: String((order[index - 1]?.id || '') ?? ''),
             disabledAttributes: index === 0 ? {"disabled": true} : {},
             arrowLeftIcon: arrowLeftIcon,
             position: t('warehouse.shelves.position', {current: index + 1, total: order.length}),
-            nextShelfId: safe(order[index + 1]?.id || ''),
+            nextShelfId: String((order[index + 1]?.id || '') ?? ''),
             nextDisabled: index === order.length - 1 ? {"disabled": true} : {},
             arrowRightIcon: arrowRightIcon,
           });
@@ -246,7 +246,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
             index: (findFurniture(data, furnitureId)?.furniture.shelves.length || 0) + 1,
           }
         )
-      ), renderTemplate('formField3', {value: safe(item?.capacity ?? ''), }), choices(
+      ), renderTemplate('formField3', {value: String((item?.capacity ?? '') ?? ''), }), choices(
         'front',
         t("warehouse.shelves.frontType"),
         [
@@ -272,12 +272,12 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
           ['true', t('warehouse.walls.withFrame')],
         ],
         String(item?.glassFrame ?? '')
-      ), renderTemplate('formField4', {value: safe(item?.heightCm ?? ''), }), renderTemplate('hint8'));
+      ), renderTemplate('formField4', {value: String((item?.heightCm ?? '') ?? ''), }), renderTemplate('hint8'));
     } else if (kind === 'furniture-copy') {
       const found = findFurniture(data, id);
       if (!found) return toast(t("warehouse.furniture.notFound"), true);
       title = t('warehouse.furniture.copyTitle', {type: typeName(found.furniture.type)});
-      endpoint = `/api/warehouse/furniture/${safe(id)}/copy`;
+      endpoint = `/api/warehouse/furniture/${String(id ?? '')}/copy`;
       fields = composeMarkup(field(
         'name',
         t("warehouse.furniture.copyName"),
@@ -291,7 +291,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
         }
       if (!found) return toast(t("warehouse.shelves.notFound"), true);
       title = t('warehouse.shelves.copyTitle');
-      endpoint = `/api/warehouse/shelves/${safe(id)}/copy`;
+      endpoint = `/api/warehouse/shelves/${String(id ?? '')}/copy`;
       fields = composeMarkup(field(
         'name',
         t("warehouse.furniture.copyName"),
@@ -317,7 +317,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
     modal.showModal(
       title,
       renderTemplate('warehouseForm', {
-        endpoint: safe(endpoint),
+        endpoint: String(endpoint ?? ''),
         method: method,
         kind: kind === 'furniture' && !id ? 'true' : 'false',
         bulk: kind === 'furniture-bulk',

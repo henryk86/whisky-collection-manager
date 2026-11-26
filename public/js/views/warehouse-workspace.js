@@ -7,7 +7,7 @@ import {addActionLabel} from '../ui/action-icons.js';
 import {renderWarehouseRoomWall} from './warehouse-room-wall.js';
 import {renderWarehouseFinder} from './warehouse-finder.js';
 import {renderWarehouseSelectionPanel} from './warehouse-selection-panel.js';
-import {CAMERA_KEYS, ROOM_SECTION_KEYS, typeName, num, capacityLabel, safe, bottleLabel, roomDiagram} from './warehouse-presentation.js';
+import {CAMERA_KEYS, ROOM_SECTION_KEYS, typeName, num, capacityLabel, bottleLabel, roomDiagram} from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 const renderTemplate = await loadTemplates('warehouse/warehouse.html');
 
@@ -35,9 +35,9 @@ export function renderWarehouseWorkspace(model) {
         headingTitle: headingTitle({title: t('warehouse.rooms.yourRooms'), }),
         rooms: composeMarkup(roomModel.rooms.map(({room, capacity: cap}) => {
           return renderTemplate('warehouseSelectRoom', {
-            id: safe(room.id),
-            previewRoomId: safe(room.id),
-            name: safe(room.name),
+            id: String(room.id ?? ''),
+            previewRoomId: String(room.id ?? ''),
+            name: String(room.name ?? ''),
             furnitureAndDimensions: t(
               "warehouse.rooms.furnitureAndDimensions",
               {
@@ -59,16 +59,16 @@ export function renderWarehouseWorkspace(model) {
       ? renderTemplate('warehouseRoomNew', {
         addActionLabel: addActionLabel(t("warehouse.rooms.addWithPlus")),
         warehouseRoomEdit: room ? renderTemplate('warehouseRoomEdit', {
-          id: safe(room.id),
-          deleteRoomId: safe(room.id),
+          id: String(room.id ?? ''),
+          deleteRoomId: String(room.id ?? ''),
         }) : '',
       })
       : '';
     content = renderTemplate('warehouseRoomToolbar', {
       rooms: composeMarkup(data.rooms.map(r => renderTemplate('renderOption', {
-        value: safe(r.id),
+        value: String(r.id ?? ''),
         selectedAttributes: r.id === room?.id ? {"selected": true} : {},
-        name: safe(r.name),
+        name: String(r.name ?? ''),
       }))),
       roomManagementActions: roomManagementActions,
     });
@@ -76,7 +76,7 @@ export function renderWarehouseWorkspace(model) {
       const cap = roomModel.rooms.find(item => item.room.id === room.id).capacity;
       const roomSummary =
         renderTemplate('warehouseRoomSummary', {
-          name: safe(room.name),
+          name: String(room.name ?? ''),
           gridDimensions: t("warehouse.rooms.gridDimensions", {width: num(room.width), height: num(room.height)}),
           capacityLabel: capacityLabel(cap),
           occupied: cap.occupied,
@@ -144,21 +144,21 @@ export function renderWarehouseWorkspace(model) {
               furniture: furniture ? ' warehouse-plan-focus' : '',
               warehousePlanFocusInfo: furniture
                 ? renderTemplate('warehousePlanFocusInfo', {
-                  name: safe(furniture.name),
-                  furnitureType: safe(typeName(furniture.type)),
+                  name: String(furniture.name ?? ''),
+                  furnitureType: String(typeName(furniture.type) ?? ''),
                   num: num(furniture.x),
                   positionY: num(furniture.y),
                   bottomElevation: num(furniture.elevation ?? 0),
                 })
                 : '',
-              warehouseFurnitureManage: furniture ? renderTemplate('warehouseFurnitureManage', {id: safe(furniture.id), }) : '',
+              warehouseFurnitureManage: furniture ? renderTemplate('warehouseFurnitureManage', {id: String(furniture.id ?? ''), }) : '',
             }
           )
         );
       } else {
         const createButton =
           renderTemplate('warehouseFurnitureNew2', {
-            id: safe(room.id),
+            id: String(room.id ?? ''),
             addActionLabel: addActionLabel(t('warehouse.furniture.place')),
           });
         const manageButton = renderTemplate('warehouseFurnitureBulk');
@@ -168,11 +168,11 @@ export function renderWarehouseWorkspace(model) {
             t: t(returnLabelKey),
             warehouseFindReturnLabel: inRoom ?
               renderTemplate('warehouseFindReturnLabel', {
-                highlighted: safe(t('warehouse.find.highlighted', {name: bottleLabel(focusBottle), location: focusPlace.label})),
+                highlighted: t('warehouse.find.highlighted', {name: bottleLabel(focusBottle), location: focusPlace.label}),
               }) :
               '',
-            title: safe(t('warehouse.find.clearHighlight')),
-            ariaLabel: safe(t('warehouse.find.clearHighlight')),
+            title: t('warehouse.find.clearHighlight'),
+            ariaLabel: t('warehouse.find.clearHighlight'),
           }) : '';
         // The physical wall intentionally omits furniture without shelves.
         // Provide
@@ -183,8 +183,8 @@ export function renderWarehouseWorkspace(model) {
               renderTemplate(
                 'warehouseUnconfiguredItem',
                 {
-                  name: safe(item.name),
-                  id: safe(item.id),
+                  name: String(item.name ?? ''),
+                  id: String(item.id ?? ''),
                   addActionLabel: addActionLabel(t('warehouse.shelves.addWithPlus')),
                 }
               ))),

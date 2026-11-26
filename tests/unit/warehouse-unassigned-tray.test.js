@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {unassignedWallPage, UNASSIGNED_WALL_PAGE_SIZE}
@@ -37,7 +37,7 @@ test(
     assert.ok(last.items.every(item => item.id !== 'b0' && item.id !== 'b10'));
     const pageHtml = renderUnassignedTrayPage(warehouse);
     assert.equal((renderedText(pageHtml).match(/data-unassigned-id=/g) || []).length, renderedText(UNASSIGNED_WALL_PAGE_SIZE));
-    assert.doesNotMatch(renderedText(pageHtml), /data-unassigned-id="b0"/);
+    assert.equal(domElements(pageHtml, '[data-unassigned-id="b0"]').length, 0);
     assert.doesNotMatch(renderedText(pageHtml), /data-shelf-id=/, 'staging must not pretend to be a real target shelf');
   }
 );
@@ -68,11 +68,11 @@ test(
     };
     const html = renderUnassignedTray(warehouse, ['unsafe']);
     assert.match(renderedText(html), /warehouse-unassigned-bottle warehouse-wall-bottle is-selected/);
-    assert.match(renderedText(html), /data-act="warehouse-bottle-select" data-id="unsafe" aria-pressed="true"/);
+    assert.ok(domElements(html, '[data-act="warehouse-bottle-select"][data-id="unsafe"][aria-pressed="true"]').length > 0);
     assert.match(renderedText(html), /&lt;script&gt;/);
-    assert.doesNotMatch(renderedText(html), /<script>/);
-    assert.doesNotMatch(renderedText(html), /data-id="placed"/);
-    assert.match(renderedText(html), /data-act="warehouse-unassigned-next" disabled/);
+    assert.equal(domElements(html, 'script').length, 0);
+    assert.equal(domElements(html, '[data-id="placed"]').length, 0);
+    assert.ok(domElements(html, '[data-act="warehouse-unassigned-next"][disabled]').length > 0);
   }
 );
 
@@ -91,8 +91,8 @@ test(
       (renderedText(html).match(new RegExp('class="warehouse-unassigned-tray warehouse' + '-unassigned-tray--embedded"', 'g')) || []).length,
       1
     );
-    assert.equal((renderedText(html).match(/class="warehouse-bottle-bulk-tools"/g) || []).length, 1);
-    assert.equal((renderedText(html).match(/class="warehouse-wall-controls"/g) || []).length, 1);
+    assert.equal(domElements(html, '[class="warehouse-bottle-bulk-tools"]').length, 1);
+    assert.equal(domElements(html, '[class="warehouse-wall-controls"]').length, 1);
     assert.match(
       renderedText(html),
       new RegExp(
@@ -100,15 +100,15 @@ test(
         'tent"[^>]*aria-expanded="false"'
       )
     );
-    assert.match(renderedText(html), /id="warehouse-wall-unassigned-content"[^>]*hidden/);
+    assert.ok(domElements(html, '[id="warehouse-wall-unassigned-content"][hidden]').length > 0);
     assert.equal((renderedText(html).match(/warehouse-unassigned-summary/g) || []).length, 0, 'no redundant collapsed header');
-    assert.match(renderedText(html), /data-unassigned-id="b26"/);
-    assert.doesNotMatch(renderedText(html), /data-unassigned-id="b0"/);
+    assert.ok(domElements(html, '[data-unassigned-id="b26"]').length > 0);
+    assert.equal(domElements(html, '[data-unassigned-id="b0"]').length, 0);
     assert.equal((renderedText(html).match(/data-shelf-id=/g) || []).length, 1);
-    assert.match(renderedText(html), /data-shelf-id="s0"/);
-    assert.equal((renderedText(html).match(/class="warehouse-wall-scroll"/g) || []).length, 1);
+    assert.ok(domElements(html, '[data-shelf-id="s0"]').length > 0);
+    assert.equal(domElements(html, '[class="warehouse-wall-scroll"]').length, 1);
     const emptyRoom = renderWarehouseRoomWall({id: 'r2', name: 'Empty room', furniture: []}, warehouse);
-    assert.match(renderedText(emptyRoom), /class="warehouse-unassigned-tray warehouse-unassigned-tray--embedded"/);
+    assert.ok(domElements(emptyRoom, '[class="warehouse-unassigned-tray warehouse-unassigned-tray--embedded"]').length > 0);
     assert.match(renderedText(emptyRoom), /noch keine Möbel mit Fächern/);
   }
 );
@@ -122,14 +122,14 @@ test(
     };
     const room = {id: 'room', name: 'Room', furniture: []};
     const html = renderWarehouseRoomWall(room, warehouse, ['b1'], {expanded: true});
-    assert.match(renderedText(html), /class="warehouse-wall-controls"/);
+    assert.ok(domElements(html, '[class="warehouse-wall-controls"]').length > 0);
     assert.match(renderedText(html), /1 Flaschen ausgewählt/);
     assert.match(renderedText(html), /Nicht zugeordnet \(2\)/);
-    assert.match(renderedText(html), /class="warehouse-unassigned-toggle"[^>]*aria-expanded="true"/);
-    assert.doesNotMatch(renderedText(html), /id="warehouse-wall-unassigned-content"[^>]*hidden/);
+    assert.ok(domElements(html, '[class="warehouse-unassigned-toggle"][aria-expanded="true"]').length > 0);
+    assert.equal(domElements(html, '[id="warehouse-wall-unassigned-content"][hidden]').length, 0);
     assert.equal((renderedText(html).match(/warehouse-bottle-bulk-tools/g) || []).length, 1);
-    assert.equal((renderedText(html).match(/data-act="warehouse-bottles-assign-selected"/g) || []).length, 1);
-    assert.match(renderedText(html), /data-unassigned-id="b1"/);
+    assert.equal(domElements(html, '[data-act="warehouse-bottles-assign-selected"]').length, 1);
+    assert.ok(domElements(html, '[data-unassigned-id="b1"]').length > 0);
   }
 );
 
@@ -146,7 +146,7 @@ test(
     const search = renderedText(html).indexOf('id="warehouse-unassigned-wall-search"');
     const controls = renderedText(html).indexOf('class="warehouse-unassigned-page-controls"');
     assert.ok(count !== -1 && count < search && search < controls);
-    assert.match(renderedText(html), /value="Whisky 00"/);
+    assert.ok(domElements(html, '[value="Whisky 00"]').length > 0);
     assert.doesNotMatch(renderedText(html), /warehouse-unassigned-search-footer/);
   }
 );

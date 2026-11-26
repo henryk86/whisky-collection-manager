@@ -3,7 +3,7 @@ import {replaceContent} from '../ui/dom-renderer.js';
 import {actionButton} from '../ui/buttons.js';
 import {t} from '../i18n/index.js';
 import {locationFor} from '../domain/distillery-map.js';
-import {escapeHtml, query} from '../ui/dom.js';
+import {query} from '../ui/dom.js';
 import {request} from '../api.js';
 import {toast} from '../ui/notifications.js';
 import {loadTemplates} from '../ui/templates.js';

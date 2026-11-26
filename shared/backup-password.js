@@ -12,19 +12,18 @@ export const BACKUP_PASSWORD_FAILURE = Object.freeze({
   controlMissing: 'BACKUP_CONTROL_NOT_CONFIGURED',
 });
 /**
- * Derives the password error result from the supplied values.
- *
- * @param {*} code Code used to identify a specific outcome.
- * @param {*} message Message to display or use for diagnostics.
- * @return {*} Result computed from the supplied inputs.
+ * Creates an error with a machine-readable backup-password failure code.
+ * @param {string} code Password failure code.
+ * @param {string} message Diagnostic message.
+ * @return {Error & {backupPasswordCode: string}} Tagged error.
  */
 function passwordError(code, message) {
   return Object.assign(new Error(message), {backupPasswordCode: code});
 }
 
 /**
- * Validates the password path state and rejects invalid inputs.
- * @return {*} Combined text from the input values.
+ * Resolves the central ZIP password file from configured backup storage.
+ * @return {string} Absolute password-file path; throws when backup control is not configured.
  */
 function passwordPath() {
   const control = process.env.BACKUP_CONTROL_DIR;
@@ -33,9 +32,8 @@ function passwordPath() {
 }
 
 /**
- * Parses backup password for backup password.
- *
- * @return {*} Result computed from the supplied inputs.
+ * Reads the central ZIP password and rejects a stored password shorter than fourteen characters.
+ * @return {string} Password with the trailing line terminator removed.
  */
 export function readBackupPassword() {
   try {

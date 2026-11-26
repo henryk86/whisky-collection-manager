@@ -63,11 +63,10 @@ if (ips.length === 1) {
 const sans = [...new Set([...names.map(x => 'DNS:' + x), ...ips.map(x => 'IP:' + x)])];
 fs.mkdirSync(certDir, {recursive: true, });
 /**
- * Derives the command result from the supplied values.
- *
- * @param {*} binary Binary data supplied to the operation.
- * @param {*} argv Value used by this operation.
- * @return {*} Value returned by the delegated operation.
+ * Runs a certificate-setup command with inherited terminal streams.
+ * @param {string} binary Executable name.
+ * @param {string[]} argv Command arguments.
+ * @return {import('node:child_process').SpawnSyncReturns<Buffer>} Child process completion status and errors.
  */
 function command(binary, argv) {
   return spawnSync(binary, argv, {stdio: 'inherit', });
@@ -115,10 +114,9 @@ try {
 catch {
 }
 /**
- * Updates env in the current state.
- *
- * @param {*} k Value used by this operation.
- * @param {*} v Value to evaluate.
+ * Updates an existing environment assignment or appends a new assignment to the configuration text.
+ * @param {string} k Environment variable name.
+ * @param {string} v New environment value.
  */
 function setEnv(k, v) {
   const line = `${k}=${v}`;

@@ -2,7 +2,6 @@ import {createRankBarViewModel, aggregateAnalyticsPeriods, createCompositionView
 import {composeMarkup} from '../ui/render-plan.js';
 import {headingTitle} from '../ui/headers.js';
 import {t, currentLanguage} from '../i18n/index.js';
-import {escapeHtml} from '../ui/dom.js';
 import {emptyState, panel as contentPanel} from '../ui/content.js';
 import {loadTemplates} from '../ui/templates.js';
 
@@ -128,14 +127,6 @@ const COUNTRY_KEYS = Object.freeze({
 export const countryName = name => COUNTRY_KEYS[name] ? t(COUNTRY_KEYS[name]) : categoryLabel(name);
 
 /**
- * Derives the safe result from the supplied values.
- *
- * @param {*} value Value to process.
- * @return {string} Escaped value for the renderer's compatibility binding.
- */
-export const safe = value => escapeHtml(value);
-
-/**
  * Prepares localized no-matching-data message.
  * @return {!import('../ui/render-plan.js').RenderPlan} Localized no-matching-data message.
  */
@@ -155,7 +146,7 @@ export const empty = () => emptyState({
 export function panel(title, content, note = '', extra = '') {
   return contentPanel({
     tag: 'section', variant: 'analytics', className: extra,
-    content: composeMarkup(headingTitle({title}), content, note ? renderTemplate('analyticsNote', {note: safe(note), }) : ''),
+    content: composeMarkup(headingTitle({title}), content, note ? renderTemplate('analyticsNote', {note: String(note ?? ''), }) : ''),
   });
 }
 
@@ -171,9 +162,9 @@ export function metric(label, value, detail = '') {
   return contentPanel({
     className: 'stat analytics-metric',
     content: renderTemplate('contentSpan', {
-      label: safe(label),
-      value: safe(value),
-      small: detail ? renderTemplate('small', {detail: safe(detail), }) : '',
+      label: String(label ?? ''),
+      value: String(value ?? ''),
+      small: detail ? renderTemplate('small', {detail: String(detail ?? ''), }) : '',
     }),
   });
 }
@@ -224,11 +215,11 @@ export function rankBars(rows, {value = 'count', format = number, limit = 14,
   if (!data.length) return empty();
   return renderTemplate('analyticsBars', {
     data: composeMarkup(data.map(({row, width}) => {
-      const label = safe(categoryLabel(row.name));
-      const title = safe(format(row[value], row.currency));
+      const label = categoryLabel(row.name);
+      const title = String((format(row[value], row.currency)) ?? '');
       const opener = drill && row.id !== undefined && row.id !== null && String(row.id).trim() ?
         renderTemplate('analyticsDistillery', {
-          id: safe(row.id),
+          id: String(row.id ?? ''),
           collectionByName: t("analytics.filters.collectionByName", {name: label}),
           label: label,
         }) : renderTemplate('analyticsBarLabel', {label: label, });
@@ -270,7 +261,7 @@ export function composition(rows, {drill = null} = {}) {
   ];
   const slices = segments.map(({from, to}, i) => `${colors[i % colors.length]} ${from.toFixed(2)}% ${to.toFixed(2)}%`);
   const legend = composeMarkup(segments.map(({row, percent}, i) => {
-    const label = safe(row.displayName ?? categoryLabel(row.name));
+    const label = String((row.displayName ?? categoryLabel(row.name)) ?? '');
     const count = `${number(row.count)} (${number(percent)} %)`;
     const action = drill && (drill.kind === 'country' || Object.hasOwn(drill, row.name)) ?
       {'data-act': 'analytics-drill-filter', 'data-kind': drill.kind, 'data-value': drill.kind === 'country' ? row.name : drill[row.name]} : null;
@@ -286,7 +277,7 @@ export function composition(rows, {drill = null} = {}) {
     });
   }));
   return renderTemplate('analyticsComposition', {
-    ariaLabel: safe(segments.map(({row}) => `${row.name}: ${row.count}`).join(', ')),
+    ariaLabel: String((segments.map(({row}) => `${row.name}: ${row.count}`).join(', ')) ?? ''),
     slices: slices.join(','),
     number: number(total),
     legend: legend,
@@ -303,7 +294,7 @@ export function composition(rows, {drill = null} = {}) {
 export function detailsTable(headings, rows) {
   if (!rows.length) return empty();
   return renderTemplate('analyticsTableWrap', {
-    headings: composeMarkup(headings.map(h => renderTemplate('th', {h: safe(h), }))),
+    headings: composeMarkup(headings.map(h => renderTemplate('th', {h: String(h ?? ''), }))),
     rows: composeMarkup(rows.map(cells => renderTemplate('tr', {cells: composeMarkup(cells.map(cell => renderTemplate('td', {cell: cell, }))), }))),
   });
 }
@@ -317,9 +308,9 @@ export function detailsTable(headings, rows) {
  */
 export function bottlingLink(item, extra = '') {
   return renderTemplate('open', {
-    id: safe(item.id),
+    id: String(item.id ?? ''),
     dataBottleIdAttributes: item.bottleId ? {"data-bottle-id": item.bottleId} : {},
-    name: safe(item.name),
+    name: String(item.name ?? ''),
     extra: extra,
   });
 }
@@ -332,8 +323,8 @@ export function bottlingLink(item, extra = '') {
  */
 export function distilleryLink(item) {
   return renderTemplate('analyticsDistillery2', {
-    id: safe(item.id),
-    name: safe(item.name),
+    id: String(item.id ?? ''),
+    name: String(item.name ?? ''),
   });
 }
 

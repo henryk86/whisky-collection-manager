@@ -31,11 +31,10 @@ const MANIFEST_FILES = [
 const validSha = value => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
 
 /**
- * Validates the safe path state and rejects invalid inputs.
- *
- * @param {*} root Root node or directory for the operation.
- * @param {*} relative Relative path or position to resolve.
- * @return {*} Combined text from the input values.
+ * Resolves a bundle member beneath its root and rejects traversal or absolute paths.
+ * @param {string} root Bundle root directory.
+ * @param {string} relative Untrusted relative member name.
+ * @return {string} Resolved path within the root.
  */
 function safePath(root, relative) {
   if (typeof relative !== 'string' || !relative || path.posix.isAbsolute(relative) || relative.includes('\\') || relative.split('/').some(part => !part || part === '.' || part === '..')) {
@@ -54,10 +53,9 @@ function safePath(root, relative) {
 }
 
 /**
- * Derives the hash file result from the supplied values.
- *
- * @param {*} filename File path or name to process.
- * @return {*} Result computed from the supplied inputs.
+ * Streams a file into SHA-256 without loading the entire bundle member into memory.
+ * @param {string} filename File path to hash.
+ * @return {string} Lowercase hexadecimal SHA-256 digest.
  */
 function hashFile(filename) {
   const hash = crypto.createHash('sha256');

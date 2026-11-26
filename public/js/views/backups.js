@@ -1,14 +1,13 @@
 import {createBackupDashboardViewModel} from './models/backups.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {headingTitle} from '../ui/headers.js';
-import {t, tHtml, currentLanguage} from '../i18n/index.js';
+import {t, currentLanguage} from '../i18n/index.js';
 /**
  * One place for manual, scheduled and restorative backups. All archives are
  * ZIP.
  */
 import {addActionLabel, successIcon, warningIcon, moreIcon}
   from '../ui/action-icons.js';
-import {escapeHtml as h} from '../ui/dom.js';
 import {jobErrorText} from '../i18n/job-errors.js';
 import {loadTemplates} from '../ui/templates.js';
 import {createProfileViewModel, providerOptions}
@@ -84,7 +83,7 @@ export function renderBackupSection(state) {
   const worker = dash.worker?.online ? renderTemplate('backupStatus') : renderTemplate('backupStatus2');
   return renderTemplate('backupManagement2', {
     headingTitle: headingTitle({title: t('backups.page.title'), }),
-    zipAndTimezone: t("backups.page.zipAndTimezone", {zone: h(dash.timeZone || 'Europe/Berlin')}),
+    zipAndTimezone: t("backups.page.zipAndTimezone", {zone: String((dash.timeZone || 'Europe/Berlin') ?? '')}),
     worker: worker,
     manual: manual(Boolean(dash.passwordConfigured)),
     passwordConfigured: dash.passwordConfigured ? 'muted' : 'warning',
@@ -121,7 +120,7 @@ export function renderBackupSection(state) {
                 }
               ),
             }),
-          lastJob: tHtml(
+          lastJob: t(
             "backups.jobs.lastJob",
             {
               summary: last ? `${labelTime(last.startedAt)} (${last.state})` : t("backups.jobs.none"),
@@ -139,7 +138,7 @@ export function renderBackupSection(state) {
               snapshots: composeMarkup(snapshots.map(s =>
                 renderTemplate('backupSnapshot', {
                   labelTime: labelTime(s.time),
-                  size: s.size ? ` · ${h((s.size / 1048576).toFixed(1))} MiB` : '',
+                  size: s.size ? ` · ${String(((s.size / 1048576).toFixed(1)) ?? '')} MiB` : '',
                   backupDownload: !legacy && p.provider === 'local' ?
                     renderTemplate('backupDownload', {
                       id: p.id,

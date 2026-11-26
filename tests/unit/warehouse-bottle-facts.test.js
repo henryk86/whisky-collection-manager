@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {bottleListFacts, bottleRow}
@@ -24,7 +24,7 @@ test(
     assert.match(renderedText(facts), /Erscheinungsjahr:.*2012/);
     assert.match(renderedText(facts), /Fasstyp:.*Oloroso &amp; Bourbon/);
     const row = bottleRow({assignments: {}, rooms: []}, bottle);
-    assert.match(renderedText(row), /class="warehouse-bottle-row-info"/);
+    assert.ok(domElements(row, '[class="warehouse-bottle-row-info"]').length > 0);
     assert.match(renderedText(row), /Whisky &lt;Test&gt;/);
     assert.match(renderedText(row), /warehouse-bottle-facts/);
     assert.match(renderedText(row), /data-bottle-search="[^"]*2012[^"]*oloroso/);
@@ -43,14 +43,11 @@ test(
     const warehouse = {bottles: [bottle], assignments: {}};
     const html = renderUnassignedTray(warehouse);
     assert.match(renderedText(html), /<details class="warehouse-unassigned-tray"\s+aria-label=/);
-    assert.doesNotMatch(renderedText(html), /<details class="warehouse-unassigned-tray" open/);
-    assert.match(renderedText(html), /<summary class="warehouse-unassigned-summary"/);
+    assert.equal(domElements(html, 'details[class="warehouse-unassigned-tray"][open]').length, 0);
+    assert.ok(domElements(html, 'summary[class="warehouse-unassigned-summary"]').length > 0);
     assert.match(renderedText(html), /Erscheinungsjahr:.*2012/);
-    assert.match(
-      renderedText(renderUnassignedTray(warehouse, [], {expanded: true})),
-      /<details class="warehouse-unassigned-tray" open/
-    );
-    assert.match(renderedText(html), /data-unassigned-id="b1"/);
+    assert.ok(domElements(renderUnassignedTray(warehouse, [], {expanded: true}), 'details[class="warehouse-unassigned-tray"][open]').length > 0);
+    assert.ok(domElements(html, '[data-unassigned-id="b1"]').length > 0);
   }
 );
 
@@ -137,7 +134,7 @@ test(
         refresh: async () => {},
       });
       view.render();
-      assert.match(renderedText(html), /id="warehouse-wall-unassigned-content"[^>]*hidden/);
+      assert.ok(domElements(html, '[id="warehouse-wall-unassigned-content"][hidden]').length > 0);
       assert.equal(renderedText(typeof onClick), 'function');
       onClick({
         currentTarget: {
@@ -155,8 +152,8 @@ test(
       assert.equal(renderedText(attributes.get('aria-expanded')), 'true');
       assert.equal(renderedText(tray.hidden), false);
       view.render();
-      assert.match(renderedText(html), /class="warehouse-unassigned-toggle"[^>]*aria-expanded="true"/);
-      assert.doesNotMatch(renderedText(html), /id="warehouse-wall-unassigned-content"[^>]*hidden/);
+      assert.ok(domElements(html, '[class="warehouse-unassigned-toggle"][aria-expanded="true"]').length > 0);
+      assert.equal(domElements(html, '[id="warehouse-wall-unassigned-content"][hidden]').length, 0);
       onClick({
         currentTarget: {
           /**
@@ -172,7 +169,7 @@ test(
       });
       assert.equal(renderedText(tray.hidden), true);
       view.render();
-      assert.match(renderedText(html), /id="warehouse-wall-unassigned-content"[^>]*hidden/);
+      assert.ok(domElements(html, '[id="warehouse-wall-unassigned-content"][hidden]').length > 0);
     } finally {
       if (original === undefined) delete globalThis.document;
       else globalThis.document = original;

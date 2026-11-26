@@ -1,4 +1,4 @@
-import {fixtureMarkup, renderedText, captureContent, captureAppend} from '../helpers/rendering.js';
+import {fixtureMarkup, renderedText, captureContent, captureAppend, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createModal} from '../../public/js/ui/modal.js';
@@ -247,8 +247,8 @@ test(
       original.form.name = 'Selected destination';
       const answer = modal.confirm('Increase capacity', 'Increase from 3 to 5?', 'Increase and assign');
       assert.equal(renderedText(state.modal.title), 'Increase capacity');
-      assert.match(renderedText(host.firstElementChild.html), /data-act="modal-confirm-accept"/);
-      assert.match(renderedText(host.firstElementChild.html), /data-act="close-modal"/);
+      assert.ok(domElements(host.firstElementChild.html, '[data-act="modal-confirm-accept"]').length > 0);
+      assert.ok(domElements(host.firstElementChild.html, '[data-act="close-modal"]').length > 0);
       assert.equal(renderedText(modal.acceptConfirmation()), true);
       assert.equal(renderedText(await answer), true);
       assert.equal(renderedText(host.firstElementChild), renderedText(original));
@@ -405,7 +405,7 @@ test(
       planner.form.name = 'Not yet saved flight';
       planner.form.files = ['draft-proposal'];
       assert.match(renderedText(planner.html), /ds-heading-with-action/);
-      assert.match(renderedText(planner.html), /data-act="flight-plan-help"/);
+      assert.ok(domElements(planner.html, '[data-act="flight-plan-help"]').length > 0);
       modal.showModal('So wird ein Flight geplant', fixtureMarkup('<section>Formeln</section>'), true, true);
       assert.equal(renderedText(state.modal.title), 'So wird ein Flight geplant');
       assert.notEqual(renderedText(host.firstElementChild), renderedText(planner));
@@ -469,7 +469,7 @@ test(
       view.startPlannedFlight();
       const planner = host.firstElementChild;
       assert.equal(renderedText(state.modal.title), 'Flight planen');
-      assert.match(renderedText(planner.html), /data-act="flight-plan-help"/);
+      assert.ok(domElements(planner.html, '[data-act="flight-plan-help"]').length > 0);
       planner.form.name = 'Kept draft';
       planner.form.files = ['kept-proposal'];
       view.showFlightPlanningHelp();

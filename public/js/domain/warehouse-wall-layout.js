@@ -19,10 +19,10 @@ const natural = new Intl.Collator(undefined, {
 const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 
 /**
- * Derives the angle result from the supplied values.
+ * Normalizes a furniture's facing direction for front-elevation grouping.
  *
- * @param {*} furniture Warehouse furniture record being modified.
- * @return {number} Calculated numeric value.
+ * @param {*} furniture Furniture record with rotation in degrees.
+ * @return {number} Normalized angle in degrees.
  */
 const angle = furniture => ((finite(furniture.rotation) % 360) + 360) % 360;
 
@@ -36,10 +36,9 @@ const angle = furniture => ((finite(furniture.rotation) % 360) + 360) % 360;
 const overlap = (a, b) => Math.max(0, Math.min(a[1], b[1]) - Math.max(a[0], b[0]));
 
 /**
- * Calculates the position numeric value.
- *
- * @param {*} furniture Warehouse furniture record being modified.
- * @return {!Array<*>} Resulting entries in their output order.
+ * Projects furniture onto its facing wall while retaining world-space bounds.
+ * @param {!Object} furniture Furniture with metre-based geometry and rotation.
+ * @return {{furniture: Object, orientation: number, xRange: number[], yRange: number[], left: number, right: number, bottom: number, top: number, hasPosition: boolean}} Front projection and physical extents in metres.
  */
 function position(furniture) {
   const orientation = angle(furniture);
@@ -65,11 +64,11 @@ function position(furniture) {
 }
 
 /**
- * Derives the vertically separate result from the supplied values.
+ * Tests whether two projected furniture items occupy non-overlapping height intervals, allowing a small tolerance.
  *
- * @param {*} a First entry or operand in the calculation.
- * @param {*} b Second entry or operand in the calculation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * @param {*} a First projected vertical interval.
+ * @param {*} b Second projected vertical interval.
+ * @return {boolean} True if their height intervals are separate within 1.5 cm.
  */
 function verticallySeparate(a, b) {
   return a.top <= b.bottom + .015 || b.top <= a.bottom + .015;

@@ -1,4 +1,4 @@
-import {renderedText, captureContent, captureAppend} from '../helpers/rendering.js';
+import {renderedText, captureContent, captureAppend, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -62,24 +62,24 @@ test(
       },
     });
     view.home();
-    assert.match(renderedText(html), /data-act="flight-plan-new"[^>]*><svg class="ui-symbol"/);
+    assert.equal(domElements(html, '[data-act="flight-plan-new"] > svg.ui-symbol').length, 1);
     assert.match(renderedText(html), /Next tasting/);
     state.page = 'tasting-flight'; state.selected = 'plan-a'; view.flight();
-    assert.match(renderedText(html), /data-act="flight-plan-start"/);
-    assert.match(renderedText(html), /data-act="flight-plan-replace"/);
-    assert.match(renderedText(html), /data-act="flight-plan-move"/);
-    assert.match(renderedText(html), /data-act="flight-plan-remove"/);
-    assert.doesNotMatch(renderedText(html), /data-act="tasting-flight-note-open"/);
+    assert.ok(domElements(html, '[data-act="flight-plan-start"]').length > 0);
+    assert.ok(domElements(html, '[data-act="flight-plan-replace"]').length > 0);
+    assert.ok(domElements(html, '[data-act="flight-plan-move"]').length > 0);
+    assert.ok(domElements(html, '[data-act="flight-plan-remove"]').length > 0);
+    assert.equal(domElements(html, '[data-act="tasting-flight-note-open"]').length, 0);
     collection.tastingFlights[0].phase = 'inProgress';
     view.flight();
-    assert.match(renderedText(html), /data-act="flight-plan-record"/);
-    assert.match(renderedText(html), /data-act="flight-plan-finish"/);
-    assert.doesNotMatch(renderedText(html), /data-act="tasting-flight-toggle-add"/);
-    assert.doesNotMatch(renderedText(html), /data-act="tasting-flight-attach"/);
+    assert.ok(domElements(html, '[data-act="flight-plan-record"]').length > 0);
+    assert.ok(domElements(html, '[data-act="flight-plan-finish"]').length > 0);
+    assert.equal(domElements(html, '[data-act="tasting-flight-toggle-add"]').length, 0);
+    assert.equal(domElements(html, '[data-act="tasting-flight-attach"]').length, 0);
     collection.tastingFlights[0].phase = 'completed';
     view.flight();
-    assert.doesNotMatch(renderedText(html), /data-act="flight-plan-record"/);
-    assert.match(renderedText(html), /data-act="tasting-flight-toggle-add"[^>]+disabled/);
+    assert.equal(domElements(html, '[data-act="flight-plan-record"]').length, 0);
+    assert.ok(domElements(html, '[data-act="tasting-flight-toggle-add"][disabled]').length > 0);
   }
 );
 test(
@@ -138,28 +138,23 @@ test(
       },
     });
     home();
-    assert.match(renderedText(html), /data-collection-flavor-picker/);
-    assert.match(renderedText(html), /class="ui-symbol collection-flavor-chevron"/);
-    assert.match(renderedText(html), /class="ui-symbol collection-menu-chevron"/);
+    assert.ok(domElements(html, '[data-collection-flavor-picker]').length > 0);
+    assert.ok(domElements(html, '[class="ui-symbol collection-flavor-chevron"]').length > 0);
+    assert.ok(domElements(html, '[class="ui-symbol collection-menu-chevron"]').length > 0);
     assert.doesNotMatch(renderedText(html), /aria-hidden="true">⌄/);
-    assert.match(renderedText(html), /data-flavor-profile-status/);
-    assert.match(renderedText(html), /value="with" data-flavor-profile-status/);
-    assert.match(
-      renderedText(html),
-      new RegExp(
-        'data-flavor-axis="smoky" data-flavor-part=' + '"min"[^>]*>[\\s\\S]*?<option value="6" sel' + 'ected>'
-      )
-    );
-    assert.match(renderedText(html), /data-act="collection-flavor-add"/);
-    assert.match(renderedText(html), /data-act="collection-flavor-apply"/);
-    assert.match(renderedText(html), /data-act="collection-flavor-open"/);
+    assert.ok(domElements(html, '[data-flavor-profile-status]').length > 0);
+    assert.ok(domElements(html, '[value="with"][data-flavor-profile-status]').length > 0);
+    assert.equal(domElements(html, 'select[data-flavor-axis="smoky"][data-flavor-part="min"]')[0].value, '6');
+    assert.ok(domElements(html, '[data-act="collection-flavor-add"]').length > 0);
+    assert.ok(domElements(html, '[data-act="collection-flavor-apply"]').length > 0);
+    assert.ok(domElements(html, '[data-act="collection-flavor-open"]').length > 0);
     assert.doesNotMatch(renderedText(html), /collection-flavor-filter/);
-    assert.match(renderedText(html), /id="collection-saved-views"/);
-    assert.match(renderedText(html), /data-act="collection-view-save"/);
-    assert.match(renderedText(html), /data-act="collection-view-apply"/);
+    assert.ok(domElements(html, '[id="collection-saved-views"]').length > 0);
+    assert.ok(domElements(html, '[data-act="collection-view-save"]').length > 0);
+    assert.ok(domElements(html, '[data-act="collection-view-apply"]').length > 0);
     assert.doesNotMatch(renderedText(html), /collection-saved-controls/);
-    assert.match(renderedText(html), /data-act="collection-flight-plan"[^>]*><svg class="ui-symbol"/);
-    assert.match(renderedText(html), /<div class="collection-results-heading">/);
+    assert.equal(domElements(html, '[data-act="collection-flight-plan"] > svg.ui-symbol').length, 1);
+    assert.ok(domElements(html, 'div[class="collection-results-heading"]').length > 0);
     assert.ok(renderedText(html).indexOf('data-act="collection-flight-plan"') > renderedText(html).indexOf('class="collection-results-heading"'));
     assert.ok(renderedText(html).indexOf('data-act="collection-flight-plan"') < renderedText(html).indexOf('class="empty-state"'));
   }

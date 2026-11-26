@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -46,7 +46,7 @@ const render = (page, tastingId) => {
 
 test('add action in the owned tasting list is inside its framed panel', () => {
   const html = render('tastings');
-  assert.doesNotMatch(renderedText(html), /class="tasting-add-action"/);
+  assert.equal(domElements(html, '[class="tasting-add-action"]').length, 0);
   assert.match(
     renderedText(html),
     new RegExp(
@@ -66,10 +66,10 @@ test(
     const end = renderedText(html).indexOf('class="tasting-top-row"', start);
     assert.ok(start !== -1 && end > start);
     const panel = renderedText(html).slice(start, end);
-    assert.match(renderedText(panel), /data-act="flavor-detail-undo"/);
-    assert.match(renderedText(panel), /data-act="flavor-detail-redo"/);
-    assert.match(renderedText(panel), /data-tasting-date/);
-    assert.match(renderedText(panel), /data-tasting-title/);
+    assert.ok(domElements(panel, '[data-act="flavor-detail-undo"]').length > 0);
+    assert.ok(domElements(panel, '[data-act="flavor-detail-redo"]').length > 0);
+    assert.ok(domElements(panel, '[data-tasting-date]').length > 0);
+    assert.ok(domElements(panel, '[data-tasting-title]').length > 0);
     assert.ok(renderedText(panel).indexOf('data-tasting-date') < renderedText(panel).indexOf('data-tasting-title'));
     assert.ok(
       renderedText(panel).indexOf('data-tasting-title') < renderedText(panel).indexOf('class="actions tasting-editor-actions"'),
@@ -86,7 +86,7 @@ test(
   'every translated plus action can share the common SVG and accessible text',
   () => {
     const markup = addActionLabel('+ Weitere Flasche');
-    assert.match(renderedText(markup), /<svg class="new-icon"/);
+    assert.ok(domElements(markup, 'svg[class="new-icon"]').length > 0);
     assert.match(renderedText(markup), />Weitere Flasche<\/span>/);
     assert.doesNotMatch(renderedText(markup), /\+ Weitere Flasche/);
     assert.match(renderedText(newBottlingIcon), /stroke-width="2.2"/);

@@ -1,17 +1,7 @@
 import {composeMarkup} from './render-plan.js';
-import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('components/content.html');
-
-
-/**
- * Encodes a scalar for the renderer's legacy escaped-text binding.
- *
- * @param {*} value Value to convert to text; nullish values become empty.
- * @return {string} Encoded scalar text.
- */
-const safe = value => escapeHtml(String(value ?? ''));
 
 /**
  * Combines optional class names without introducing empty class tokens.
@@ -47,7 +37,7 @@ export function panel({content = '', variant = 'standard', tag = 'div',
   const baseClass = variant === 'analytics' ? 'analytics-panel' : variant === 'plain' ? '' : 'panel';
   return renderTemplate('panel', {
     tag: tag,
-    className: safe(classes(baseClass, className)),
+    className: String((classes(baseClass, className)) ?? ''),
     variant: variant,
     content: content,
     closingTag: tag,
@@ -74,7 +64,7 @@ export function detailField({
   const definition = variant === 'definition';
   const labelTag = definition ? 'dt' : 'span';
   const valueTag = definition ? 'dd' : variant === 'readonly' ? 'strong' : variant === 'note' ? 'p' : 'div';
-  const valueContent = valueHtml ? value : safe(value);
+  const valueContent = valueHtml ? value : String(value ?? '');
   return renderTemplate('detailFieldDiv', {
     classAttributes: className ? {"class": className} : {},
     variant,
@@ -82,7 +72,7 @@ export function detailField({
       renderTemplate('detailField', {
         labelTag,
         classAttributes: labelClass ? {"class": labelClass} : {},
-        label: safe(label),
+        label: String(label ?? ''),
         closingLabelTag: labelTag,
       }),
       renderTemplate('detailField2', {
@@ -132,17 +122,17 @@ export function emptyState({
 } = {}) {
   assertVariant(variant, ['collection', 'subtle', 'inline'], 'empty state');
   if (variant === 'inline') return renderTemplate('emptyStateP', {
-    className: safe(classes('analytics-empty', className)),
-    message: safe(description || title),
+    className: String((classes('analytics-empty', className)) ?? ''),
+    message: String((description || title) ?? ''),
   });
   if (variant === 'subtle') return renderTemplate('emptyStateP2', {
-    className: safe(classes('hint', className)),
-    message: safe(description || title),
+    className: String((classes('hint', className)) ?? ''),
+    message: String((description || title) ?? ''),
   });
   return renderTemplate('emptyStateDiv', {
-    className: safe(classes('empty-state', className)),
-    title: safe(title),
-    description: safe(description),
+    className: String((classes('empty-state', className)) ?? ''),
+    title: String(title ?? ''),
+    description: String(description ?? ''),
     actions,
   });
 }
@@ -157,8 +147,8 @@ export function emptyState({
 export function divider({orientation = 'horizontal', className = ''} = {}) {
   assertVariant(orientation, ['horizontal', 'vertical'], 'divider');
   return orientation === 'horizontal'
-    ? renderTemplate('hr', {className: safe(classes('divider', className)), })
-    : renderTemplate('dividerSpan', {className: safe(className), });
+    ? renderTemplate('hr', {className: String((classes('divider', className)) ?? ''), })
+    : renderTemplate('dividerSpan', {className: String(className ?? ''), });
 }
 
 /**
@@ -174,7 +164,7 @@ export function actionToolbar(content, {className = '', variant = 'inline'} =
   assertVariant(variant, ['inline', 'filters', 'end'], 'action toolbar');
   const baseClass = variant === 'filters' ? 'toolbar' : 'actions';
   return renderTemplate('actionToolbarDiv', {
-    className: safe(classes(baseClass, className)),
+    className: String((classes(baseClass, className)) ?? ''),
     variant: variant,
     content: content,
   });

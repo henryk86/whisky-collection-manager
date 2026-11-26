@@ -8,6 +8,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {checkJSDoc, undocumentedExports} from '../../scripts/check-jsdoc.js';
+import {semanticTypeDiagnostics} from '../../scripts/check-js-types.js';
 import {jsdocViolations} from '../../scripts/check-jsdoc-complete.js';
 import {
   separateFunctions, insertTrailingCommas
@@ -303,4 +304,36 @@ export function example() {return render('example');}`;
   assert.deepEqual(jsdocViolations('sample.js', source.replace('@return {string}', '@return {RenderPlan}')), []);
   const shadowed = source.replace('function example() {return render', 'function example() {const render = String; return render');
   assert.deepEqual(jsdocViolations('sample.js', shadowed), []);
+});
+
+
+test('Semantic JSDoc: rejects incompatible return types and unknown types', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'wcm-jsdoc-types-'));
+  try {
+    const file = path.join(dir, 'contract.js');
+    writeFileSync(file, `/** @return {string} Display label. */
+export function label() { return 42; }
+/** @param {UnknownRecord} record Incoming record. */
+export function read(record) { return record; }
+`);
+    const issues = semanticTypeDiagnostics([file]);
+    assert.ok(issues.some(issue => issue.includes('TS2322')));
+    assert.ok(issues.some(issue => issue.includes('TS2304')));
+  } finally {
+    rmSync(dir, {recursive: true, force: true});
+  }
+});
+
+test('Semantic JSDoc: accepts matching implementation and contract', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'wcm-jsdoc-types-'));
+  try {
+    const file = path.join(dir, 'contract.js');
+    writeFileSync(file, `/** @param {number} count Item count.
+ * @return {string} Display label. */
+export function label(count) { return String(count); }
+`);
+    assert.deepEqual(semanticTypeDiagnostics([file]), []);
+  } finally {
+    rmSync(dir, {recursive: true, force: true});
+  }
 });

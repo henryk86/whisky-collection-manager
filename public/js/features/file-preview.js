@@ -1,6 +1,6 @@
 import {t} from '../i18n/index.js';
 import {modalFooter} from '../ui/modal-layout.js';
-import {escapeHtml, query} from '../ui/dom.js';
+import {query} from '../ui/dom.js';
 import {httpResponseError} from '../api.js';
 import {loadTemplates} from '../ui/templates.js';
 

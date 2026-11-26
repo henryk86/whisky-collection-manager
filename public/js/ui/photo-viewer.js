@@ -1,5 +1,5 @@
 import {t} from '../i18n/index.js';
-import {escapeHtml, query, queryAll} from './dom.js';
+import {query, queryAll} from './dom.js';
 import {createPhotoZoom} from './photo-zoom.js';
 import {minusIcon, plusIcon, arrowLeftIcon, arrowRightIcon}
   from './action-icons.js';

@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {suggestFlight, flightCandidates, orderFlightItems, FLIGHT_FOCUSES}
@@ -194,7 +194,7 @@ test(
         '-label="So wird ein Flight geplant"'
       )
     );
-    assert.doesNotMatch(renderedText(html), /class="btn small flight-plan-help-button"/);
+    assert.equal(domElements(html, '[class="btn small flight-plan-help-button"]').length, 0);
     view.showFlightPlanningHelp();
     assert.equal(renderedText(title), 'So wird ein Flight geplant');
     assert.equal(renderedText(wide), true);
@@ -226,18 +226,18 @@ test(
     assert.match(renderedText(modal), /sechs bestplatzierten Flaschen/);
     assert.match(renderedText(modal), /720/);
     assert.ok(renderedText(modal).length > 6000, 'Detailed explanations should remain available');
-    assert.match(renderedText(modal), /data-act="close-modal"/);
+    assert.ok(domElements(modal, '[data-act="close-modal"]').length > 0);
     view.startPlannedFlight();
     assert.equal(renderedText(nested), false, 'new planner starts as a top-level modal');
     assert.match(
       renderedText(headingAction),
       new RegExp('class="ds-help-icon-button flight-plan-hel' + 'p-button" data-act="flight-plan-help"')
     );
-    assert.match(renderedText(headingAction), /aria-label="So wird ein Flight geplant"/);
-    assert.match(renderedText(modal), /data-flight-plan-focus-wrap hidden/);
-    assert.match(renderedText(modal), /data-flight-plan-unfamiliar-wrap hidden/);
-    assert.match(renderedText(modal), /name="flight-plan-unfamiliar" checked/);
-    assert.match(renderedText(modal), /<details class="flight-plan-advanced">/);
+    assert.ok(domElements(headingAction, '[aria-label="So wird ein Flight geplant"]').length > 0);
+    assert.ok(domElements(modal, '[data-flight-plan-focus-wrap][hidden]').length > 0);
+    assert.ok(domElements(modal, '[data-flight-plan-unfamiliar-wrap][hidden]').length > 0);
+    assert.ok(domElements(modal, '[name="flight-plan-unfamiliar"][checked]').length > 0);
+    assert.ok(domElements(modal, 'details[class="flight-plan-advanced"]').length > 0);
     for (const field of [
       'data-flight-plan-cask-mode',
       'flight-cask-group-sherry',

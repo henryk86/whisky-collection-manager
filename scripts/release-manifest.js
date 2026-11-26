@@ -10,10 +10,9 @@ import {fileURLToPath} from 'node:url';
 export const FILENAME = 'wcm-source-manifest.json';
 export const MODULE_DIRS = ['public/js', 'server', 'shared', 'worker'];
 /**
- * Reads hash data from the local filesystem.
- *
- * @param {*} file File resource to read, write or inspect.
- * @return {*} Result computed from the supplied inputs.
+ * Calculates the release manifest checksum for a file.
+ * @param {string} file File path.
+ * @return {string} Hexadecimal SHA-256 digest.
  */
 const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 

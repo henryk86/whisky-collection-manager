@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {bottlingOriginLabel} from '../../public/js/domain/bottling-origin.js';
@@ -130,7 +130,7 @@ test(
       physicalBottles
     );
     const stats = renderedText(html).slice(renderedText(html).indexOf('<div class="stats">'), renderedText(html).indexOf('<div class="toolbar collection-filters"'));
-    assert.equal((renderedText(stats).match(/class="panel stat"/g) || []).length, 4);
+    assert.equal(domElements(stats, '[class="panel stat"]').length, 4);
     assert.match(renderedText(stats), /<span>Geöffnet<\/span>\s*<strong>1<\/strong>/);
     assert.match(renderedText(stats), /<span>Geschlossen<\/span>\s*<strong>2<\/strong>/);
     assert.ok(
@@ -158,10 +158,7 @@ test(
     assert.equal(renderedText(bottlingOriginLabel({...b, bottler: '  '}, () => 'wrong')), '');
     assert.match(renderedText(renderHome(null, [b])), /class="card-kicker">Signatory Vintage/);
     const table = renderHome(null, [b], [], 'table');
-    assert.match(
-      renderedText(table),
-      new RegExp('data-act="collection-sort-column" data-col' + 'umn="distillery"[^>]*>Destillerie \\/ Abfü' + 'ller')
-    );
+    assert.match(domElements(table, 'button[data-act="collection-sort-column"][data-column="distillery"]')[0].text.trim(), /Destillerie \/ Abfüller/);
     assert.match(renderedText(table), /<td>Signatory Vintage<\/td>/);
     assert.match(
       renderedText(renderHome(null, [{...b, bottler: '<script>alert(1)</script>'}])),
@@ -177,8 +174,8 @@ test(
       collection: {settings: {establishedYear: 1989}, distilleries: []},
       backupDashboard: null,
     })();
-    assert.match(renderedText(html), /id="collection-settings-form"/);
-    assert.match(renderedText(html), /name="establishedYear"[^>]*value="1989"/);
+    assert.ok(domElements(html, '[id="collection-settings-form"]').length > 0);
+    assert.ok(domElements(html, '[name="establishedYear"][value="1989"]').length > 0);
     assert.match(renderedText(html), /Gründungsjahr speichern/);
     assert.match(renderedText(html), /Datensicherung/);
   }
@@ -197,14 +194,14 @@ test(
       releaseYear: null,
     };
     const card = renderHome(null, [blank]);
-    assert.match(renderedText(card), /<h3(?: data-i18n-ignore)?>Ohne Angaben<\/h3>/);
-    assert.doesNotMatch(renderedText(card), /class="card-facts muted"/);
+    assert.ok(domElements(card, 'h3').some(heading => heading.text.trim() === 'Ohne Angaben'));
+    assert.equal(domElements(card, '[class="card-facts muted"]').length, 0);
     assert.doesNotMatch(renderedText(card), /– Jahre|– %|NaN|<div class="card-kicker"><\/div>/);
     const table = renderHome(null, [blank], [], 'table');
-    assert.match(
-      renderedText(table),
-      new RegExp('<strong>Ohne Angaben<\\/strong>[\\s\\S]*?<' + 'td><\\/td>\\s*<td><\\/td>\\s*<td><\\/td>')
-    );
+    const cells = domElements(table, 'tbody tr td');
+    const nameIndex = cells.findIndex(cell => cell.text.trim().startsWith('Ohne Angaben'));
+    assert.ok(nameIndex >= 0);
+    assert.ok(cells.slice(nameIndex + 1).some((cell, index, remaining) => remaining.slice(index, index + 3).length === 3 && remaining.slice(index, index + 3).every(item => item.text.trim() === '')));
     assert.doesNotMatch(renderedText(table), /– %|– Jahre/);
 
     const withAbv = {...blank, abv: 46.5};
@@ -223,9 +220,9 @@ test(
     const html = renderHome(null);
     const toggle = renderedText(html).match(new RegExp('<button[^>]*class="btn collection-filter-t' + 'oggle"[^>]*>[\\s\\S]*?<\\/button>'))?.[0];
     assert.ok(toggle, 'advanced filter toggle exists');
-    assert.match(renderedText(toggle), /class="collection-filter-icon"/);
-    assert.match(renderedText(toggle), /class="collection-filter-chevron"/);
-    assert.match(renderedText(toggle), /aria-expanded="false"/);
+    assert.ok(domElements(toggle, '[class="collection-filter-icon"]').length > 0);
+    assert.ok(domElements(toggle, '[class="collection-filter-chevron"]').length > 0);
+    assert.ok(domElements(toggle, '[aria-expanded="false"]').length > 0);
     assert.doesNotMatch(renderedText(toggle), /⌄/);
   }
 );

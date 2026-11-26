@@ -2,7 +2,6 @@
  * @fileoverview Composable template data, independent of DOM or HTML output.
  */
 import {t} from '../i18n/index.js';
-import {decodeEscaped} from './bindings.js';
 
 export const SLOT = /\{\{(content|attr|attrs|text|t|tag):([\w.]+)\}\}/g;
 
@@ -112,5 +111,5 @@ export function scalarBinding(plan, mode, key) {
   if (value != null && !['string', 'number', 'boolean'].includes(typeof value)) {
     throw new TypeError(`Non-scalar binding: ${key}`);
   }
-  return mode === 'attr' || mode === 'content' ? decodeEscaped(value) : String(value ?? '');
+  return String(value ?? '');
 }

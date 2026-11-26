@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -32,24 +32,21 @@ test(
   () => {
     const {warehouse, shelf} = fixture();
     const html = renderWarehouseAssignment(warehouse, warehouse.bottles[0]);
-    assert.match(renderedText(html), /class="warehouse-assignment-bottle"/);
-    assert.match(renderedText(html), /class="warehouse-assignment-current"/);
+    assert.ok(domElements(html, '[class="warehouse-assignment-bottle"]').length > 0);
+    assert.ok(domElements(html, '[class="warehouse-assignment-current"]').length > 0);
     assert.match(renderedText(html), /Aktueller Lagerort/);
     assert.match(renderedText(html), /<strong>Whiskyzimmer \/ Regal &lt;1&gt; \/ Fach 1<\/strong>/);
-    assert.match(renderedText(html), /<div class="warehouse-assignment-editor">/);
+    assert.ok(domElements(html, 'div[class="warehouse-assignment-editor"]').length > 0);
     assert.doesNotMatch(renderedText(html), /<details|<summary>/);
-    assert.match(
-      renderedText(html),
-      new RegExp('<fieldset class="warehouse-assignment-targ' + 'et"><legend>Neuer Lagerort<\\/legend>')
-    );
-    assert.match(renderedText(html), /data-assignment-room/);
-    assert.match(renderedText(html), /data-assignment-furniture/);
-    assert.match(renderedText(html), /data-assignment-shelf/);
+    assert.equal(domElements(html, 'fieldset.warehouse-assignment-target > legend')[0].text.trim(), 'Neuer Lagerort');
+    assert.ok(domElements(html, '[data-assignment-room]').length > 0);
+    assert.ok(domElements(html, '[data-assignment-furniture]').length > 0);
+    assert.ok(domElements(html, '[data-assignment-shelf]').length > 0);
     assert.match(renderedText(html), /Whiskyzimmer \/ Regal &lt;1&gt; \/ Fach 1/);
     assert.doesNotMatch(renderedText(html), /<1>/);
-    assert.doesNotMatch(renderedText(html), /<test>/);
-    assert.match(renderedText(html), /value="s1" selected/);
-    assert.match(renderedText(html), /value="s2" disabled/);
+    assert.equal(domElements(html, 'test').length, 0);
+    assert.ok(domElements(html, '[value="s1"][selected]').length > 0);
+    assert.ok(domElements(html, '[value="s2"][disabled]').length > 0);
     assert.match(renderedText(html), /1 von 1 Plätzen belegt/);
     assert.deepEqual(assignmentLocation(warehouse, 's1')?.shelf, shelf);
   }
@@ -95,7 +92,7 @@ test(
     const {renderWarehouseAssignment} = await import('../../public/js/ui/warehouse-assignment.js');
     const html = renderWarehouseAssignment(w, [w.bottles[0], w.bottles[1]]);
     assert.match(renderedText(html), /2 Flaschen ausgewählt/);
-    assert.match(renderedText(html), /<div class="warehouse-assignment-editor">/);
+    assert.ok(domElements(html, 'div[class="warehouse-assignment-editor"]').length > 0);
     assert.doesNotMatch(renderedText(html), /<details|<summary>/);
   }
 );
@@ -113,7 +110,7 @@ test(
     assert.equal(renderedText(shelfCapacityIncrease(warehouse, warehouse.rooms[0].furniture[0].shelves[0], ['b1'])), null);
     warehouse.rooms[0].furniture[0].shelves.push({id: 'unlimited', capacity: null});
     assert.equal(renderedText(shelfCapacityIncrease(warehouse, warehouse.rooms[0].furniture[0].shelves[2], ['b2'])), null);
-    assert.match(renderedText(renderWarehouseAssignment(warehouse, [warehouse.bottles[0], warehouse.bottles[1]])), /value="r1"/);
+    assert.ok(domElements(renderWarehouseAssignment(warehouse, [warehouse.bottles[0], warehouse.bottles[1]]), '[value="r1"]').length > 0);
   }
 );
 

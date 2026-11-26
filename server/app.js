@@ -10,10 +10,8 @@ import {initialize} from './storage/collection-store.js';
 import {initWarehouse} from './storage/warehouse-store.js';
 import {initializeAuth, authorizeRequest} from './services/auth.js';
 /**
- * One shared handler for HTTP and HTTPS; neither protocol owns application
- * state.
- *
- * @return {Function} Structured result assembled from the input data.
+ * Initializes persisted stores and returns the secured HTTP request dispatcher.
+ * @return {function(import('node:http').IncomingMessage, import('node:http').ServerResponse): Promise<void>} Asynchronous request handler.
  */
 export function createRequestHandler() {
   initialize();
@@ -88,9 +86,8 @@ export function createRequestHandler() {
 }
 
 /**
- * Creates server for app.
- *
- * @return {*} Result computed from the supplied inputs.
+ * Creates the HTTP server using the initialized application request handler.
+ * @return {import('node:http').Server} Server instance; the caller starts listening.
  */
 export function createServer() {
   return http.createServer(createRequestHandler());

@@ -31,10 +31,9 @@ const isObject = value => !!value && typeof value === 'object' && !Array.isArray
 const isString = value => typeof value === 'string';
 
 /**
- * Derives the optional string result from the supplied values.
- *
- * @param {*} value Value to process.
- * @return {boolean} Whether the operation matched or succeeded.
+ * Accepts missing or null values in addition to valid strings.
+ * @param {*} value Candidate optional field.
+ * @return {boolean} Whether the field is nullish or a string.
  */
 const optionalString = value => value == null || isString(value);
 
@@ -643,11 +642,10 @@ export function validate(collection) {
 }
 
 /**
- * Rejects a request when a required field is missing or invalid.
- *
- * @param {*} value Input value to process.
- * @param {string} name Name of the item.
- * @return {*} Result computed from the supplied inputs.
+ * Validates a required nonblank string and removes surrounding whitespace.
+ * @param {*} value Untrusted field value.
+ * @param {string} name Field identifier for the validation error.
+ * @return {string} Trimmed nonempty value.
  */
 export function requireField(value, name) {
   assert(

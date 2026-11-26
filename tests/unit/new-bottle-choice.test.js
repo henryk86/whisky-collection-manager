@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import {createBottleForm} from '../../public/js/features/forms/bottle.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -33,12 +33,12 @@ test(
     assert.deepEqual(matchingBottlings(collection, 'OTHER bottler').map(entry => entry.id), ['whisky-b']);
     assert.equal(matchingBottlings(collection, 'absent').length, 0);
     const html = bottlingChoiceDialog(collection);
-    assert.match(renderedText(html), /id="new-bottle-choice-form"/);
-    assert.match(renderedText(html), /data-act="new-bottling-direct"/);
-    assert.match(renderedText(html), /name="bottlingId" required/);
+    assert.ok(domElements(html, '[id="new-bottle-choice-form"]').length > 0);
+    assert.ok(domElements(html, '[data-act="new-bottling-direct"]').length > 0);
+    assert.ok(domElements(html, '[name="bottlingId"][required]').length > 0);
     assert.match(renderedText(html), /option value=""/); // no implicit parent selection
-    assert.match(renderedText(html), /value="whisky-a"/);
-    assert.doesNotMatch(renderedText(bottlingChoiceOptions(collection, 'unmatched')), /value="whisky-a"/);
+    assert.ok(domElements(html, '[value="whisky-a"]').length > 0);
+    assert.equal(domElements(bottlingChoiceOptions(collection, 'unmatched'), '[value="whisky-a"]').length, 0);
     assert.equal(collection.bottlings.length, 2);
     assert.equal(collection.bottlings[0].bottles.length, 1);
   }
@@ -120,16 +120,16 @@ test(
     editors.newBottling();
     assert.match(renderedText(calls.at(-1).body), /new-bottle-choice-form/);
     editors.chooseExistingBottling('whisky-a');
-    assert.match(renderedText(calls.at(-1).body), /data-from-overview="1"/);
-    assert.match(renderedText(calls.at(-1).body), /data-bottling-id="whisky-a"/);
+    assert.ok(domElements(calls.at(-1).body, '[data-from-overview="1"]').length > 0);
+    assert.ok(domElements(calls.at(-1).body, '[data-bottling-id="whisky-a"]').length > 0);
     assert.throws(() => editors.chooseExistingBottling('missing'), /vorhandene Abfüllung/);
     editors.createBottling();
-    assert.match(renderedText(calls.at(-1).body), /id="bottling-form"/);
+    assert.ok(domElements(calls.at(-1).body, '[id="bottling-form"]').length > 0);
     editors.newBottle();
-    assert.match(renderedText(calls.at(-1).body), /data-bottling-id="whisky-a"/);
-    assert.doesNotMatch(renderedText(calls.at(-1).body), /data-from-overview/);
+    assert.ok(domElements(calls.at(-1).body, '[data-bottling-id="whisky-a"]').length > 0);
+    assert.equal(domElements(calls.at(-1).body, '[data-from-overview]').length, 0);
     state.collection = {bottlings: [], distilleries: []};
     editors.newBottling();
-    assert.match(renderedText(calls.at(-1).body), /id="bottling-form"/);
+    assert.ok(domElements(calls.at(-1).body, '[id="bottling-form"]').length > 0);
   }
 );

@@ -43,10 +43,10 @@ export function createFlavorHistory(initial) {
      */
     get canRedo() {return cursor < entries.length - 1;},
     /**
-     * Derives the record result from the supplied values.
+     * Appends a changed sensory profile to history and discards the redo branch.
      *
-     * @param {*} value Value to process.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * @param {*} value Profile to snapshot.
+     * @return {boolean} True when a new history entry was added.
      */
     record(value) {
       if (sameFlavor(entries[cursor], value)) return false;

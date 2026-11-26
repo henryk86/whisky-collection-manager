@@ -2,7 +2,6 @@ import {composeMarkup} from '../ui/render-plan.js';
 import {actionButton} from '../ui/buttons.js';
 import {headingTitle, pageHeader, backNavigation} from '../ui/headers.js';
 import {t} from '../i18n/index.js';
-import {escapeHtml} from '../ui/dom.js';
 import {detailField, detailGrid, actionToolbar} from '../ui/content.js';
 import {formatDate, imageUrl} from '../ui/format.js';
 import {flavorChart} from '../ui/flavor-profile.js';
@@ -147,9 +146,9 @@ export function createTastingPresentation({state, selectors}) {
    * Builds the localized tasting rating text for the current language.
    *
    * @param {*} record Record to validate or persist.
-   * @return {string} Localized unrated label or escaped rating followed by the 100-point scale.
+   * @return {string} Localized unrated label or formatted rating followed by the 100-point scale.
    */
-  const tastingRating = record => record.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(String(record.rating))} / 100`;
+  const tastingRating = record => record.rating == null ? t('tasting.unrated') : `${String(record.rating)} / 100`;
 
   /**
    * Prepares displayed scalar value or muted missing-value indicator.
@@ -157,7 +156,7 @@ export function createTastingPresentation({state, selectors}) {
    * @param {*} value Value to process.
    * @return {import('../ui/render-plan.js').RenderPlan|string} Displayed scalar value or muted missing-value indicator (or scalar/empty text when no plan is needed).
    */
-  const blank = value => value == null || String(value).trim() === '' ? renderTemplate('muted3') : escapeHtml(String(value));
+  const blank = value => value == null || String(value).trim() === '' ? renderTemplate('muted3') : String(value);
 
   /**
    * Prepares read-only rating glasses and score display.
@@ -274,7 +273,7 @@ export function createTastingPresentation({state, selectors}) {
       content: `${t('tastings.open')}: ${home ? b.name : (record.title || formatDate(record.tastedOn))}`,
       entryTitle: home ? b.name : (record.title || formatDate(record.tastedOn)),
       entryDate: home ? formatDate(record.tastedOn) : (record.title ? formatDate(record.tastedOn) : ''),
-      entrySubtitle: home && record.title ? ` · ${escapeHtml(record.title)}` : '',
+      entrySubtitle: home && record.title ? ` · ${String(record.title ?? '')}` : '',
       tastingListGlasses: tastingListGlasses(record),
       tastingRating: tastingRating(record),
       chevronRightIcon: chevronRightIcon,

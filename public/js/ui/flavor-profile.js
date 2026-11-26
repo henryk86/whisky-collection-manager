@@ -1,6 +1,5 @@
 import {composeMarkup} from './render-plan.js';
 import {t} from '../i18n/index.js';
-import {escapeHtml} from './dom.js';
 import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
 import {loadTemplates} from './templates.js';
 

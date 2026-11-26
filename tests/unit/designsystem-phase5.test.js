@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHomeView} from '../../public/js/views/home.js';
@@ -81,8 +81,8 @@ test(
          */
         shell: markup => {html = markup;},
       })();
-      assert.equal((renderedText(html).match(/class="panel stat" data-ds-panel="standard"/g) || []).length, 4);
-      assert.match(renderedText(html), /class="empty-state" data-ds-empty-state="collection"/);
+      assert.equal(domElements(html, '[class="panel stat"][data-ds-panel="standard"]').length, 4);
+      assert.ok(domElements(html, '[class="empty-state"][data-ds-empty-state="collection"]').length > 0);
       assert.doesNotMatch(renderedText(html), /class="panel stat"[^>]*>\s*<div class="panel"/);
     } finally {
       for (const [name, value] of Object.entries(previous)) {
@@ -109,9 +109,9 @@ test(
        */
       shell: markup => {html = markup;},
     })();
-    assert.match(renderedText(html), /class="panel stat analytics-metric" data-ds-panel="standard"/);
-    assert.match(renderedText(html), /class="analytics-panel" data-ds-panel="analytics"/);
-    assert.match(renderedText(html), /data-ds-empty-state="inline"/);
+    assert.ok(domElements(html, '[class="panel stat analytics-metric"][data-ds-panel="standard"]').length > 0);
+    assert.ok(domElements(html, '[class="analytics-panel"][data-ds-panel="analytics"]').length > 0);
+    assert.ok(domElements(html, '[data-ds-empty-state="inline"]').length > 0);
   }
 );
 
@@ -139,8 +139,8 @@ test(
       renderedText(html),
       new RegExp('class="actions warehouse-shelf-detail-acti' + 'ons" data-ds-action-toolbar="inline"')
     );
-    assert.match(renderedText(html), /data-act="warehouse-assign" data-id="p1"/);
-    assert.match(renderedText(html), /href="\/\?bottling=b1"/);
+    assert.ok(domElements(html, '[data-act="warehouse-assign"][data-id="p1"]').length > 0);
+    assert.ok(domElements(html, '[href="/?bottling=b1"]').length > 0);
     assert.match(renderedText(html), /A&amp;B/);
   }
 );

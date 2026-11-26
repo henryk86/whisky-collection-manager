@@ -2,7 +2,6 @@ import {composeMarkup} from '../../ui/render-plan.js';
 import {replaceContent} from '../../ui/dom-renderer.js';
 import {actionButton} from '../../ui/buttons.js';
 import {request, clearResourceCache} from '../../api.js';
-import {escapeHtml} from '../../ui/dom.js';
 import {t} from '../../i18n/index.js';
 import {toast} from '../../ui/notifications.js';
 import {eyeIcon, eyeOffIcon} from '../../ui/action-icons.js';

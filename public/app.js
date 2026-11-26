@@ -18,7 +18,6 @@ import {createFilePreview} from './js/features/file-preview.js';
 import {createPhotoViewer} from './js/ui/photo-viewer.js';
 import {createPhotoEditor} from './js/features/photo-editor/controller.js';
 import {createShell} from './js/ui/shell.js';
-import {escapeHtml} from './js/ui/dom.js';
 import {toast} from './js/ui/notifications.js';
 import {runAction} from './js/ui/action-result.js';
 import {loadResources} from './js/ui/refresh-resources.js';

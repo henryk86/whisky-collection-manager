@@ -1,13 +1,13 @@
 
 
 import {destructiveFooter} from '../ui/modal-layout.js';
-import {t, tHtml} from '../i18n/index.js';
+import {t} from '../i18n/index.js';
 
 import {toast} from '../ui/notifications.js';
 
 import {request} from '../api.js';
 
-import {safe, count} from './warehouse-presentation.js';
+import {count} from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('warehouse/warehouse.html');
@@ -33,7 +33,7 @@ export function createWarehouseDeleteController({currentRoom, selectedFurniture,
       t("warehouse.bulk.deleteTitle", {count: ids.length}),
       renderTemplate('askBulkDeleteP', {
         deleteConfirmation: t("warehouse.bulk.deleteConfirmation", {count: ids.length}),
-        ids: ids.map(id => room.furniture.find(f => f.id === id)?.name).map(safe).join(', '),
+        ids: ids.map(id => room.furniture.find(f => f.id === id)?.name).map(name => String(name ?? '')).join(', '),
         destructiveFooter: destructiveFooter({
           cancelLabel: t("common.actions.cancel"),
           acceptLabel: t("warehouse.bulk.deleteAction", {count: ids.length}),
@@ -66,7 +66,7 @@ export function createWarehouseDeleteController({currentRoom, selectedFurniture,
         modal.showModal(
           t('warehouse.rooms.deleteOccupiedTitle'),
           renderTemplate('askDeleteP', {
-            deleteOccupiedMessage: tHtml('warehouse.rooms.deleteOccupiedMessage', {name: room.name, count: occupied}),
+            deleteOccupiedMessage: t('warehouse.rooms.deleteOccupiedMessage', {name: room.name, count: occupied}),
             destructiveFooter: destructiveFooter({
               cancelLabel: t('common.actions.cancel'),
               acceptLabel: t('warehouse.rooms.unassignAndDelete'),
@@ -80,7 +80,7 @@ export function createWarehouseDeleteController({currentRoom, selectedFurniture,
       modal.showModal(
         t('warehouse.rooms.delete'),
         renderTemplate('askDeleteP2', {
-          deleteEmptyMessage: tHtml('warehouse.rooms.deleteEmptyMessage', {name: room.name}),
+          deleteEmptyMessage: t('warehouse.rooms.deleteEmptyMessage', {name: room.name}),
           destructiveFooter: destructiveFooter({
             cancelLabel: t('common.actions.cancel'),
             acceptLabel: t('common.actions.remove'),

@@ -3,7 +3,6 @@
  */
 import german from '../../locales/de.json' with {type: 'json'};
 import english from '../../locales/en.json' with {type: 'json'};
-import {escapeHtml} from '../ui/dom.js';
 
 const DEFAULT_LANGUAGE = 'de';
 const STORAGE_KEY = 'whisky-language';
@@ -71,18 +70,6 @@ export function createTranslator(messages = {}, fallback = english,
  * @return {string} Translated text, or the key if no message is available.
  */
 export const t = (key, params = {}) => translator(key, params);
-
-/**
- * Resolves a key for an HTML template after escaping string placeholder values.
- * Catalog text itself is trusted.
- *
- * @param {string} key Stable catalog key.
- * @param {!Object=} params Named interpolation values, including user text.
- * @return {string} Translated markup with escaped string values.
- */
-export const tHtml = (key, params = {}) => t(key, Object.fromEntries(
-  Object.entries(params).map(([name, value]) => [name, typeof value === 'string' ? escapeHtml(value) : value])
-));
 
 /**
  * Returns the active application locale.

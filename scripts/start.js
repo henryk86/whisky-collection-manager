@@ -45,10 +45,9 @@ export function needsNpmCi(root, {production = false} = {}) {
 }
 
 /**
- * Retrieves env file from the available state.
- *
- * @param {*} root Root node or directory for the operation.
- * @return {*} Combined text from the input values.
+ * Parses environment assignments from the project's optional .env file.
+ * @param {string} root Project root containing the environment file.
+ * @return {Object<string,string>} Parsed assignments; empty when no file exists.
  */
 function readEnvFile(root) {
   const result = {};
@@ -78,11 +77,10 @@ function readEnvFile(root) {
 export function localTlsStatus(root, env = process.env) {
   const fileEnv = readEnvFile(root);
   /**
-   * Derives the setting result from the supplied values.
-   *
-   * @param {*} key Key used to select or group values.
-   * @param {*} fallback Value used when the requested data is unavailable.
-   * @return {*} Result computed from the supplied inputs.
+   * Resolves a startup option, preferring process environment over the environment file.
+   * @param {string} key Environment variable name.
+   * @param {*} fallback Fallback when neither source defines it.
+   * @return {*} Configured value or the supplied fallback.
    */
   const setting = (key, fallback) => env[key] ?? fileEnv[key] ?? fallback;
   const enabled = String(setting('HTTPS_ENABLED', 'true')).toLowerCase();
@@ -108,10 +106,9 @@ export function localTlsStatus(root, env = process.env) {
 }
 
 /**
- * Derives the npm command result from the supplied values.
- *
- * @param {*} env Value used by this operation.
- * @return {!Array<*>} Resulting entries in their output order.
+ * Resolves npm's executable and arguments without requiring a Windows command-shell workaround when npm_execpath is available.
+ * @param {Object} env Environment of the startup process.
+ * @return {Object} Executable and initial arguments for invoking npm.
  */
 function npmCommand(env) {
   // npm supplies npm_execpath to npm run scripts. This avoids spawning

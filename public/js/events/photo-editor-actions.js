@@ -8,108 +8,104 @@
 export function createPhotoEditorActions({photoEditor}) {
   return {
     /**
-     * Handles the photo editor open interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the photo editor for the action's image source.
+     * @param {!HTMLElement} button Triggering action element passed to the controller.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-open': button => photoEditor.open(button),
 
     /**
-     * Handles the photo editor tab interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Switches the photo editor to the requested tool tab.
+     * @param {!HTMLElement} button Action element carrying data-photo-editor-tab.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-tab': button => photoEditor.selectTab(button.dataset.photoEditorTab),
 
     /**
-     * Handles the photo editor before interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Switches between the edited preview and the original image.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-before': () => photoEditor.before(),
 
     /**
-     * Handles the photo editor auto interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Computes automatic image adjustments.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-auto': () => photoEditor.auto(),
 
     /**
-     * Handles the photo editor reset interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Restores the editor's default adjustments.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-reset': () => photoEditor.reset(),
 
     /**
-     * Handles the photo editor reset group interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Resets only the selected adjustment group.
+     * @param {!HTMLElement} button Action element carrying data-photo-group.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-reset-group': button =>
       photoEditor.resetGroup(button.dataset.photoGroup),
 
     /**
-     * Handles the photo editor pick white interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Toggles white-balance sample selection.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-pick-white': () => photoEditor.toggleWhitePicker(),
 
     /**
-     * Handles the photo editor brush mode interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Activates or toggles the requested mask-brush mode.
+     * @param {!HTMLElement} button Action element carrying data-photo-brush-mode.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-brush-mode': button =>
       photoEditor.toggleBrush(button.dataset.photoBrushMode),
 
     /**
-     * Handles the photo editor brush undo interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Reverts the most recent mask-brush operation.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-brush-undo': () => photoEditor.undoBrush(),
 
     /**
-     * Handles the photo editor zoom in interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Increases the editor preview zoom by a factor of 1.5.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-zoom-in': () => photoEditor.zoom(1.5),
 
     /**
-     * Handles the photo editor zoom out interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Decreases the editor preview zoom by a factor of 1.5.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-zoom-out': () => photoEditor.zoom(1 / 1.5),
 
     /**
-     * Handles the photo editor zoom reset interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Resets editor preview magnification.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-zoom-reset': () => photoEditor.zoom(0),
 
     /**
-     * Handles the photo editor save interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Exports and saves the current edited image.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-save': () => photoEditor.save(),
 
     /**
-     * Handles the photo editor cutout interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Starts foreground extraction for the source image.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-cutout': () => photoEditor.cutout(),
 
     /**
-     * Handles the photo editor toggle cutout interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Toggles application of the foreground mask.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-toggle-cutout': () => photoEditor.toggleCutout(),
 
     /**
-     * Handles the photo editor remove cutout interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Removes the current foreground mask.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-editor-remove-cutout': () => photoEditor.removeCutout(),
   };

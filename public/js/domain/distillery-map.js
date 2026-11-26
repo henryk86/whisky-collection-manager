@@ -1,3 +1,4 @@
+import {bottlingDistilleryIds} from './distillery-origin.js';
 import {APPROXIMATE_LOCATIONS, normalizeDistilleryName}
   from './distillery-locations.js';
 /** Explicitly stored coordinates take priority over the built-in directory. */
@@ -20,7 +21,7 @@ export const ISLAY_LOCATIONS = Object.freeze({
  *
  * @param {!Object} distillery Distillery with optional saved coordinates.
  * @return {?{lat: number, lon: number, source: string,
- *     approximate: (boolean|undefined)}} Coordinates and provenance,
+ *     approximate?: boolean}} Coordinates and provenance,
  *     or null when no location is known.
  */
 export function locationFor(distillery) {
@@ -49,7 +50,7 @@ export function locationFor(distillery) {
  *
  * @param {import('../../../shared/types.js').Collection} collection
  *     Collection with distillery and physical-bottle records.
- * @param {{includeAllDistilleries: boolean}=} options Include distilleries
+ * @param {{includeAllDistilleries?: boolean}=} options Include distilleries
  *     without bottles when preparing a complete map.
  * @return {!Object} Distilleries grouped with physical bottle counts
  *     and geographic coordinates.
@@ -73,8 +74,7 @@ export function buildDistilleryMap(collection, {includeAllDistilleries =
     }
   }
   for (const bottling of collection.bottlings || []) {
-    const ids = Array.isArray(bottling.distilleryIds) ?
-      bottling.distilleryIds : (bottling.distilleryId ? [bottling.distilleryId] : []);
+    const ids = bottlingDistilleryIds(bottling);
     for (const id of new Set(ids)) {
       const distillery = byId.get(id);
       if (!distillery) continue;
@@ -181,18 +181,16 @@ export function unproject(x, y, zoom) {
 }
 
 /**
- * Zooms around a pixel inside the map viewport, keeping the geographic
- * position beneath that pixel stationary. With no pointer, use the centre. All
- * coordinates are relative to the viewport, not to the event target.
+ * Changes the map scale while keeping the geographic position beneath the selected pixel stationary.
  *
- * @param {*} center Current map centre coordinates.
- * @param {*} currentZoom Zoom level before the interaction.
- * @param {*} requestedZoom New zoom level requested by the user.
- * @param {number} width Width in pixels.
- * @param {number} height Height in pixels.
- * @param {number=} x Horizontal coordinate in the current coordinate system.
- * @param {number=} y Vertical coordinate in the current coordinate system.
- * @return {*} Structured result assembled from the input data.
+ * @param {*} center Current geographic centre.
+ * @param {*} currentZoom Current map zoom.
+ * @param {*} requestedZoom Requested map zoom.
+ * @param {number} width Viewport width in pixels.
+ * @param {number} height Viewport height in pixels.
+ * @param {number=} x Horizontal viewport coordinate.
+ * @param {number=} y Vertical viewport coordinate.
+ * @return {*} New centre and clamped zoom.
  */
 export function zoomAroundPoint(
   center,

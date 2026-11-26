@@ -8,32 +8,32 @@
 export function createImportActions({externalImport, editors}) {
   return {
     /**
-     * Handles the import apply interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Applies the parsed external bottling import.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'import-apply': () => externalImport.applyImport(),
 
     /**
-     * Handles the import continue interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Confirms the pending external import choice.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'import-continue': () => externalImport.confirmPendingImport(),
 
     /**
-     * Handles the import existing bottle interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens a physical-bottle form using the pending import data.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'import-existing-bottle': () => editors.newBottle(true),
 
     /**
-     * Handles the import existing photo interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Attaches the imported photo to the chosen existing bottle.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'import-existing-photo': () => externalImport.attachToExistingBottle(),
 
     /**
-     * Handles the import existing edit interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens an existing record with the pending import data.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'import-existing-edit': () => externalImport.editExisting(),
   };

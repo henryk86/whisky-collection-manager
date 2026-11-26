@@ -42,9 +42,8 @@ export function separateFunctions(filename, text) {
   }
 
   /**
-   * Tests input text against the examine pattern.
-   *
-   * @param {*} nodes Value used by this operation.
+   * Finds missing blank lines between adjacent documented functions in a syntax-node list.
+   * @param {import('typescript').NodeArray<import('typescript').Node>} nodes Sibling syntax nodes to inspect.
    */
   function examine(nodes) {
     for (let i = 1; i < nodes.length; i++) {

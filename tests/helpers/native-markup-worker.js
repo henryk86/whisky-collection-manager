@@ -39,48 +39,42 @@ async function openRenderer() {
       if (!value || typeof value !== 'object' || !value.plan) return value;
       return new RenderPlan(value.source, Object.fromEntries(Object.entries(value.values).map(([key, item]) => [key, restore(item)])), value.parts?.map(restore) || null);
     }
-    globalThis.renderForAssertion = ({encoded, expected}) => {
+    globalThis.renderForAssertion = ({encoded, selector, markup}) => {
       const template = document.createElement('template');
       // Most fragments are children of HTML elements; standalone table/SVG
       // fragments use the same context they have when mounted by the app.
       const plan = restore(encoded);
-      const source = plan.source || plan.parts?.find(part => part?.source)?.source || '';
+      const source = markup ? encoded : plan.source || plan.parts?.find(part => part?.source)?.source || '';
       const firstTag = source.trim().match(/^<([\w-]+)/)?.[1];
       const contextTag = {tr: 'tbody', td: 'tr', th: 'tr', tbody: 'table', thead: 'table', option: 'select', optgroup: 'select'}[firstTag];
       const svgTags = new Set(['path', 'g', 'circle', 'line', 'polygon', 'polyline', 'rect', 'text', 'defs', 'clipPath']);
       const context = svgTags.has(firstTag) ? document.createElementNS('http://www.w3.org/2000/svg', 'svg') : contextTag ? document.createElement(contextTag) : null;
-      template.content.append(materialize(plan, document, context));
-      const reference = document.createElement('template');
-      if (context) {
-        const range = document.createRange();
-        range.selectNodeContents(context);
-        reference.content.append(range.createContextualFragment(expected));
-      } else reference.innerHTML = expected;
-      for (const root of [template.content, reference.content]) {
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-        const nodes = [];
-        while (walker.nextNode()) nodes.push(walker.currentNode);
-        for (const node of nodes) {
-          if (/^\s*$/.test(node.data) && /\n/.test(node.data) && !node.parentElement?.closest('pre,textarea,code')) node.remove();
-        }
-        root.normalize();
-      }
-      if (!template.content.isEqualNode(reference.content)) {
-        throw new Error(`Native DOM differs from assertion markup: ${template.innerHTML.slice(0, 500)} versus ${reference.innerHTML.slice(0, 500)}`);
-      }
+      if (markup) {
+        const host = context || template;
+        host.innerHTML = encoded;
+        if (context) template.content.append(...context.childNodes);
+      } else template.content.append(materialize(plan, document, context));
+      if (selector !== undefined) return [...template.content.querySelectorAll(selector)].map(node => ({
+        tag: node.localName,
+        text: node.textContent,
+        attributes: Object.fromEntries([...node.attributes].map(attr => [attr.name, attr.value])),
+        value: node.value,
+        checked: node.checked,
+        disabled: node.disabled,
+      }));
       return template.innerHTML;
     };
   }, origin);
   return page;
 }
 
-parentPort.on('message', async ({port, signal, value, expected, close}) => {
+parentPort.on('message', async ({port, signal, value, selector, markup, close}) => {
   const status = new Int32Array(signal);
   try {
     if (close) {await browser?.close(); port.postMessage({value: ''});}
     else {
       const renderer = page || await openRenderer();
-      port.postMessage({value: await renderer.evaluate(input => globalThis.renderForAssertion(input), {encoded: value, expected})});
+      port.postMessage({value: await renderer.evaluate(input => globalThis.renderForAssertion(input), {encoded: value, selector, markup})});
     }
   } catch (error) {port.postMessage({error: error.message});}
   finally {Atomics.store(status, 0, 1); Atomics.notify(status, 0); port.close();}

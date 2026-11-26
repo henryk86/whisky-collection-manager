@@ -1,5 +1,4 @@
 import {composeMarkup} from './render-plan.js';
-import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('components/section-navigation.html');
@@ -24,30 +23,29 @@ export function sectionWorkspace(
   },
   content
 ) {
-  const safe = escapeHtml;
   const items = sections.map(section => ({id: String(section.id), label: String(section.label)}));
   const selected = items.some(item => item.id === activeId) ? activeId : items[0]?.id;
   const desktop = composeMarkup(items.map(item =>
     renderTemplate('sectionNavItem', {
       id: item.id === selected ? ' active' : '',
-      act: safe(action),
+      act: String(action ?? ''),
       itemAttributes: {[itemAttribute]: item.id},
       ariaCurrentAttributes: item.id === selected ? {"aria-current": "page"} : {},
-      label: safe(item.label),
+      label: String(item.label ?? ''),
     })));
   const options = composeMarkup(items.map(item =>
     renderTemplate('optionsOption', {
-      value: safe(item.id),
+      value: String(item.id ?? ''),
       selectedAttributes: item.id === selected ? {"selected": true} : {},
-      label: safe(item.label),
+      label: String(item.label ?? ''),
     })));
   return renderTemplate('sectionWorkspace', {
-    desktopClass: desktopClass ? ` ${safe(desktopClass)}` : '',
-    ariaLabel: safe(label),
+    desktopClass: desktopClass ? ` ${String(desktopClass ?? '')}` : '',
+    ariaLabel: String(label ?? ''),
     desktop: desktop,
-    label: safe(label),
-    sectionSwitch: safe(switchKind),
-    navigationLabel: safe(label),
+    label: String(label ?? ''),
+    sectionSwitch: String(switchKind ?? ''),
+    navigationLabel: String(label ?? ''),
     options: options,
     content: content,
   });

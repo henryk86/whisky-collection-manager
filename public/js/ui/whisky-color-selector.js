@@ -7,7 +7,6 @@ import {
 import {whiskyColorNameKey} from '../../../shared/whisky-color-names.js';
 import {glencairnSymbol} from './glencairn-icon.js';
 import {t} from '../i18n/index.js';
-import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('components/whisky-color-selector.html');

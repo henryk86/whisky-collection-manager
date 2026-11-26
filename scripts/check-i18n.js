@@ -8,10 +8,9 @@ import path from 'node:path';
 
 const catalog = JSON.parse(fs.readFileSync('public/locales/de.json', 'utf8'));
 /**
- * Derives the walk result from the supplied values.
- *
- * @param {*} directory Directory containing the requested data.
- * @return {*} Combined text from the input values.
+ * Discovers JavaScript and HTML files whose translation references must be checked.
+ * @param {string} directory Directory to search recursively.
+ * @return {string[]} Discovered source paths.
  */
 const walk = directory => fs.readdirSync(directory, {withFileTypes: true}).flatMap(entry => {
   const file = path.join(directory, entry.name);

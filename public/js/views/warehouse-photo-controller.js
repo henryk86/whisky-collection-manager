@@ -6,7 +6,7 @@ import {toast} from '../ui/notifications.js';
 import {imageData} from '../features/photos.js';
 import {request} from '../api.js';
 
-import {safe, findFurniture, shelfPanel} from './warehouse-presentation.js';
+import {findFurniture, shelfPanel} from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('warehouse/warehouse.html');
@@ -27,7 +27,7 @@ export function createWarehousePhotoController({w, modal, refresh, attachBottleP
     if (!found) return;
     modal.updateContent(
       renderTemplate('warehouseFurnitureManager2', {
-        furnitureId: safe(found.furniture.id),
+        furnitureId: String(found.furniture.id ?? ''),
         shelfPanel: shelfPanel(w(), found.room, found.furniture, {managementOnly: true}),
       }));
     attachBottlePhotos();
@@ -92,8 +92,8 @@ export function createWarehousePhotoController({w, modal, refresh, attachBottleP
     modal.showModal(
       title,
       renderTemplate('warehousePhotoLightbox', {
-        src: safe(path),
-        alt: safe(title),
+        src: String(path ?? ''),
+        alt: String(title ?? ''),
       }),
       true
     );

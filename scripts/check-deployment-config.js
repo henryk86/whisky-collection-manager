@@ -21,23 +21,21 @@ const check = (value, message) => {
 };
 
 /**
- * Enforces the text precondition.
- *
- * @param {*} text Text to process.
- * @param {*} snippet Value used by this operation.
- * @param {*} message Message to display or use for diagnostics.
-  * @return {*} Result of this expression.
-*/
+ * Fails the deployment contract if a required literal is absent.
+ * @param {string} text Configuration text.
+ * @param {string} snippet Required literal substring.
+ * @param {string} message Diagnostic identifying the contract.
+ * @return {void} Returns normally only when the literal is present.
+ */
 const requireText = (text, snippet, message) => check(text.includes(snippet), message);
 
 /**
- * Derives the no text result from the supplied values.
- *
- * @param {*} text Text to process.
- * @param {*} snippet Value used by this operation.
- * @param {*} message Message to display or use for diagnostics.
-  * @return {*} Result of this expression.
-*/
+ * Fails the deployment contract if a forbidden literal is present.
+ * @param {string} text Configuration text.
+ * @param {string} snippet Forbidden literal substring.
+ * @param {string} message Diagnostic identifying the contract.
+ * @return {void} Returns normally only when the literal is absent.
+ */
 const noText = (text, snippet, message) => check(!text.includes(snippet), message);
 
 /**

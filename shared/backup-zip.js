@@ -18,11 +18,10 @@ const TABLE = Array.from({length: 256}, (_, start) => {
   return value >>> 0;
 });
 /**
- * Derives the crc32 result from the supplied values.
- *
- * @param {*} buffer Value used by this operation.
- * @param {number=} previous Value used by this operation.
- * @return {number} Calculated numeric value.
+ * Updates a running ZIP CRC-32 checksum over the supplied bytes.
+ * @param {Uint8Array} buffer Bytes to incorporate.
+ * @param {number=} previous Previous unfinalized CRC state.
+ * @return {number} Unsigned updated CRC state.
  */
 function crc32(buffer, previous = 0xffffffff) {
   let value = previous;
@@ -31,10 +30,9 @@ function crc32(buffer, previous = 0xffffffff) {
 }
 
 /**
- * Updates the write state for its caller.
- *
- * @param {*} fd Value used by this operation.
- * @param {*} buffer Value used by this operation.
+ * Writes all bytes to a file descriptor, including retrying partial writes.
+ * @param {number} fd Open file descriptor.
+ * @param {Buffer} buffer Bytes to write.
  */
 function write(fd, buffer) {
   let position = 0;
@@ -115,11 +113,10 @@ function requiredPassword(password) {
 }
 
 /**
- * Calculates the aes numeric value.
- *
- * @param {*} password Password or secret supplied by the caller.
- * @param {*} salt Value used by this operation.
- * @return {!Object} Structured result assembled from the input data.
+ * Derives WinZip AES encryption and authentication keys from a password and salt.
+ * @param {string} password Backup password.
+ * @param {Buffer} salt Per-entry random salt.
+ * @return {Object} Encryption and authentication state for the ZIP entry.
  */
 function aes(password, salt) {
   const keys = crypto.pbkdf2Sync(Buffer.from(password, 'utf8'), salt, 1000, 66, 'sha1');
@@ -286,12 +283,11 @@ export function writeReadableZip(sourceRoot, destination, password, timestamp =
 }
 
 /**
- * Retrieves at from the available state.
- *
- * @param {*} fd Value used by this operation.
- * @param {*} length Value used by this operation.
- * @param {*} offset Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Reads exactly the requested byte range or rejects a truncated ZIP archive.
+ * @param {number} fd Open archive file descriptor.
+ * @param {number} length Number of bytes to read.
+ * @param {number} offset Absolute byte offset.
+ * @return {Buffer} Requested archive bytes.
  */
 function readAt(fd, length, offset) {
   const buffer = Buffer.alloc(length);

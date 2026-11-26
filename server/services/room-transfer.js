@@ -9,8 +9,8 @@ import {fail} from '../domain/errors.js';
 const FORMAT = 'wcm-room-transfer';
 const VERSION = 1;
 /**
- * Derives the id result from the supplied values.
- * @return {*} Result computed from the supplied inputs.
+ * Generates an identifier for a transferred storage record.
+ * @return {string} Random UUID.
  */
 const id = () => crypto.randomUUID();
 const furnitureKeys = [
@@ -32,11 +32,10 @@ const furnitureKeys = [
 const shelfKeys = ['name', 'capacity', 'front', 'heightCm', 'doorLeaves',
   'glassFrame'];
 /**
- * Selects and transforms the pick records.
- *
- * @param {*} source Input source to inspect.
- * @param {*} keys Value used by this operation.
- * @return {!Object} Entries that meet the selection criteria.
+ * Copies permitted own properties for room-transfer serialization.
+ * @param {Object} source Source record.
+ * @param {string[]} keys Permitted property names.
+ * @return {Object} Selected own fields.
  */
 const pick = (source, keys) => Object.fromEntries(keys.filter(key => Object.hasOwn(source, key)).map(key => [key, source[key]]));
 
@@ -49,19 +48,17 @@ const pick = (source, keys) => Object.fromEntries(keys.filter(key => Object.hasO
 const key = value => String(value || '').trim().toLocaleLowerCase('de');
 
 /**
- * Derives the source id result from the supplied values.
- *
- * @param {*} room Warehouse room being inspected or modified.
- * @return {*} Result computed from the supplied inputs.
+ * Resolves the original transferred-room identity rather than a newly generated local ID when available.
+ * @param {Object} room Room with optional transfer source ID.
+ * @return {string} Original source ID or the current room ID.
  */
 const sourceId = room => room.transferSourceId || room.id;
 
 /**
- * Enforces the ids precondition.
- *
- * @param {*} ids Identifiers in their current order.
- * @param {*} allIds Value used by this operation.
- * @return {*} Whether the requested condition is met.
+ * Validates the selected room IDs and expands the all-rooms selection.
+ * @param {*} ids The all token or requested room ID array.
+ * @param {string[]} allIds IDs available in the transfer.
+ * @return {string[]} Validated requested IDs.
  */
 function assertIds(ids, allIds) {
   if (ids === 'all') return allIds;
@@ -188,8 +185,8 @@ export function planRoomImport(
       continue;
     }
     /**
-     * Constructs id from the supplied data.
-     * @return {*} Result computed from the supplied inputs.
+     * Allocates an unused UUID and reserves it in the destination ID set.
+     * @return {string} Newly reserved identifier.
      */
     const makeId = () => {
       let fresh; do {

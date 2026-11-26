@@ -27,12 +27,10 @@ export function projectedWarehouseBottles(collection) {
 }
 
 /**
- * Updates derived warehouse bottle information from collection changes.
- * projection.
- *
- * @param {!Object} warehouse Warehouse model being processed.
- * @param {!Object} collection Collection data being processed.
- * @return {*} Structured result assembled from the input data.
+ * Rebuilds the warehouse's bottle projection and removes assignments to missing physical bottles.
+ * @param {Object|null|undefined} warehouse Current warehouse data, if available.
+ * @param {import('./types.js').Collection} collection Current collection with physical inventory.
+ * @return {Object|null|undefined} Warehouse projection, or the original nullish input when no warehouse is supplied.
  */
 export function synchronizeWarehouseProjection(warehouse, collection) {
   if (!warehouse) return warehouse;

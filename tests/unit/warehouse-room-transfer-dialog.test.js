@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {roomTransferMarkup}
@@ -10,17 +10,17 @@ test(
   'one room transfer dialog contains two mutually exclusive tabs and preserves both forms',
   () => {
     const html = roomTransferMarkup(rooms, 'r2');
-    assert.match(renderedText(html), /role="tablist"/);
-    assert.equal((renderedText(html).match(/role="tab"/g) || []).length, 2);
-    assert.match(renderedText(html), /id="warehouse-transfer-tab-export" aria-selected="true"/);
-    assert.match(renderedText(html), /id="warehouse-transfer-panel-import"[^>]+hidden/);
-    assert.match(renderedText(html), /id="warehouse-transfer-panel-export"[^>]*>/);
-    assert.match(renderedText(html), /id="warehouse-room-export-form"/);
-    assert.match(renderedText(html), /id="warehouse-room-import-form"/);
-    assert.match(renderedText(html), /value="r2" checked/);
-    assert.match(renderedText(html), /id="warehouse-transfer-file"/);
-    assert.match(renderedText(html), /id="warehouse-transfer-conflict-policy"/);
-    assert.match(renderedText(html), /id="warehouse-transfer-apply" disabled/);
+    assert.ok(domElements(html, '[role="tablist"]').length > 0);
+    assert.equal(domElements(html, '[role="tab"]').length, 2);
+    assert.ok(domElements(html, '[id="warehouse-transfer-tab-export"][aria-selected="true"]').length > 0);
+    assert.ok(domElements(html, '[id="warehouse-transfer-panel-import"][hidden]').length > 0);
+    assert.ok(domElements(html, '[id="warehouse-transfer-panel-export"]').length > 0);
+    assert.ok(domElements(html, '[id="warehouse-room-export-form"]').length > 0);
+    assert.ok(domElements(html, '[id="warehouse-room-import-form"]').length > 0);
+    assert.ok(domElements(html, '[value="r2"][checked]').length > 0);
+    assert.ok(domElements(html, '[id="warehouse-transfer-file"]').length > 0);
+    assert.ok(domElements(html, '[id="warehouse-transfer-conflict-policy"]').length > 0);
+    assert.ok(domElements(html, '[id="warehouse-transfer-apply"][disabled]').length > 0);
     assert.equal(renderedText(html).includes('warehouse-rooms-export'), false);
     assert.equal(renderedText(html).includes('warehouse-rooms-import'), false);
   }
@@ -30,9 +30,9 @@ test(
   'import tab is the default for an empty warehouse and export is disabled',
   () => {
     const html = roomTransferMarkup([]);
-    assert.match(renderedText(html), /id="warehouse-transfer-tab-export"[^>]*disabled/);
-    assert.match(renderedText(html), /id="warehouse-transfer-tab-import" aria-selected="true"/);
-    assert.match(renderedText(html), /id="warehouse-transfer-panel-export"[^>]+hidden/);
-    assert.match(renderedText(html), /id="warehouse-transfer-panel-import"[^>]*>/);
+    assert.ok(domElements(html, '[id="warehouse-transfer-tab-export"][disabled]').length > 0);
+    assert.ok(domElements(html, '[id="warehouse-transfer-tab-import"][aria-selected="true"]').length > 0);
+    assert.ok(domElements(html, '[id="warehouse-transfer-panel-export"][hidden]').length > 0);
+    assert.ok(domElements(html, '[id="warehouse-transfer-panel-import"]').length > 0);
   }
 );

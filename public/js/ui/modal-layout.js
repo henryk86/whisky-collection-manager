@@ -1,6 +1,5 @@
 import {composeMarkup} from './render-plan.js';
 import {sectionHeader} from './headers.js';
-import {escapeHtml} from './dom.js';
 import {actionButton} from './buttons.js';
 import {closeIcon} from './action-icons.js';
 import {loadTemplates} from './templates.js';
@@ -58,7 +57,7 @@ export function modalFrame({title, content, wide = false, variant = '',
  */
 export function modalFooter(actions, {className = ''} = {}) {
   return renderTemplate('actions', {
-    className: className ? ` ${escapeHtml(className)}` : '',
+    className: className ? ` ${String(className ?? '')}` : '',
     actions: actions,
   });
 }

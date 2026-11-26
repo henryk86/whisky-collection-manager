@@ -130,23 +130,23 @@ export function bindEvents(
 */
     'close-menu': () => setMenu(false),
     /**
-     * Handles the goto home interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Navigates to the collection overview.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     'goto-home': () => navigate('home'),
     /**
-     * Handles the goto tastings home interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the global tasting and flight overview.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     'goto-tastings-home': () => navigate('tastings-home'),
     /**
-     * Handles the goto map interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the map without a selected bottling.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     'goto-map': () => navigate('map'),
     /**
-     * Handles the goto help interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the application help page.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     'goto-help': () => navigate('help'),
     /**
@@ -157,18 +157,18 @@ export function bindEvents(
      */
     'help-tab': button => activateHelpTopic(button.dataset.helpTopic, button.closest('.help-page')),
     /**
-     * Handles the bottling map interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the map for the currently selected bottling.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     'bottling-map': () => navigate('map', state.selected),
     /**
-     * Handles the goto analysis interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the analytics overview.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     'goto-analysis': () => navigate('analytics', 'overview'),
     /**
-     * Handles the goto warehouse interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the storage overview.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     'goto-warehouse': () => navigate('warehouse', 'overview'),
     /**
@@ -184,13 +184,13 @@ export function bindEvents(
       }
     },
     /**
-     * Handles the flavor detail undo interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Restores the preceding sensory-profile edit.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'flavor-detail-undo': () => tastingsView.undoFlavor(),
     /**
-     * Handles the flavor detail redo interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Reapplies the next sensory-profile edit.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'flavor-detail-redo': () => tastingsView.redoFlavor(),
     /**
@@ -202,21 +202,20 @@ export function bindEvents(
       if (state.backupUnlocked) await backup.refresh(true);
     },
     /**
-     * Handles the find distillery location interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Starts the coordinate lookup for the edited distillery.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'find-distillery-location': () => settings.findDistilleryLocation(),
     /**
-     * Handles the apply distillery location interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Applies the coordinates supplied by the selected search result.
+     * @param {!HTMLElement} button Triggering action element passed to the controller.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'apply-distillery-location': button =>
       settings.applyDistilleryLocation(button),
     /**
-     * Handles the toggle theme interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Switches between the available light and dark themes.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'toggle-theme': () => theme.toggleTheme(),
     /**
@@ -230,18 +229,18 @@ export function bindEvents(
      */
     'suggest-bottle': () => suggestNumber('inventoryNumber'),
     /**
-     * Handles the new interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the bottling creation choice.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     new: () => editors.newBottling(),
     /**
-     * Handles the new bottling direct interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the form for a new bottling directly.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'new-bottling-direct': () => editors.createBottling(),
     /**
-     * Handles the back interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Returns to the collection overview.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     back: () => navigate('home'),
     /**
@@ -265,66 +264,62 @@ export function bindEvents(
       render();
     },
     /**
-     * Handles the edit bottling interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the editor for the selected bottling.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'edit-bottling': () => editors.editBottling(),
     /**
-     * Handles the add bottle interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Adds a physical bottle to the current bottling.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'add-bottle': () => editors.newBottle(),
     /**
-     * Handles the edit bottle interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the editor for the physical bottle identified by the action.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'edit-bottle': button => editors.editBottle(button.dataset.id),
     /**
-     * Handles the close modal interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Closes the active modal.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'close-modal': () => modal.closeModal(),
     /**
-     * Handles the modal confirm accept interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Accepts the currently pending confirmation.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'modal-confirm-accept': () => modal.acceptConfirmation(),
     /**
-     * Handles the modal choice interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Resolves the pending modal choice using the selected value.
+     * @param {!HTMLElement} button Action element carrying data-choice.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'modal-choice': button => modal.acceptChoice(button.dataset.choice),
     /**
-     * Handles the add distillery interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the new-distillery dialog.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'add-distillery': () => settings.promptDistillery(),
     /**
-     * Handles the rename distillery interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the rename dialog for the selected distillery.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'rename-distillery': button => settings.promptDistillery(button.dataset.id),
     /**
-     * Handles the scan interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the barcode scanner for a lookup.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     scan: () => scanner.scanCode(),
     /**
-     * Handles the scan into bottle interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the scanner in inventory-number assignment mode.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'scan-into-bottle': () => scanner.scanCode(true),
     /**
-     * Handles the submit code interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Resolves the manually entered code using the action's assignment mode.
+     * @param {!HTMLElement} button Action element carrying data-assign.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'submit-code': button => resolveCode(query('[name=manualCode]').value, button.dataset.assign === '1'),
     /**
@@ -347,8 +342,8 @@ export function bindEvents(
       }
     },
     /**
-     * Handles the confirm import interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Confirms the pending collection import.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'confirm-import': () => settings.confirmImport(),
     /**
@@ -373,42 +368,40 @@ export function bindEvents(
       }
     ),
     /**
-     * Handles the preview file interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the file preview for the selected attachment.
+     * @param {!HTMLElement} button Triggering action element passed to the controller.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'preview-file': button => filePreview.open(button),
     /**
-     * Handles the open photo interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the selected photo in the lightbox.
+     * @param {!HTMLElement} button Triggering action element passed to the controller.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'open-photo': button => photoViewer.open(button),
     /**
-     * Handles the photo zoom in interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Increases the current lightbox zoom by a factor of 1.25.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-zoom-in': () => photoViewer.zoom(1.25),
     /**
-     * Handles the photo zoom out interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Decreases the current lightbox zoom by a factor of 1.25.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-zoom-out': () => photoViewer.zoom(1 / 1.25),
     /**
-     * Handles the photo zoom reset interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Resets the lightbox zoom to its default.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-zoom-reset': () => photoViewer.zoom(0),
     /**
-     * Handles the photo prev interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Moves to the previous lightbox photo.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-prev': () => photoViewer.step(-1),
     /**
-     * Handles the photo next interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Moves to the next lightbox photo.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'photo-next': () => photoViewer.step(1),
     /**
@@ -471,8 +464,8 @@ export function bindEvents(
       }
     ),
     /**
-     * Handles the import interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Starts the JSON import flow.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     import: () => settings.importJSON(),
   };

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {csv} from '../../server/exports/csv.js';
 import {allowedExtensionOrigin} from '../../server/http/request-security.js';
-import {createTranslator, tHtml} from '../../public/js/i18n/index.js';
+import {createTranslator, t} from '../../public/js/i18n/index.js';
 
 test(
   'CSV export escapes spreadsheet formulas without changing numeric negatives',
@@ -38,16 +38,13 @@ test(
   }
 );
 
-test(
-  'tHtml escapes parameter strings, t remains plaintext for non-HTML contexts',
-  () => {
-    const actual = tHtml('warehouse.shelves.doorAcross', {from: '<img onerror=alert(1)>', to: 3});
-    assert.ok(!actual.includes('<img'));
-    assert.ok(actual.includes('&lt;img'));
-    const lookup = createTranslator({demo: 'Hello {name}'});
-    assert.equal(lookup('demo', {name: '<b>'}), 'Hello <b>');
-  }
-);
+test('translation interpolation preserves literal user text for native DOM binding', () => {
+  const input = '<img onerror=alert(1)> &lt; &amp;';
+  const actual = t('warehouse.shelves.doorAcross', {from: input, to: 3});
+  assert.ok(actual.includes(input));
+  const lookup = createTranslator({demo: 'Hello {name}'});
+  assert.equal(lookup('demo', {name: '<b>'}), 'Hello <b>');
+});
 
 
 test(
@@ -83,8 +80,7 @@ test(
   }
 );
 
-test('tHtml renders a raw ampersand as exactly one HTML entity', () => {
-  const rendered = tHtml('warehouse.shelves.doorAcross', {from: 'A&B', to: 3});
-  assert.ok(rendered.includes('A&amp;B'));
-  assert.ok(!rendered.includes('A&amp;amp;B'));
+test('translation preserves ampersands and literal entity-like input', () => {
+  const input = 'A&B &amp; &#39;';
+  assert.ok(t('warehouse.shelves.doorAcross', {from: input, to: 3}).includes(input));
 });

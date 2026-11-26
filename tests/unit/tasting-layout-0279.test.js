@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -40,7 +40,7 @@ test(
     const panel = renderedText(html).slice(start, end);
     assert.ok(renderedText(panel).indexOf('data-tasting-date') < renderedText(panel).indexOf('data-tasting-title'));
     assert.ok(renderedText(panel).indexOf('data-tasting-title') < renderedText(panel).indexOf('class="actions tasting-editor-actions"'));
-    assert.match(renderedText(panel), /data-act="flavor-detail-undo"/);
-    assert.match(renderedText(panel), /data-act="flavor-detail-redo"/);
+    assert.ok(domElements(panel, '[data-act="flavor-detail-undo"]').length > 0);
+    assert.ok(domElements(panel, '[data-act="flavor-detail-redo"]').length > 0);
   }
 );

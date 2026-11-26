@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -60,9 +60,9 @@ test(
       refresh() {},
     });
     view.flight();
-    assert.equal((renderedText(html).match(/data-flight-drag/g) || []).length, 3);
-    assert.equal((renderedText(html).match(/data-act="tasting-flight-note-open"/g) || []).length, 3);
-    assert.match(renderedText(html), /aria-label="Reihenfolge per Ziehen ändern"/);
-    assert.match(renderedText(html), /data-act="tasting-flight-move"/, 'keyboard/accessible buttons remain');
+    assert.equal(domElements(html, '[data-flight-drag]').length, 3);
+    assert.equal(domElements(html, '[data-act="tasting-flight-note-open"]').length, 3);
+    assert.ok(domElements(html, '[aria-label="Reihenfolge per Ziehen ändern"]').length > 0);
+    assert.ok(domElements(html, '[data-act="tasting-flight-move"]').length > 0, 'keyboard/accessible buttons remain');
   }
 );

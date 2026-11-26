@@ -5,18 +5,16 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {prepareSyncPR} from './sync-release-branches.js';
 /**
- * Normalizes the gh text for subsequent processing.
- *
- * @param {!Array<*>} args Arguments forwarded to the operation.
- * @return {*} Result computed from the supplied inputs.
+ * Executes the GitHub CLI without interactive input.
+ * @param {...string} args GitHub CLI arguments.
+ * @return {string} Trimmed standard output.
  */
 const gh = (...args) => execFileSync('gh', args, {encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}).trim();
 
 /**
- * Derives the sleep result from the supplied values.
- *
- * @param {*} ms Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Delays the next polling attempt.
+ * @param {number} ms Delay in milliseconds.
+ * @return {Promise<void>} Resolves when the timer fires.
  */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 

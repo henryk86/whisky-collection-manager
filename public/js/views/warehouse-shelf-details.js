@@ -3,10 +3,7 @@ import {createShelfContentsModel} from './models/warehouse-details.js';
 /** Shelf details show all rows of bottles, not just the front-facing row. */
 import {t, formatNumber} from '../i18n/index.js';
 import {actionToolbar} from '../ui/content.js';
-import {
-  bottleSymbol, bottleListFacts, bottleActionButtons,
-  safe
-} from './warehouse-presentation.js';
+import {bottleSymbol, bottleListFacts, bottleActionButtons} from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('warehouse/warehouse-shelf-details.html');
@@ -48,13 +45,13 @@ export function shelfContents(warehouse, shelfId, bottlings = []) {
         ].filter(([, value]) => value != null && value !== '')
           .map(([label, value]) =>
             renderTemplate('warehouseBottleFact', {
-              label: safe(label),
-              value: safe(value),
+              label: String(label ?? ''),
+              value: String(value ?? ''),
             })));
         return renderTemplate('warehouseShelfDetailBottle', {
-          bottleId: safe(b.id),
+          bottleId: String(b.id ?? ''),
           bottleSymbol: bottleSymbol(b, {placeholderImage: true, staticImage: true}),
-          name: safe(b.name),
+          name: String(b.name ?? ''),
           facts: facts,
           bottleListFacts: bottleListFacts(b),
           actionToolbar: actionToolbar(bottleActionButtons(b), {className: 'warehouse-shelf-detail-actions'}),

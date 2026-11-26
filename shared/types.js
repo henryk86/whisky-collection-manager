@@ -77,6 +77,7 @@
  * known.
  * @property {number|null} [distillationYear]
  * @property {number|null} [bottlingYear]
+ * @property {number|null} [releaseYear] Calendar year the release was issued.
  * @property {'complete'|'incomplete'} [completionStatus]
  * @property {Tasting[]} tastings Independent tastings; the only persisted
  * owned-tasting source.

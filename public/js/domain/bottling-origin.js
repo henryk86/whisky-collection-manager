@@ -1,10 +1,9 @@
 /**
- * Show distilleries first; otherwise show just the bottler's name, without a
- * prefix.
+ * Prefers the names of known distilleries, otherwise displays the bottler without a prefix.
  *
- * @param {!Object} bottling Bottling record being processed.
- * @param {*} distilleryNames Distillery names used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * @param {!Object} bottling Bottling with contributor IDs and optional bottler.
+ * @param {*} distilleryNames Callback returning the display names of the bottling's distilleries.
+ * @return {*} Trimmed origin label, or empty text when unknown.
  */
 export function bottlingOriginLabel(bottling, distilleryNames) {
   const ids = Array.isArray(bottling.distilleryIds)

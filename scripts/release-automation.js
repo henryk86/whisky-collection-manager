@@ -14,10 +14,9 @@ import {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /**
- * Normalizes the git text for subsequent processing.
- *
- * @param {!Array<*>} args Arguments forwarded to the operation.
- * @return {*} Result computed from the supplied inputs.
+ * Runs Git in the release repository.
+ * @param {...string} args Git command arguments.
+ * @return {string} Trimmed standard output.
  */
 const git = (...args) => execFileSync('git', args, {cwd: ROOT, encoding: 'utf8'}).trim();
 const TYPES = new Set([
@@ -114,10 +113,9 @@ export function notesForPlan(plan) {
 }
 
 /**
- * Derives the git exists result from the supplied values.
- *
- * @param {*} ref Value used by this operation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * Checks whether a revision resolves to a commit.
+ * @param {string} ref Git revision or reference.
+ * @return {boolean} Whether Git can resolve the commit.
  */
 const gitExists = (ref) => {
   try {
@@ -126,11 +124,10 @@ const gitExists = (ref) => {
 };
 
 /**
- * Checks whether ancestor applies.
- *
- * @param {*} ancestor Value used by this operation.
- * @param {*} head Value used by this operation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * Checks commit ancestry using Git's merge-base exit status.
+ * @param {string} ancestor Potential ancestor revision.
+ * @param {string} head Descendant revision to inspect.
+ * @return {boolean} Whether the ancestor is reachable from the descendant.
  */
 const isAncestor = (ancestor, head) => {
   try {
@@ -139,19 +136,17 @@ const isAncestor = (ancestor, head) => {
 };
 
 /**
- * Performs the commit parents lifecycle action.
- *
- * @param {*} rev Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Reads the direct parents of a commit in Git's order.
+ * @param {string} rev Commit revision.
+ * @return {string[]} Parent commit hashes, empty for a root commit.
  */
 const commitParents = (rev) => git('rev-list', '--parents', '-n', '1', rev).split(/\s+/).slice(1);
 
 /**
- * Checks whether file at applies.
- *
- * @param {*} ref Value used by this operation.
- * @param {*} name Environment variable or setting name.
- * @return {boolean} Whether the operation matched or succeeded.
+ * Checks if a path exists in the tree of a particular revision.
+ * @param {string} ref Git revision.
+ * @param {string} name Repository-relative tree path.
+ * @return {boolean} Whether the tree contains the path.
  */
 const hasFileAt = (ref, name) => {
   try {
@@ -282,11 +277,10 @@ export function planRelease({head = 'HEAD', requireMerge = true} = {}) {
 }
 
 /**
- * Parses option from its input.
- *
- * @param {*} args Arguments forwarded to the operation.
- * @param {*} name Environment variable or setting name.
- * @return {*} Result computed from the supplied inputs.
+ * Reads the value following a named command-line option.
+ * @param {string[]} args Command-line arguments.
+ * @param {string} name Option name to find.
+ * @return {(string|undefined)} Following argument, or undefined if absent.
  */
 function parseOption(args, name) {
   const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined;

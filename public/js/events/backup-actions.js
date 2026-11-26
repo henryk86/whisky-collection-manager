@@ -8,115 +8,104 @@
 export function createBackupActions({backup}) {
   return {
     /**
-     * Handles the backup refresh interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Reloads the unlocked backup dashboard.
+     * @return {Promise<void>} Resolves after the dashboard refresh or error handling.
      */
     'backup-refresh': () => backup.refresh(),
 
     /**
-     * Handles the backup manual download interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Downloads the manually created collection backup.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'backup-manual-download': () => backup.downloadManual(),
 
     /**
-     * Handles the backup lock interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Clears the active backup administration session.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'backup-lock': () => backup.lock(),
 
     /**
-     * Handles the backup new interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens a new backup-profile form.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'backup-new': () => backup.edit(),
 
     /**
-     * Handles the backup edit interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the selected backup profile for editing.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'backup-edit': button => backup.edit(button.dataset.id),
 
     /**
-     * Handles the backup run interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Queues a backup run for the selected profile.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {Promise<void>} Resolves after queuing and refreshing the dashboard or reporting an error.
      */
     'backup-run': button => backup.job(button.dataset.id, 'run'),
 
     /**
-     * Handles the backup test interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Queues a connectivity test for the selected backup profile.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {Promise<void>} Resolves after queuing and refreshing the dashboard or reporting an error.
      */
     'backup-test': button => backup.job(button.dataset.id, 'test'),
 
     /**
-     * Handles the backup check interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Queues a repository integrity check for the selected profile.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {Promise<void>} Resolves after queuing and refreshing the dashboard or reporting an error.
      */
     'backup-check': button => backup.job(button.dataset.id, 'check'),
 
     /**
-     * Handles the backup snapshots interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Queues retrieval of snapshots for the selected profile.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {Promise<void>} Resolves after queuing and refreshing the dashboard or reporting an error.
      */
     'backup-snapshots': button => backup.job(button.dataset.id, 'snapshots'),
 
     /**
-     * Handles the backup restore interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the selected profile's restore flow.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'backup-restore': button => backup.restore(button.dataset.id),
 
     /**
-     * Handles the backup prepare interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Queues preparation of the selected snapshot for download.
+     * @param {!HTMLElement} button Action element carrying data-id, data-file.
+     * @return {Promise<void>} Resolves after queuing and refreshing the dashboard or reporting an error.
      */
     'backup-prepare': button => backup.job(button.dataset.id, 'prepare', {snapshotId: button.dataset.file}),
 
     /**
-     * Handles the backup download prepared interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Downloads the prepared backup artifact identified by the action.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'backup-download-prepared': button =>
       backup.downloadPrepared(button.dataset.id),
 
     /**
-     * Handles the backup download interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Downloads the selected file from the specified backup profile.
+     * @param {!HTMLElement} button Action element carrying data-id, data-file.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'backup-download': button => backup.download(button.dataset.id, button.dataset.file),
 
     /**
-     * Handles the backup delete interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Starts the profile-removal confirmation flow.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'backup-delete': button => backup.remove(button.dataset.id),
 
     /**
-     * Handles the backup confirm delete interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Confirms removal of the selected backup profile.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'backup-confirm-delete': button => backup.confirmDelete(button.dataset.id),
   };

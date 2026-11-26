@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {shelfLevels, effectiveShelfFront, totalExplicitHeightCm}
@@ -159,10 +159,10 @@ test(
       assert.match(renderedText(form), /Fach nach oben verschieben/);
       assert.doesNotMatch(renderedText(html), /warehouse-furniture-panel/, 'furniture editing is modal only');
       view.openForm('shelf', 'mid');
-      assert.match(renderedText(form), /name="heightCm"/);
-      assert.match(renderedText(form), /name="front"/);
-      assert.match(renderedText(form), /name="doorLeaves"/);
-      assert.match(renderedText(form), /name="glassFrame"/);
+      assert.ok(domElements(form, '[name="heightCm"]').length > 0);
+      assert.ok(domElements(form, '[name="front"]').length > 0);
+      assert.ok(domElements(form, '[name="doorLeaves"]').length > 0);
+      assert.ok(domElements(form, '[name="glassFrame"]').length > 0);
       assert.match(renderedText(form), />Holztür</);
       assert.match(renderedText(form), />Glastür</);
     } finally {
@@ -282,12 +282,12 @@ test(
         refresh: async () => {},
       });
       view.openForm('furniture', 'c');
-      assert.match(renderedText(form), /name="doorLeaves"/);
-      assert.match(renderedText(form), /name="glassFrame"/);
+      assert.ok(domElements(form, '[name="doorLeaves"]').length > 0);
+      assert.ok(domElements(form, '[name="glassFrame"]').length > 0);
       state.warehouseSelectedFurnitureIds = ['c'];
       view.openForm('furniture-bulk');
-      assert.match(renderedText(form), /name="doorLeaves"/);
-      assert.match(renderedText(form), /name="glassFrame"/);
+      assert.ok(domElements(form, '[name="doorLeaves"]').length > 0);
+      assert.ok(domElements(form, '[name="glassFrame"]').length > 0);
     } finally {
       if (doc === undefined) delete globalThis.document; else globalThis.document = doc;
     }

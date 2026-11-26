@@ -1,6 +1,6 @@
 import {t} from '../i18n/index.js';
 import {toast} from '../ui/notifications.js';
-import {safe, bottlePreview, findFurniture, shelfPanel} from './warehouse-presentation.js';
+import {bottlePreview, findFurniture, shelfPanel} from './warehouse-presentation.js';
 import {shelfContents} from './warehouse-shelf-details.js';
 import {renderWarehouseSelectionPanel} from './warehouse-selection-panel.js';
 import {createWarehouseSelectionModel} from './models/warehouse.js';
@@ -30,7 +30,7 @@ export function createWarehouseInspectionController({w, state, currentRoom, moda
     modal.showModal(
       found.furniture.name,
       renderTemplate('warehouseFurnitureManager', {
-        furnitureId: safe(found.furniture.id),
+        furnitureId: String(found.furniture.id ?? ''),
         shelfPanel: shelfPanel(data, found.room, found.furniture, {managementOnly: true}),
       }),
       true

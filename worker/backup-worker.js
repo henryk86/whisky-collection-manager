@@ -109,10 +109,9 @@ function writeJson(name, value) {
 }
 
 /**
- * Normalizes relative for consistent processing.
- *
- * @param {*} raw Value used by this operation.
- * @return {string} Validated relative backup path without hidden or parent segments.
+ * Rejects unsafe backup target paths and accepts only normalized relative paths.
+ * @param {*} raw Untrusted target path.
+ * @return {string} Validated relative target path.
  */
 function cleanRelative(raw) {
   if (typeof raw !== 'string' || !SAFE_PATH.test(raw) || raw.startsWith('/') || raw.endsWith('/') || raw.split('/').some(p => !p || p.startsWith('.') || p === '..')) {
@@ -122,10 +121,9 @@ function cleanRelative(raw) {
 }
 
 /**
- * Resolves the configured backup repository path.
- *
- * @param {*} profile Profile data used for the comparison.
- * @return {*} Combined text from the input values.
+ * Resolves the profile target to a local directory or remote repository, rejecting paths outside allowed storage.
+ * @param {Object} profile Backup profile with provider and target configuration.
+ * @return {string} Repository path or remote target.
  */
 export function repositoryFor(profile) {
   const target = cleanRelative(profile.targetPath);
@@ -149,8 +147,8 @@ export function repositoryFor(profile) {
 }
 
 /**
- * Retrieves profiles from the available state.
- * @return {*} Result computed from the supplied inputs.
+ * Reads and validates the profile catalog used by the backup scheduler.
+ * @return {Object[]} Configured backup profiles.
  */
 function loadProfiles() {
   const data = readJson('profiles.json', {version: 1, profiles: []});
@@ -159,8 +157,8 @@ function loadProfiles() {
 }
 
 /**
- * Derives the job env result from the supplied values.
- * @return {*} Structured result assembled from the input data.
+ * Builds the environment for restic and rclone subprocesses.
+ * @return {Object<string,string>} Process environment with backup configuration and secret-file paths.
  */
 function jobEnv() {
   const password = process.env.RESTIC_PASSWORD_FILE || '/run/secrets/restic-password';
@@ -215,12 +213,11 @@ export function runCommand(binary, args, {cwd, timeout = 3600000} = {}) {
 }
 
 /**
- * Derives the restic result from the supplied values.
- *
- * @param {*} repo Repository used for the check.
- * @param {*} args Arguments forwarded to the operation.
- * @param {*} options Options controlling the operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Runs restic against the specified repository.
+ * @param {string} repo Restic repository path or URL.
+ * @param {string[]} args Restic operation arguments.
+ * @param {Object} options Subprocess options.
+ * @return {Promise<*>} Subprocess result.
  */
 const restic = (repo, args, options) => runCommand('restic', ['-r', repo, ...args], options);
 
@@ -244,10 +241,9 @@ async function snapshots(repo) {
 }
 
 /**
- * Formats of for presentation.
- *
- * @param {*} profile Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Distinguishes ZIP profiles from existing Restic profiles without a format field.
+ * @param {Object} profile Backup profile configuration.
+ * @return {('zip'|'restic')} Effective backup format.
  */
 function formatOf(profile) {
   // Existing profiles have no format field and must keep their Restic
@@ -256,10 +252,9 @@ function formatOf(profile) {
 }
 
 /**
- * Converts date information for the archive name operation.
- *
- * @param {*} job Value used by this operation.
- * @return {string} Timestamped ZIP filename with a short job ID suffix.
+ * Builds a unique ZIP backup filename using the current UTC timestamp and job ID.
+ * @param {Object} job Backup job carrying its ID.
+ * @return {string} Generated archive filename.
  */
 function archiveName(job) {
   const timestamp = new Date().toISOString().slice(0, 23).replace(/[:.]/g, '-');
@@ -267,11 +262,10 @@ function archiveName(job) {
 }
 
 /**
- * Parses zip files for data from JSON input.
- *
- * @param {*} profile Value used by this operation.
- * @param {*} repo Repository used for the check.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Enumerates ZIP archives and their metadata in the selected local or remote target.
+ * @param {Object} profile Backup profile.
+ * @param {string} repo Resolved target repository.
+ * @return {Promise<Object[]>} Discovered ZIP archive records.
  */
 async function zipFilesFor(profile, repo) {
   let entries;
@@ -303,10 +297,9 @@ async function zipFilesFor(profile, repo) {
 }
 
 /**
- * Calculates the week bucket numeric value.
- *
- * @param {*} time Value used by this operation.
- * @return {string} ISO-week year and week-number key based on UTC.
+ * Groups a timestamp into a UTC ISO week for retention selection.
+ * @param {(string|number|Date)} time Archive timestamp.
+ * @return {string} ISO week-year and week number.
  */
 function weekBucket(time) {
   const d = new Date(time);
@@ -467,10 +460,9 @@ async function prepareZipRestore(job, profile, repo) {
 }
 
 /**
- * Enforces the source snapshot precondition.
- *
- * @param {*} job Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Requests a consistent source snapshot from the application using the internal worker token.
+ * @param {Object} job Backup job whose ID identifies the snapshot.
+ * @return {Promise<string>} Source snapshot directory.
  */
 async function ensureSourceSnapshot(job) {
   const file = process.env.BACKUP_WORKER_TOKEN_FILE || '/run/secrets/backup-worker-token';
@@ -747,8 +739,8 @@ export function createWorker() {
   return {
     start, processQueue,
     /**
-     * Retrieves status from the available state.
-     * @return {*} Result computed from the supplied inputs.
+     * Returns the current backup-worker status snapshot.
+     * @return {Object} Current in-memory status record.
      */
     getStatus: () => status,
   };

@@ -4,7 +4,6 @@ import {replaceContent, replaceElement} from '../ui/dom-renderer.js';
 import {pageHeader} from '../ui/headers.js';
 import {t} from '../i18n/index.js';
 import {markerDiameter} from '../domain/distillery-map.js';
-import {escapeHtml} from '../ui/dom.js';
 import {
   editIcon, pagodaRoofIcon, closedDistilleryIcon, chevronLeftIcon,
   chevronRightIcon
@@ -123,7 +122,7 @@ export function createMapView({state, shell, navigate, settings}) {
         id: site.id,
       })));
     return renderTemplate('mapRelatedBottling', {
-      locationsFor: t("map.bottling.locationsFor", {name: escapeHtml(relatedBottling.name)}),
+      locationsFor: t("map.bottling.locationsFor", {name: String(relatedBottling.name ?? '')}),
       mapRelatedSites: entries ? renderTemplate('mapRelatedSites', {entries: entries, }) : renderTemplate('hint'),
     });
   }
@@ -151,7 +150,7 @@ export function createMapView({state, shell, navigate, settings}) {
         renderTemplate('mapSiteHeading', {
           name: selected.name,
           id: selected.id,
-          correctLocationFor: t("map.actions.correctLocationFor", {name: escapeHtml(selected.name)}),
+          correctLocationFor: t("map.actions.correctLocationFor", {name: String(selected.name ?? '')}),
           editIcon: editIcon,
           plural: plural(selected.bottlingCount, t("forms.bottling.title"), t("analytics.inventory.bottlings")),
           bottleCountLabel: plural(selected.bottleCount, t("forms.bottle.title"), t("forms.bottle.plural")),
@@ -162,7 +161,7 @@ export function createMapView({state, shell, navigate, settings}) {
           formField: selected.bottlingCount ?
             renderTemplate('formField', {
               search: search,
-              bottlingsAtSite: t("map.bottling.bottlingsAtSite", {name: escapeHtml(selected.name)}),
+              bottlingsAtSite: t("map.bottling.bottlingsAtSite", {name: String(selected.name ?? '')}),
               length: entries.length ? composeMarkup(entries.map(({entry, facts}) =>
                 renderTemplate('mapBottlingLink', {
                   id: entry.id,

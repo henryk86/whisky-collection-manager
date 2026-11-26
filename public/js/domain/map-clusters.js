@@ -56,18 +56,18 @@ export function clusterMapSites(sites, zoom, {pinnedId = null} = {}) {
 // markers around their projected locations and preserve the real anchor for
 // a small visual connector. This changes neither coordinates nor bottle data.
 /**
- * Orders the spread overlapping sites records using the configured comparison.
+ * Separates overlapping markers at maximum zoom while preserving their geographic anchors.
  *
- * @param {*} groups Value used by this operation.
+ * @param {*} groups Marker groups to update in place.
  */
 function spreadOverlappingSites(groups) {
   const visited = new Set();
   const ordered = [...groups].sort((a, b) => String(a.sites[0].id).localeCompare(String(b.sites[0].id)));
   /**
-   * Calculates the diameter numeric value.
+   * Applies the minimum touch target diameter to a marker.
    *
-   * @param {*} group Value used by this operation.
-   * @return {number} Calculated numeric value.
+   * @param {*} group Marker group with its physical bottle count.
+   * @return {number} Marker diameter in pixels, at least 35.
    */
   const diameter = group => Math.max(35, markerDiameter(group.bottleCount));
   for (const start of ordered) {

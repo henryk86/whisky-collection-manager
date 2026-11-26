@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -113,13 +113,6 @@ const selectors = {
   distilleryNames: () => '',
 };
 
-/**
- * Derives the extract header result from the supplied values.
- *
- * @param {*} html HTML markup to render or inspect.
- * @return {*} Result computed from the supplied inputs.
- */
-const extractHeader = html => renderedText(html).match(/<thead><tr>([\s\S]*?)<\/tr><\/thead>/)?.[1] || '';
 
 // These preferences must not modify collection.json or leak across overview
 // modes.
@@ -255,7 +248,7 @@ test(
           // Simulate native details toggling when the user clicks the
           // dropdown summary, rather than changing its view state directly.
           currentPicker = {
-            open: /class="collection-table-columns" open/.test(renderedText(markup)),
+            open: domElements(markup, '.collection-table-columns[open]').length > 0,
             isConnected: true,
             /**
              * Updates the add event listener state for its caller.
@@ -270,34 +263,32 @@ test(
         },
       });
       view();
-      assert.match(renderedText(extractHeader(html)), /data-column="rating"/);
-      assert.doesNotMatch(renderedText(extractHeader(html)), /data-column="editing"/);
+      assert.ok(domElements(html, 'thead [data-column="rating"]').length > 0);
+      assert.equal(domElements(html, 'thead [data-column="editing"]').length, 0);
       const rating = {dataset: {collectionColumn: 'rating'}, checked: false};
       view.handleChange(rating);
-      assert.doesNotMatch(renderedText(extractHeader(html)), /data-column="rating"/);
+      assert.equal(domElements(html, 'thead [data-column="rating"]').length, 0);
       const editing = {dataset: {collectionColumn: 'editing'}, checked: true};
       view.handleChange(editing);
-      assert.match(renderedText(extractHeader(html)), /data-column="editing"/);
-      assert.match(renderedText(html), /class="collection-table-columns" open/);
+      assert.ok(domElements(html, 'thead [data-column="editing"]').length > 0);
+      assert.ok(domElements(html, '[class="collection-table-columns"][open]').length > 0);
       assert.deepEqual(renderedText(loadTableColumns(storage).bottlings).includes('editing'), true);
       // Closing the native <details> summary must persist across renders;
       // previously the next table update reopened it unexpectedly.
       currentPicker.open = false;
       currentPicker.onToggle();
       view();
-      assert.doesNotMatch(renderedText(html), /class="collection-table-columns" open/,
-        'the manually closed column picker remains closed on a subsequent render');
+      assert.equal(domElements(html, '[class="collection-table-columns"][open]').length, 0, 'the manually closed column picker remains closed on a subsequent render');
       view.handleClick({
         dataset: {
           act: 'collection-sort-column',
           column: 'age',
         },
       });
-      assert.doesNotMatch(renderedText(html), /class="collection-table-columns" open/,
-        'sorting a header closes the picker after editing columns');
+      assert.equal(domElements(html, '[class="collection-table-columns"][open]').length, 0, 'sorting a header closes the picker after editing columns');
       assert.equal(renderedText(state.sort), 'age');
-      assert.match(renderedText(html), /<option value="age" selected>/);
-      assert.match(renderedText(extractHeader(html)), /aria-sort="descending"[^>]*>\s*<button[^>]*data-column="age"/);
+      assert.ok(domElements(html, 'option[value="age"][selected]').length > 0);
+      assert.equal(domElements(html, 'thead [aria-sort="descending"] > button[data-column="age"]').length, 1);
       view.handleClick({
         dataset: {
           act: 'collection-sort-column',
@@ -305,11 +296,11 @@ test(
         },
       });
       assert.equal(renderedText(state.sort), 'ageAsc');
-      assert.match(renderedText(html), /<option value="ageAsc" selected>/);
+      assert.ok(domElements(html, 'option[value="ageAsc"][selected]').length > 0);
       state.overviewMode = 'bottles';
       view();
-      assert.match(renderedText(extractHeader(html)), /data-column="inventory"/);
-      assert.match(renderedText(extractHeader(html)), /data-column="rating"/);
+      assert.ok(domElements(html, 'thead [data-column="inventory"]').length > 0);
+      assert.ok(domElements(html, 'thead [data-column="rating"]').length > 0);
       view.handleClick({
         dataset: {
           act: 'collection-sort-column',
@@ -317,7 +308,7 @@ test(
         },
       });
       assert.equal(renderedText(state.sort), 'inventoryAsc');
-      assert.match(renderedText(html), /<option value="inventoryAsc" selected>/);
+      assert.ok(domElements(html, 'option[value="inventoryAsc"][selected]').length > 0);
       view.handleClick({
         dataset: {
           act: 'collection-sort-column',

@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -124,7 +124,7 @@ test(
     for (const action of ['delete-bottling', 'delete-bottle', 'delete-file']) {
       assert.ok(renderedText(button(html, action)).includes(`${renderedText(deleteIcon)}<span>Löschen</span>`), action);
     }
-    assert.match(renderedText(button(html, 'delete-file')), /aria-label="Datei Beleg\.pdf löschen"/);
+    assert.ok(domElements(button(html, 'delete-file'), '[aria-label="Datei Beleg.pdf löschen"]').length > 0);
   }
 );
 
@@ -152,11 +152,10 @@ test(
       }], assignments: {'physical-a': 'shelf-a'},
     };
     const link = button(detailMarkup({warehouse}), 'warehouse-focus');
-    assert.match(renderedText(link), /data-id="shelf-a"/);
-    assert.match(renderedText(link), /data-bottle-id="physical-a"/);
+    assert.ok(domElements(link, '[data-id="shelf-a"]').length > 0);
+    assert.ok(domElements(link, '[data-bottle-id="physical-a"]').length > 0);
     assert.match(renderedText(link), /Whiskyzimmer \/ Vitrine \/ Fach 2/);
-    assert.doesNotMatch(renderedText(detailMarkup()), /data-act="warehouse-focus"/,
-      'a bottle without a known location must not present a location link');
+    assert.equal(domElements(detailMarkup(), '[data-act="warehouse-focus"]').length, 0, 'a bottle without a known location must not present a location link');
   }
 );
 
@@ -172,10 +171,10 @@ test(
   () => {
     const html = detailMarkup({photos: [{id: 'photo-a', path: 'bottle.webp'}]});
     const edit = button(html, 'photo-editor-open');
-    assert.doesNotMatch(renderedText(html), /data-act="cutout-open"/, 'no redundant second gallery button');
+    assert.equal(domElements(html, '[data-act="cutout-open"]').length, 0, 'no redundant second gallery button');
     assert.ok(renderedText(edit).includes(renderedText(editIcon)), 'the existing pencil icon is reused');
-    assert.match(renderedText(edit), /title="Flaschenbild bearbeiten"/);
-    assert.match(renderedText(edit), /aria-label="Flaschenbild bearbeiten"/);
+    assert.ok(domElements(edit, '[title="Flaschenbild bearbeiten"]').length > 0);
+    assert.ok(domElements(edit, '[aria-label="Flaschenbild bearbeiten"]').length > 0);
     assert.doesNotMatch(renderedText(edit), /Anpassen|Adjust/);
   }
 );
@@ -201,9 +200,9 @@ test(
         'class="bottle-entry-main-photo" data-act="' + 'open-photo" data-bottle-photo-preview="phy' + 'sical-a"'
       )
     );
-    assert.match(renderedText(card), /class="bottle-entry-visual"/);
-    assert.match(renderedText(card), /class="bottle-entry-head"/);
-    assert.match(renderedText(card), /class="bottle-entry-facts"/);
+    assert.ok(domElements(card, '[class="bottle-entry-visual"]').length > 0);
+    assert.ok(domElements(card, '[class="bottle-entry-head"]').length > 0);
+    assert.ok(domElements(card, '[class="bottle-entry-facts"]').length > 0);
     assert.match(
       renderedText(html),
       /class="bottle-entry-list"><div class="bottle bottle-entry/,
@@ -212,22 +211,22 @@ test(
     assert.doesNotMatch(renderedText(html), /class="panel"><div class="bottle bottle-entry/,
       'no nested panel around the physical-bottle card');
     assert.match(renderedText(card), /class="bottle-entry-data-title">Flaschendaten/);
-    assert.match(renderedText(card), /class="bottle-entry-gallery"/);
+    assert.ok(domElements(card, '[class="bottle-entry-gallery"]').length > 0);
     assert.match(renderedText(card), /<h4>Fotos \(2\)<\/h4>/);
-    assert.match(renderedText(card), /class="bottle-photo-add-actions"/);
-    assert.match(renderedText(card), /class="bottle-documents"/);
+    assert.ok(domElements(card, '[class="bottle-photo-add-actions"]').length > 0);
+    assert.ok(domElements(card, '[class="bottle-documents"]').length > 0);
     assert.ok(renderedText(card).indexOf('bottle-entry-visual') < renderedText(card).indexOf('bottle-entry-content'));
     assert.ok(renderedText(card).indexOf('bottle-entry-content') < renderedText(card).indexOf('bottle-entry-gallery'));
     assert.ok(renderedText(card).indexOf('bottle-entry-gallery') < renderedText(card).indexOf('bottle-documents'));
     assert.ok(renderedText(card).indexOf('bottle-entry-visual') < renderedText(card).indexOf('data-photo-list="physical-a"'));
-    assert.equal((renderedText(card).match(/data-photo-list="physical-a"/g) || []).length, 1);
-    assert.equal((renderedText(card).match(/data-photo-tile/g) || []).length, 2);
-    assert.equal((renderedText(card).match(/data-act="photo-editor-open"/g) || []).length, 2);
-    assert.equal((renderedText(card).match(/data-act="delete-photo"/g) || []).length, 2);
-    assert.equal((renderedText(card).match(/data-photo-drag/g) || []).length, 2);
-    assert.equal((renderedText(card).match(/data-act="move-photo"/g) || []).length, 4);
-    assert.equal((renderedText(card).match(/data-bottle-photos="physical-a"/g) || []).length, 2);
-    assert.equal((renderedText(card).match(/data-bottle-files="physical-a"/g) || []).length, 1);
+    assert.equal(domElements(card, '[data-photo-list="physical-a"]').length, 1);
+    assert.equal(domElements(card, '[data-photo-tile]').length, 2);
+    assert.equal(domElements(card, '[data-act="photo-editor-open"]').length, 2);
+    assert.equal(domElements(card, '[data-act="delete-photo"]').length, 2);
+    assert.equal(domElements(card, '[data-photo-drag]').length, 2);
+    assert.equal(domElements(card, '[data-act="move-photo"]').length, 4);
+    assert.equal(domElements(card, '[data-bottle-photos="physical-a"]').length, 2);
+    assert.equal(domElements(card, '[data-bottle-files="physical-a"]').length, 1);
     assert.match(renderedText(card), /bottle-main-source/);
     assert.match(renderedText(card), /bottle-main-cutout/);
     assert.ok(
@@ -242,14 +241,14 @@ test(
   () => {
     const html = detailMarkup();
     assert.match(renderedText(html), /bottle-entry without-photos/);
-    assert.doesNotMatch(renderedText(html), /class="bottle-entry-visual"/);
-    assert.doesNotMatch(renderedText(html), /class="bottle-entry-main-photo"/);
-    assert.match(renderedText(html), /class="bottle-entry-gallery"/);
-    assert.match(renderedText(html), /class="bottle-photo-add-actions"/);
+    assert.equal(domElements(html, '[class="bottle-entry-visual"]').length, 0);
+    assert.equal(domElements(html, '[class="bottle-entry-main-photo"]').length, 0);
+    assert.ok(domElements(html, '[class="bottle-entry-gallery"]').length > 0);
+    assert.ok(domElements(html, '[class="bottle-photo-add-actions"]').length > 0);
     assert.match(renderedText(html), /class="bottle-entry-data-title">Flaschendaten/);
-    assert.match(renderedText(html), /data-bottle-photos="physical-a"/);
-    assert.match(renderedText(html), /data-bottle-files="physical-a"/);
-    assert.match(renderedText(html), /data-act="edit-bottle"/);
-    assert.match(renderedText(html), /data-act="delete-bottle"/);
+    assert.ok(domElements(html, '[data-bottle-photos="physical-a"]').length > 0);
+    assert.ok(domElements(html, '[data-bottle-files="physical-a"]').length > 0);
+    assert.ok(domElements(html, '[data-act="edit-bottle"]').length > 0);
+    assert.ok(domElements(html, '[data-act="delete-bottle"]').length > 0);
   }
 );

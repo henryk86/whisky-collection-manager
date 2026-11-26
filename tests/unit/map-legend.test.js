@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -25,7 +25,7 @@ test(
     }
     assert.ok(renderedText(html).indexOf('>1</span>') < renderedText(html).indexOf('>10</span>'));
     assert.ok(renderedText(html).indexOf('>10</span>') < renderedText(html).indexOf('>100</span>'));
-    assert.ok(renderedText(html).includes(`map-cluster-legend-icon" style="--legend-diameter:${27}px"`));
+    assert.equal(domElements(html, '.map-cluster-legend-icon')[0].attributes.style, '--legend-diameter:27px');
     assert.match(renderedText(html), />6<\/span>Gruppiert/);
     assert.doesNotMatch(renderedText(html), /map-legend-empty|map-pagoda-icon/);
   }

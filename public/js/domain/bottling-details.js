@@ -16,11 +16,11 @@ export function hasBottlingDetail(value) {
 }
 
 /**
- * Derives the human date result from the supplied values.
+ * Formats a full calendar date for display, preferring it over a year-only value.
  *
- * @param {*} date Value used by this operation.
- * @param {*} year Value used by this operation.
- * @return {*} Combined text from the input values.
+ * @param {*} date Full date, if recorded.
+ * @param {*} year Year to display when the date is absent.
+ * @return {*} Reformatted date or the original fallback year.
  */
 function humanDate(date, year) {
   if (hasBottlingDetail(date)) {

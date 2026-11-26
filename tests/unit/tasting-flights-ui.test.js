@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createTastingsView} from '../../public/js/views/tastings.js';
@@ -73,18 +73,18 @@ test(
     });
     view.home();
     assert.match(renderedText(html), /Islay comparison/);
-    assert.match(renderedText(html), /data-act="tasting-flight-new"/);
+    assert.ok(domElements(html, '[data-act="tasting-flight-new"]').length > 0);
     state.page = 'tasting-flight'; state.selected = 'flight-1'; view.flight();
-    assert.doesNotMatch(renderedText(html), /data-act="tasting-flight-new-owned"/);
+    assert.equal(domElements(html, '[data-act="tasting-flight-new-owned"]').length, 0);
     // The add panel is optional, hidden until clicking the add button.
-    assert.match(renderedText(html), /data-act="tasting-flight-toggle-add"/);
+    assert.ok(domElements(html, '[data-act="tasting-flight-toggle-add"]').length > 0);
     view.toggleFlightAdd();
-    assert.match(renderedText(html), /data-act="tasting-flight-new-owned"/);
-    assert.match(renderedText(html), /data-act="tasting-flight-move"/);
-    assert.match(renderedText(html), /data-act="tasting-flight-note-open"/);
+    assert.ok(domElements(html, '[data-act="tasting-flight-new-owned"]').length > 0);
+    assert.ok(domElements(html, '[data-act="tasting-flight-move"]').length > 0);
+    assert.ok(domElements(html, '[data-act="tasting-flight-note-open"]').length > 0);
     assert.match(renderedText(html), /peat and smoke/);
     state.page = 'tasting'; state.selected = 'b-1'; state.tastingId = 'note-1'; view.editor();
-    assert.match(renderedText(html), /data-act="tasting-open-flight"/);
+    assert.ok(domElements(html, '[data-act="tasting-open-flight"]').length > 0);
     assert.match(renderedText(html), /Position 1 von 1/);
     assert.equal(renderedText(flightForTasting(collection, 'note-1').id), 'flight-1');
     assert.equal(renderedText(flightEntries(collection, collection.tastingFlights[0])[0].record.id), 'note-1');

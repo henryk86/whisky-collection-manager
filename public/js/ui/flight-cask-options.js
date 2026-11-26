@@ -5,7 +5,6 @@ import {
 import {checkboxInput} from './fields.js';
 import {actionButton} from './buttons.js';
 import {chevronDownIcon} from './action-icons.js';
-import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('tastings/flight-cask-options.html');
@@ -46,7 +45,7 @@ export function flightCaskOptionsHtml(t) {
     const dimensions =
       composeMarkup(Object.entries(CASK_DIMENSIONS[group]).map(
         ([dimension, values]) => {
-          const title = escapeHtml(t(`${prefix}dimension.${dimension}`));
+          const title = t(`${prefix}dimension.${dimension}`);
           const fields = composeMarkup(values.map(value => checkboxInput(t(`${prefix}subtype.${value}`), featureField(group, dimension, value))));
           return renderTemplate('flightPlanCaskDimension', {
             title: title,
@@ -54,8 +53,8 @@ export function flightCaskOptionsHtml(t) {
             fields: fields,
           });
         }));
-    const title = escapeHtml(groupLabel(group));
-    const all = escapeHtml(t(`${prefix}allTypes`));
+    const title = String((groupLabel(group)) ?? '');
+    const all = t(`${prefix}allTypes`);
     return renderTemplate('flightPlanCaskRefinement', {
       group: group,
       title: title,
@@ -64,11 +63,11 @@ export function flightCaskOptionsHtml(t) {
       dimensions: dimensions,
     });
   }));
-  const label = escapeHtml(t(`${prefix}caskGroup`));
-  const hint = escapeHtml(t(`${prefix}groupHint`));
-  const phaseLabel = escapeHtml(t(`${prefix}phase`));
+  const label = t(`${prefix}caskGroup`);
+  const hint = t(`${prefix}groupHint`);
+  const phaseLabel = t(`${prefix}phase`);
   const phases = composeMarkup(CASK_PHASES.map(phase => {
-    const text = escapeHtml(t(`${prefix}phase.${phase}`));
+    const text = t(`${prefix}phase.${phase}`);
     return renderTemplate('phasesOption', {
       phase: phase,
       text: text,

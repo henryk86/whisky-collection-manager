@@ -83,10 +83,9 @@ async function main() {
     const pr = prs.find(p => approvedVersionMerge(p, sha, repo));
     const {execFileSync} = await import('node:child_process');
     /**
-     * Normalizes the git text for subsequent processing.
-     *
-     * @param {!Array<*>} args Arguments forwarded to the operation.
-     * @return {*} Result computed from the supplied inputs.
+     * Runs Git to inspect the merged pull-request commit.
+     * @param {...string} args Git arguments.
+     * @return {string} Trimmed standard output.
      */
     const git = (...args) => execFileSync('git', args, {encoding: 'utf8'}).trim();
     const tag = pr.head.ref.slice('release/version-'.length);

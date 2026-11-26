@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPlanRenderer, loadTemplates, parseTemplates}
   from '../../public/js/ui/templates.js';
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import {RenderPlan} from '../../public/js/ui/render-plan.js';
 import {createProfileViewModel}
   from '../../public/js/features/backups/profile-model.js';
@@ -76,7 +76,10 @@ test('scalar content never becomes nested HTML and attribute groups require maps
     body: '<svg onload="alert(1)"></svg>',
   });
   assert.ok(plan instanceof RenderPlan);
-  assert.equal(renderedText(plan), '<p aria-expanded="false" title="&quot; &lt; &amp;">&lt;svg onload=&quot;alert(1)&quot;&gt;&lt;/svg&gt;</p>');
+  const [paragraph] = domElements(plan, 'p');
+  assert.deepEqual(paragraph.attributes, {'aria-expanded': 'false', title: '" < &'});
+  assert.equal(paragraph.text, '<svg onload="alert(1)"></svg>');
+  assert.equal(domElements(plan, 'svg').length, 0);
   assert.throws(() => renderedText(render('item', {attributes: 'hidden', body: ''})), /plain object/);
   assert.throws(() => renderedText(render('item', {attributes: {onclick: 'alert(1)'}, body: ''})), /Invalid template attribute/);
 });

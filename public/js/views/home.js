@@ -14,7 +14,6 @@ import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('collection/home.html');
 import {newBottlingIcon, inventoryScanIcon, chevronDownIcon, chevronLeftIcon, chevronRightIcon, arrowUpIcon, arrowDownIcon, arrowsUpDownIcon, closeIcon, collectionTableIcon, collectionCardsIcon, flightPlanIcon} from '../ui/action-icons.js';
-import {escapeHtml} from '../ui/dom.js';
 import {emptyState, panel as contentPanel} from '../ui/content.js';
 import {imageUrl} from '../ui/format.js';
 import {bottleStatusLabels} from '../domain/labels.js';
@@ -311,7 +310,7 @@ export function createHomeView({
       });
     // The original description stays verbatim. CSS keeps the whole copy on
     // one line on desktop and permits natural wrapping on small screens.
-    const heroCopy = escapeHtml(t('home.hero.description'));
+    const heroCopy = t('home.hero.description');
     shell(renderTemplate('collectionHero', {
       heroCopy: heroCopy,
       newBottlingIcon: newBottlingIcon,

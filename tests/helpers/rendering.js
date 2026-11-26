@@ -1,45 +1,7 @@
 /** @fileoverview DOM-backed assertions and explicit capture ports for view tests. */
 import {after} from 'node:test';
 import {MessageChannel, receiveMessageOnPort, Worker} from 'node:worker_threads';
-import {RenderPlan, SLOT, slotValue, scalarBinding} from '../../public/js/ui/render-plan.js';
-
-import {escapeHtml} from '../../public/js/ui/dom.js';
-import {attributeEntries, checkedTag, decodeEscaped} from '../../public/js/ui/bindings.js';
-
-/**
- * Compacts structural whitespace for DOM-free markup assertions, preserving
- * quoted attributes, user data, and inline spacing.
- * @param {string} source Static template source.
- * @return {string} Canonical markup for the test adapter.
- */
-function compactTemplate(source) {
-  return source.replace(/<\/?(?:[^>"']|"[^"]*"|'[^']*')+>/g, tag =>
-    tag.replace(/"[^"]*"|'[^']*'|\s+/g, part => /^\s/.test(part) ? ' ' : part))
-    .replace(/>\n[ \t]*</g, '><');
-}
-
-/**
- * Serializes a render plan for diagnostic/test assertions. Shares binding
- * normalization and structural validation with native DOM materialization.
- * @param {*} value Render plan or scalar content.
- * @return {string} Escaped markup representation.
- */
-function serializeMarkup(value) {
-  if (!(value instanceof RenderPlan)) return escapeHtml(decodeEscaped(value));
-  if (value.parts) return value.parts.map(serializeMarkup).join('');
-  const source = compactTemplate(value.source);
-  return source.replace(SLOT, (_, mode, key, offset) => {
-    const binding = slotValue(value, mode, key);
-    if (mode === 'tag') return checkedTag(binding);
-    if (mode === 'attrs') {
-      const attributes = attributeEntries(binding).map(([name, text, flag]) =>
-        flag ? name : `${name}="${escapeHtml(text)}"`).join(' ');
-      return attributes && (/\s/.test(source[offset - 1]) ? '' : ' ') + attributes;
-    }
-    if (mode === 'content' && binding instanceof RenderPlan) return serializeMarkup(binding);
-    return escapeHtml(scalarBinding(value, mode, key));
-  });
-}
+import {RenderPlan, SLOT, slotValue} from '../../public/js/ui/render-plan.js';
 
 let worker;
 const rendered = new WeakMap();
@@ -65,7 +27,7 @@ function encode(value) {
 /**
  * Sends a synchronous assertion request to the test's Chromium worker.
  * @param {!Object} request Render data or a close instruction.
- * @return {string} Browser-generated markup.
+ * @return {string|Array<Object>} Browser-generated markup or queried element properties.
  */
 function askBrowser(request) {
   worker ||= new Worker(new URL('./native-markup-worker.js', import.meta.url));
@@ -87,8 +49,8 @@ after(async () => {
 });
 
 /**
- * Checks the historical markup assertion format against actual DOM materialization.
- * New renderer tests should assert native node properties directly.
+ * Returns native Chromium serialization for tests that inspect markup.
+ * Prefer DOM element queries for structural assertions.
  * @param {*} value Captured render plan or ordinary value.
  * @return {*} DOM-generated markup or the original value.
  */
@@ -98,12 +60,20 @@ export function renderedText(value) {
   const key = JSON.stringify(encoded);
   const cached = rendered.get(value);
   if (cached?.key === key) return cached.markup;
-  // Historical assertions inspect attribute order and original SVG syntax.
-  // Verify their representation against the actual native DOM first.
-  const markup = serializeMarkup(value);
-  askBrowser({value: encoded, expected: markup});
+  const markup = askBrowser({value: encoded});
   rendered.set(value, {key, markup});
   return markup;
+}
+
+/**
+ * Reads matching elements from the production DOM in document order.
+ * Strings are test-owned fixtures, not application markup inputs.
+ * @param {RenderPlan|string} value Render plan or captured test markup.
+ * @param {string} selector Native CSS selector.
+ * @return {Array<{tag: string, text: string, attributes: Object<string, string>, value: (string|undefined), checked: (boolean|undefined), disabled: (boolean|undefined)}>} Matched elements and their DOM properties.
+ */
+export function domElements(value, selector) {
+  return askBrowser({value: encode(value), selector, markup: typeof value === 'string'});
 }
 
 /**

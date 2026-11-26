@@ -3,7 +3,7 @@ import {composeMarkup, RenderPlan} from '../ui/render-plan.js';
 import {wallFurnitureGroups} from '../domain/warehouse-wall-layout.js';
 import {renderUnassignedTray} from './warehouse-unassigned-tray.js';
 import {t} from '../i18n/index.js';
-import {bottleSymbol, num, safe} from './warehouse-presentation.js';
+import {bottleSymbol, num} from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 import {createWarehouseWallViewModel} from './models/warehouse-wall.js';
 export {WALL_PIXELS_PER_METRE} from './models/warehouse-wall.js';
@@ -46,13 +46,13 @@ function renderShelf(bay) {
   ].filter(Boolean).map(name => ` ${name}`).join('');
   return renderTemplate('warehouseShelf', {
     shelfClasses,
-    shelfId: safe(bay.shelfId), shelfCapacity: bay.shelfCapacity, shelfAction: bay.action,
-    front: safe(bay.front), bayHeight: bay.bayHeight, bottleHeight: bay.bottleHeight,
-    bottleWidth: bay.bottleWidth, name: safe(bay.shelfName), frontName: safe(bay.frontName),
-    occupancy: bay.occupancy ? ` · ${safe(bay.occupancy)}` : '',
+    shelfId: String(bay.shelfId ?? ''), shelfCapacity: bay.shelfCapacity, shelfAction: bay.action,
+    front: String(bay.front ?? ''), bayHeight: bay.bayHeight, bottleHeight: bay.bottleHeight,
+    bottleWidth: bay.bottleWidth, name: String(bay.shelfName ?? ''), frontName: String(bay.frontName ?? ''),
+    occupancy: bay.occupancy ? ` · ${String(bay.occupancy ?? '')}` : '',
     preview: composeMarkup(bay.bottles.map(renderBottle)),
     warehouseShelfOverflow: bay.hiddenCount ? renderTemplate('warehouseShelfOverflow', {
-      ariaLabel: safe(t('warehouse.shelves.moreBottles', {count: bay.hiddenCount})), hiddenCount: bay.hiddenCount,
+      ariaLabel: t('warehouse.shelves.moreBottles', {count: bay.hiddenCount}), hiddenCount: bay.hiddenCount,
     }) : '',
     content: bay.empty ? (bay.unavailable ? renderTemplate('warehouseWallNoSpace') : renderTemplate('hint')) : '',
   });
@@ -67,16 +67,16 @@ function renderShelf(bay) {
 function renderFurniture(item, stacked) {
   return renderTemplate('warehouseWallFurniture', {
     stacked: stacked ? ' warehouse-wall-furniture--stacked' : '',
-    furnitureId: safe(item.id), widthPx: item.widthPx, heightPx: item.heightPx,
+    furnitureId: String(item.id ?? ''), widthPx: item.widthPx, heightPx: item.heightPx,
     elevationPx: item.elevationPx, offsetPx: item.offsetPx,
     clearance: item.clearanceCm > 0.001 ? renderTemplate('warehouseWallClearance', {
       clearancePx: item.clearancePx,
-      title: safe(t('warehouse.shelves.remainingHeight', {height: num(item.clearanceCm)})),
+      title: t('warehouse.shelves.remainingHeight', {height: num(item.clearanceCm)}),
     }) : '',
     bays: composeMarkup(item.bays.map(renderShelf)),
     editFurniture: renderTemplate('warehouseFurnitureManage', {
-      id: safe(item.id), title: safe(item.name),
-      ariaLabel: safe(t('warehouse.shelves.showForFurniture', {name: item.name})),
+      id: String(item.id ?? ''), title: String(item.name ?? ''),
+      ariaLabel: t('warehouse.shelves.showForFurniture', {name: item.name}),
     }),
   });
 }
@@ -99,17 +99,17 @@ export function renderWarehouseRoomWall(room, warehouse, selectedBottleIds = [],
   })));
   return renderTemplate('warehouseRoomWall', {
     focusClass: model.focused ? ' has-find-focus' : '',
-    ariaLabel: safe(t('warehouse.wall.aria', {room: model.roomName})),
-    bulkToolsLabel: safe(t('warehouse.bottles.bulkTools')),
-    bulkSelected: safe(t('warehouse.bottles.bulkSelected', {count: model.selectedCount})),
-    expanded: String(model.expanded), title: safe(t('warehouse.wall.unassignedToggleHint')),
+    ariaLabel: t('warehouse.wall.aria', {room: model.roomName}),
+    bulkToolsLabel: t('warehouse.bottles.bulkTools'),
+    bulkSelected: t('warehouse.bottles.bulkSelected', {count: model.selectedCount}),
+    expanded: String(model.expanded), title: t('warehouse.wall.unassignedToggleHint'),
     unassignedTitle: t('warehouse.wall.unassignedTitle', {count: model.unassignedCount}),
     disabledAttributes: {disabled: !model.selectedCount},
     previewAttributes: {disabled: model.selectedCount !== 1},
     assignAttributes: {disabled: !model.selectedCount},
     unassignedTray: renderUnassignedTray(warehouse, selectedBottleIds, {...unassignedOptions, embedded: true}),
     warehouseWallScroll: model.groups.length ? renderTemplate('warehouseWallScroll', {
-      roomId: safe(model.roomId), ariaLabel: safe(t('warehouse.wall.scrollAria')), cards,
+      roomId: String(model.roomId ?? ''), ariaLabel: t('warehouse.wall.scrollAria'), cards,
     }) : renderTemplate('warehouseRoomWallEmpty'),
   });
 }

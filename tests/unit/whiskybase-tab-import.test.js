@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWhiskybase}
@@ -140,7 +140,7 @@ test(
       assert.ok(confirmation, 'requires the in-app confirmation modal');
       assert.equal(renderedText(confirmation[1]), 'Externe Importdaten bereit');
       assert.match(renderedText(confirmation[2]), /ungespeicherte Eingaben/);
-      assert.match(renderedText(confirmation[2]), /data-act="import-continue"/);
+      assert.ok(domElements(confirmation[2], '[data-act="import-continue"]').length > 0);
       assert.equal(renderedText(confirmation[4]), true, 'keep the existing dialog nested underneath');
       assert.ok(!calls.some(call => call[0] === 'navigate'));
       assert.ok(!calls.some(call => call[0] === 'createBottling'));

@@ -15,10 +15,9 @@ const LOCAL_PENDING_STATUS = 'Nicht lokal ausgeführt';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /**
- * Reads read data from the local filesystem.
- *
- * @param {*} name Environment variable or setting name.
- * @return {*} Combined text from the input values.
+ * Reads a UTF-8 file from the release repository.
+ * @param {string} name Path relative to the repository root.
+ * @return {string} File contents.
  */
 const read = (name) => fs.readFileSync(path.join(ROOT, name), 'utf8');
 
@@ -84,10 +83,9 @@ export function nextVersion(current, part) {
 export function verifyReleaseMetadata(root = ROOT, {allowReadmeMismatch =
   false} = {}) {
   /**
-   * Reads content data from the local filesystem.
-   *
-   * @param {*} name Environment variable or setting name.
-   * @return {*} Combined text from the input values.
+   * Reads release metadata from the repository under verification.
+   * @param {string} name Repository-relative filename.
+   * @return {string} UTF-8 file contents.
    */
   const content = name => fs.readFileSync(path.join(root, name), 'utf8');
   const pkg = JSON.parse(content('package.json'));
@@ -119,9 +117,8 @@ export function verifyReleaseMetadata(root = ROOT, {allowReadmeMismatch =
 }
 
 /**
- * Validates fresh version against its constraints.
- *
- * @param {*} version Value used by this operation.
+ * Rejects a release version that does not advance beyond existing semantic-version tags.
+ * @param {string} version Proposed semantic version.
  */
 function validateFreshVersion(version) {
   const output = execFileSync('git', ['tag', '--list', 'v*'], {cwd: ROOT, encoding: 'utf8'});
@@ -238,10 +235,9 @@ export function applyAutomatedRelease(version, commits, mergeSha, previousTag) {
   // the changelog from the previous tag, not stale development metadata.
   if (!/^v\d+\.\d+\.\d+$/.test(previousTag)) throw new Error('Invalid previous release tag');
   /**
-   * Derives the released file result from the supplied values.
-   *
-   * @param {*} name Environment variable or setting name.
-   * @return {*} Computed value, or null when the input has no match.
+   * Reads a file from the preceding release tag when it exists.
+   * @param {string} name Repository-relative file path.
+   * @return {(string|null)} Released contents, or null when unavailable.
    */
   const releasedFile = name => {
     try {

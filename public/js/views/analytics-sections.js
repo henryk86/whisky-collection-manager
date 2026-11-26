@@ -4,7 +4,7 @@ import {composeMarkup} from '../ui/render-plan.js';
 import {t} from '../i18n/index.js';
 import {chevronRightIcon} from '../ui/action-icons.js';
 import {loadTemplates} from '../ui/templates.js';
-import {number, money, categoryLabel, countryName, safe, empty, panel, metric, metricGrid, sectionHeading, two, rankBars, composition, detailsTable, bottlingLink, timeChart} from './analytics-components.js';
+import {number, money, categoryLabel, countryName, empty, panel, metric, metricGrid, sectionHeading, two, rankBars, composition, detailsTable, bottlingLink, timeChart} from './analytics-components.js';
 
 const renderTemplate = await loadTemplates('analytics/analytics.html');
 
@@ -150,7 +150,7 @@ export function profile(analytics) {
         t("analytics.production.limitedEditions"),
         detailsTable(
           [t("analytics.table.bottling"), t("analytics.table.edition")],
-          d.edition.slice(0, 25).map(item => [bottlingLink(item), safe(number(item.value))])
+          d.edition.slice(0, 25).map(item => [bottlingLink(item), number(item.value)])
         ),
         t("analytics.notes.limitedEditionEligibility")
       )
@@ -183,7 +183,7 @@ export function finance(analytics, state) {
     ]),
     t("analytics.statistics.documentedPriceCount", {count: p.count, total: scope.bottles})
   ))) : panel(t("analytics.finance.expensesPricesAndUnitPrices"), empty());
-  const byPrices = d.mostExpensive.map(item => [bottlingLink(item), safe(money(item.price, item.currency))]);
+  const byPrices = d.mostExpensive.map(item => [bottlingLink(item), money(item.price, item.currency)]);
   const costPages = distilleries.map(({currency, rows}) => panel(
     t("analytics.finance.purchaseCostsByDistillery", {currency}),
     rankBars(
@@ -203,10 +203,10 @@ export function finance(analytics, state) {
     t("analytics.notes.multiDistilleryCosts")
   ));
   const merchants = d.merchants.map(row => [
-    safe(categoryLabel(row.name)),
-    safe(row.currency),
-    safe(number(row.count)),
-    safe(money(row.total, row.currency)),
+    categoryLabel(row.name),
+    String(row.currency ?? ''),
+    number(row.count),
+    money(row.total, row.currency),
   ]);
   const priceCharts = timelines.map(({currency, rows}) => timeChart(
     t("analytics.finance.purchaseCostsOverTime", {currency}),
@@ -333,11 +333,11 @@ export function quality(analytics) {
       t("analytics.table.example"),
     ],
     entries.map(row => [
-      safe(categoryLabel(row.name)),
-      safe(number(row.count)),
+      categoryLabel(row.name),
+      number(row.count),
       row.count && row.ids?.length
         ? renderTemplate('open2', {
-          id: safe(typeof row.ids[0] === 'string' ? row.ids[0] : row.ids[0].id),
+          id: String((typeof row.ids[0] === 'string' ? row.ids[0] : row.ids[0].id) ?? ''),
           objectAttributes: typeof row.ids[0] === 'object' ? {"data-bottle-id": row.ids[0].bottleId} : {},
         }) : '–',
     ])
@@ -369,10 +369,10 @@ export function quality(analytics) {
  */
 function sectionCard(page, stat) {
   return renderTemplate('analyticsSection', {
-    section: safe(page.id),
+    section: String(page.id ?? ''),
     icon: page.icon,
-    title: safe(page.title),
-    sub: safe(page.sub),
+    title: String(page.title ?? ''),
+    sub: String(page.sub ?? ''),
     chevronRightIcon: chevronRightIcon,
   });
 }
@@ -423,7 +423,7 @@ export function overview(analytics, pages) {
         )
       )
     ),
-    best: safe(best),
+    best: String(best ?? ''),
     priceCoverage: t("analytics.statistics.priceCoverage", {priced: analytics.finance.priceCoverage, total: s.bottles}),
     sectionHeading: sectionHeading(t("analytics.sections.all")),
     sectionCards: composeMarkup(pages.slice(1).map(page => sectionCard(page))),

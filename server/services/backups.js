@@ -137,8 +137,8 @@ function atomicJson(name, value) {
 }
 
 /**
- * Validates the profiles state and rejects invalid inputs.
- * @return {*} Result computed from the supplied inputs.
+ * Loads and validates the on-disk backup profile catalog.
+ * @return {Object} Version-one profile document, or the empty initial catalog.
  */
 function profiles() {
   const value = readJson(PROFILE_FILE, {version: 1, profiles: []});
@@ -307,11 +307,10 @@ export function getDashboard(req) {
 }
 
 /**
- * Enforces the distinct target precondition.
- *
- * @param {*} existing Value used by this operation.
- * @param {*} candidate Value used by this operation.
- * @param {*=} excludeId Value used by this operation.
+ * Rejects a profile whose local or remote target duplicates another configured profile.
+ * @param {Object[]} existing Existing profiles.
+ * @param {Object} candidate Candidate backup profile.
+ * @param {?string=} excludeId Profile ID excluded when editing in place.
  */
 function assertDistinctTarget(existing, candidate, excludeId = null) {
   /**
@@ -357,11 +356,10 @@ export function createProfile(req, input) {
 }
 
 /**
- * Selects profile matching the input.
- *
- * @param {*} data Input data to process.
- * @param {*} id Identifier of the affected record.
- * @return {*} Result computed from the supplied inputs.
+ * Locates a validated backup profile ID in the loaded catalog.
+ * @param {Object} data Profile configuration document.
+ * @param {string} id Profile ID to locate.
+ * @return {number} Index of the existing profile; throws a not-found error otherwise.
  */
 function findProfile(data, id) {
   if (!ID.test(id)) throw fail('Ungültige Profil-ID', 404, "api.errors.invalidProfileID");

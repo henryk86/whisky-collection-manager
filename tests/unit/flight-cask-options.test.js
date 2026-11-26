@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import de from '../../public/locales/de.json' with {type: 'json'};
@@ -29,9 +29,9 @@ test('each category, phase and dimension has a label in both languages', () => {
     const t = createTranslator(messages, {}, language);
     const html = flightCaskOptionsHtml(t);
     assert.equal(renderedText(t('flightPlan.caskAge.group.wine')), renderedText(language === 'de' ? 'Wein' : 'Wine'));
-    assert.equal((renderedText(html).match(/data-flight-plan-cask-subtype-wrap="wine"/g) || []).length, 1);
+    assert.equal(domElements(html, '[data-flight-plan-cask-subtype-wrap="wine"]').length, 1);
     assert.doesNotMatch(renderedText(html), /flightPlan\.caskAge\./);
-    assert.match(renderedText(html), /name="flight-cask-group-rum"/);
+    assert.ok(domElements(html, '[name="flight-cask-group-rum"]').length > 0);
     assert.doesNotMatch(renderedText(html), /name="flight-cask-feature-rum-/);
     for (const group of CASK_GROUPS) {
       assert.ok(renderedText(html).includes(`name="flight-cask-group-${group}"`));

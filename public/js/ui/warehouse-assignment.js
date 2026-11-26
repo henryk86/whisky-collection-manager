@@ -5,22 +5,12 @@ import {replaceContent} from './dom-renderer.js';
  * shelfId.
  */
 import {t} from '../i18n/index.js';
-import {escapeHtml} from './dom.js';
 import {imageUrl} from './format.js';
 import {bottleLabel, count, storagePath}
   from '../views/warehouse-presentation.js';
 import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('warehouse/warehouse-assignment.html');
-
-
-/**
- * Derives the safe result from the supplied values.
- *
- * @param {*} value Value to process.
- * @return {string} Escaped scalar text, using empty text for nullish values.
- */
-const safe = value => escapeHtml(String(value ?? ''));
 
 /**
  * Resolves the current shelf location of a physical bottle.
@@ -108,10 +98,10 @@ export async function approveShelfCapacityIncrease(warehouse, shelfId,
  */
 function option(value, label, {selected = false, disabled = false} = {}) {
   return renderTemplate('option', {
-    value: safe(value),
+    value: String(value ?? ''),
     selectedAttributes: selected ? {"selected": true} : {},
     disabledAttributes: disabled ? {"disabled": true} : {},
-    label: safe(label),
+    label: String(label ?? ''),
   });
 }
 
@@ -198,35 +188,35 @@ export function renderWarehouseAssignment(warehouse, bottle) {
   const roomId = current?.room.id || '';
   const furnitureId = current?.furniture.id || '';
   const shelfId = current?.shelf.id || '';
-  const photo = isBulk ? '' : bottle.photoPath ? renderTemplate('img', {src: safe(imageUrl(bottle.photoPath)), }) : renderTemplate('photoSvg');
+  const photo = isBulk ? '' : bottle.photoPath ? renderTemplate('img', {src: String((imageUrl(bottle.photoPath)) ?? ''), }) : renderTemplate('photoSvg');
   return renderTemplate('warehouseAssignment', {
-    ariaLabel: safe(t('warehouse.assignment.bottleLabel')),
+    ariaLabel: t('warehouse.assignment.bottleLabel'),
     photo: photo,
-    isBulk: isBulk ? safe(t('warehouse.bottles.bulkSelected', {count: bottles.length})) : safe(bottleLabel(bottle)),
+    isBulk: isBulk ? t('warehouse.bottles.bulkSelected', {count: bottles.length}) : String((bottleLabel(bottle)) ?? ''),
     warehouseAssignmentBulkList: isBulk ? renderTemplate(
       'warehouseAssignmentBulkList',
       {
-        bottleNames: safe(bottles.slice(0, 5).map(bottleLabel).join(' · ')),
+        bottleNames: String((bottles.slice(0, 5).map(bottleLabel).join(' · ')) ?? ''),
         length: bottles.length > 5 ? ' …' : '',
       }
     ) : '',
     currentLocationPanel: isBulk ? '' :
       renderTemplate('warehouseAssignmentCurrent', {
-        ariaLabel: safe(t('warehouse.assignment.currentLocation')),
-        currentLocationLabel: safe(t('warehouse.assignment.currentLocation')),
-        currentLocation: safe(current?.label || t('warehouse.bottles.unassignedLabel')),
+        ariaLabel: t('warehouse.assignment.currentLocation'),
+        currentLocationLabel: t('warehouse.assignment.currentLocation'),
+        currentLocation: String((current?.label || t('warehouse.bottles.unassignedLabel')) ?? ''),
       }),
-    newLocation: safe(t('warehouse.assignment.newLocation')),
-    modeLabel: safe(t('warehouse.assignment.modeLabel')),
-    roomLabel: safe(t('warehouse.assignment.room')),
+    newLocation: t('warehouse.assignment.newLocation'),
+    modeLabel: t('warehouse.assignment.modeLabel'),
+    roomLabel: t('warehouse.assignment.room'),
     roomOptions: roomOptions(warehouse, roomId),
-    furnitureLabel: safe(t('warehouse.assignment.furniture')),
+    furnitureLabel: t('warehouse.assignment.furniture'),
     disabledAttributes: !roomId ? {"disabled": true} : {},
     furnitureOptions: furnitureOptions(current?.room, furnitureId),
-    shelfLabel: safe(t('warehouse.assignment.shelf')),
+    shelfLabel: t('warehouse.assignment.shelf'),
     shelfDisabled: !furnitureId ? {"disabled": true} : {},
     shelfOptions: shelfOptions(warehouse, current?.furniture, ids, shelfId),
-    feedback: safe(shelfId ? occupancyMessage(warehouse, shelfId, ids) : t('warehouse.assignment.selectHint')),
+    feedback: String((shelfId ? occupancyMessage(warehouse, shelfId, ids) : t('warehouse.assignment.selectHint')) ?? ''),
   });
 }
 

@@ -19,10 +19,9 @@ const CUSTOM_HEX = /^#[0-9a-f]{6}$/i;
 const clamp = value => Math.max(0, Math.min(1, Number.isFinite(Number(value)) ? Number(value) : 0));
 
 /**
- * Transforms the entries used by hex to hsl.
- *
- * @param {*} hex Value used by this operation.
- * @return {!Object} Structured result assembled from the input data.
+ * Converts six-digit RGB hexadecimal text to HSL components.
+ * @param {string} hex RGB hexadecimal colour.
+ * @return {Object} Hue, saturation and lightness components.
  */
 function hexToHsl(hex) {
   const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
@@ -54,12 +53,11 @@ export function isAllowedWhiskyHex(hex) {
 }
 
 /**
- * Calculates the hsl to hex numeric value.
- *
- * @param {*} h Value used by this operation.
- * @param {*} s Source value to transform.
- * @param {*} l Value used by this operation.
- * @return {string} RGB color encoded as a six-digit hexadecimal color string.
+ * Converts HSL components to a six-digit RGB hexadecimal colour.
+ * @param {number} h Hue angle.
+ * @param {number} s Saturation fraction.
+ * @param {number} l Lightness fraction.
+ * @return {string} RGB hexadecimal colour.
  */
 function hslToHex(h, s, l) {
   const a = s * Math.min(l, 1 - l);

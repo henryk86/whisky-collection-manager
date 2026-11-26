@@ -1,4 +1,3 @@
-import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('components/buttons.html');
@@ -27,7 +26,7 @@ const renderTemplate = await loadTemplates('components/buttons.html');
 
 
 /**
- * Renders a shared button with escaped text and delegated actions.
+ * Renders a shared button with text and delegated actions.
  *
  * @param {!ButtonOptions=} options Button label, content, delegated action and visual state.
  * @return {!import('./render-plan.js').RenderPlan} Accessible action button in the requested design-system variant.
@@ -61,7 +60,7 @@ export function actionButton({
   if (!Object.hasOwn(variants, variant)) throw new RangeError('Invalid button variant');
   if (!['default', 'small', 'large'].includes(size)) throw new RangeError('Invalid button size');
   if (!['button', 'submit', 'reset'].includes(type)) throw new RangeError('Invalid button type');
-  const safe = escapeHtml(String(label));
+  const safe = String(label);
   const classes = [
     'btn',
     'ds-button',

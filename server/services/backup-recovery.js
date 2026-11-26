@@ -33,10 +33,9 @@ function suppliedPassword(req) {
 }
 
 /**
- * Tests input text against the path for pattern.
- *
- * @param {*} id Identifier of the affected record.
- * @return {*} Combined text from the input values.
+ * Validates the restore ID and resolves its staging directory under backup control storage.
+ * @param {string} id Restore job identifier.
+ * @return {string} Absolute restore staging directory.
  */
 function pathFor(id) {
   if (!ID.test(id)) throw fail('Ungültige Wiederherstellungs-ID', 400, "api.errors.invalidRestoreID");

@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -123,9 +123,9 @@ test('backup UI escapes names and errors; never renders credentials', () => {
   const html = renderBackupSection(state);
   assert.match(renderedText(html), /&lt;script&gt;/);
   assert.doesNotMatch(renderedText(html), /<script>|<img src=x/);
-  assert.match(renderedText(html), /data-act="backup-run"/);
-  assert.match(renderedText(html), /data-act="backup-restore"/);
-  assert.match(renderedText(profileForm(malicious, ['dropbox'])), /id="backup-profile-form"/);
+  assert.ok(domElements(html, '[data-act="backup-run"]').length > 0);
+  assert.ok(domElements(html, '[data-act="backup-restore"]').length > 0);
+  assert.ok(domElements(profileForm(malicious, ['dropbox']), '[id="backup-profile-form"]').length > 0);
   assert.match(renderedText(profileForm({}, [], [{name: 'usb', label: 'USB-Stick'}])), /AES-256-Passwortschutz/);
   assert.match(renderedText(profileForm({}, [], [{name: 'usb', label: 'USB-Stick'}])), /usb\/whisky-zip/);
   assert.match(renderedText(renderBackupSection({backupUnlocked: false, backupDashboard: null})), /backup-admin-key/);
@@ -149,15 +149,15 @@ test(
       },
     });
     for (const html of [locked, unlocked]) {
-      assert.equal((renderedText(html).match(/href="\/api\/export\/zip"/g) || []).length, 0);
+      assert.equal(domElements(html, '[href="/api/export/zip"]').length, 0);
       assert.match(renderedText(html), /Backup direkt herunterladen/);
       assert.match(renderedText(html), /Automatische Backups/);
       assert.match(renderedText(html), /Wiederherstellen|Backup einspielen/);
     }
-    assert.match(renderedText(unlocked), /data-act="backup-manual-download"/);
-    assert.match(renderedText(unlocked), /id="backup-password-form"/);
-    assert.match(renderedText(unlocked), /id="backup-import-zip-form"/);
-    assert.match(renderedText(unlocked), /data-act="backup-new"/);
+    assert.ok(domElements(unlocked, '[data-act="backup-manual-download"]').length > 0);
+    assert.ok(domElements(unlocked, '[id="backup-password-form"]').length > 0);
+    assert.ok(domElements(unlocked, '[id="backup-import-zip-form"]').length > 0);
+    assert.ok(domElements(unlocked, '[data-act="backup-new"]').length > 0);
   }
 );
 
@@ -175,7 +175,7 @@ test(
         passwordConfigured: false,
       },
     });
-    assert.doesNotMatch(renderedText(unlockedNoPassword), /data-act="backup-manual-download"/);
+    assert.equal(domElements(unlockedNoPassword, '[data-act="backup-manual-download"]').length, 0);
     assert.match(renderedText(unlockedNoPassword), /Backup-Passwort festlegen/);
   }
 );

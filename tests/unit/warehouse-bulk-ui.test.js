@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
@@ -79,17 +79,17 @@ test(
     };
     try {
       view.render();
-      assert.doesNotMatch(renderedText(html), /class="warehouse-bottle-check"/);
-      assert.doesNotMatch(renderedText(html), /data-act="warehouse-bottles-assign-selected"/);
+      assert.equal(domElements(html, '[class="warehouse-bottle-check"]').length, 0);
+      assert.equal(domElements(html, '[data-act="warehouse-bottles-assign-selected"]').length, 0);
       assert.match(renderedText(html), /warehouse-finder-card/);
-      assert.match(renderedText(html), /data-act="warehouse-find-location"/);
+      assert.ok(domElements(html, '[data-act="warehouse-find-location"]').length > 0);
       state.selected = 'shelves';
       view.render();
       view.assignSelectedBottles();
-      assert.match(renderedText(dialog), /data-endpoint="\/api\/warehouse\/bottles\/bulk"/);
-      assert.match(renderedText(dialog), /data-bottle-bulk="true"/);
-      assert.match(renderedText(html), /class="warehouse-room-wall"/);
-      assert.equal((renderedText(html).match(/class="warehouse-wall-bottle is-selected"/g) || []).length, 2);
+      assert.ok(domElements(dialog, '[data-endpoint="/api/warehouse/bottles/bulk"]').length > 0);
+      assert.ok(domElements(dialog, '[data-bottle-bulk="true"]').length > 0);
+      assert.ok(domElements(html, '[class="warehouse-room-wall"]').length > 0);
+      assert.equal(domElements(html, '[class="warehouse-wall-bottle is-selected"]').length, 2);
       assert.match(renderedText(html), /warehouse-bottle-bulk-tools/);
     } finally {
       if (oldDocument === undefined) delete globalThis.document;

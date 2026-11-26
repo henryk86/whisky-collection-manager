@@ -69,11 +69,10 @@ const warnings = [];
 const results = [];
 const interactionChecks = [];
 /**
- * Serializes command data to JSON.
- *
- * @param {*} method Value used by this operation.
- * @param {!Object=} params Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Sends a Chrome DevTools Protocol request and rejects it if no response arrives within 25 seconds.
+ * @param {string} method DevTools method name.
+ * @param {Object=} params Protocol method arguments.
+ * @return {Promise<*>} Protocol response result, or rejection on timeout or protocol failure.
  */
 function command(method, params = {}) {
   const id = ++seq;
@@ -92,9 +91,8 @@ function command(method, params = {}) {
          */
         resolve: v => {clearTimeout(timer); resolve(v);},
         /**
-         * Updates the reject state for its caller.
-         *
-         * @param {*} e Value used by this operation.
+         * Cancels the command deadline before rejecting its outstanding request.
+         * @param {*} e Protocol or transport error to forward.
          */
         reject: e => {clearTimeout(timer); reject(e);},
       }
@@ -104,10 +102,9 @@ function command(method, params = {}) {
 }
 
 /**
- * Validates the evaluate state and rejects invalid inputs.
- *
- * @param {*} expression Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Evaluates an expression in Chromium and reports page-side exceptions.
+ * @param {string} expression JavaScript expression to evaluate in the inspected page.
+ * @return {Promise<*>} By-value result of the browser evaluation.
  */
 async function evaluate(expression) {
   const out = await command('Runtime.evaluate', {expression, awaitPromise: true, returnByValue: true});
@@ -116,12 +113,11 @@ async function evaluate(expression) {
 }
 
 /**
- * Validates the until state and rejects invalid inputs.
- *
- * @param {*} expression Value used by this operation.
- * @param {*} label Label shown to the user.
- * @param {number=} tries Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * Polls a browser-side readiness condition at 100 ms intervals.
+ * @param {string} expression JavaScript readiness expression.
+ * @param {string} label Description used if readiness is not reached.
+ * @param {number=} tries Maximum number of polling attempts.
+ * @return {Promise<void>} Resolves on readiness or rejects when attempts are exhausted.
  */
 async function until(expression, label, tries = 80) {
   for (let i = 0; i < tries; i++) {
@@ -170,8 +166,8 @@ async function intercept({requestId, request}) {
 }
 
 /**
- * Validates the absolute chromium state and rejects invalid inputs.
- * @return {*} Result computed from the supplied inputs.
+ * Resolves and verifies the configured Chromium executable path.
+ * @return {string} Existing browser executable path.
  */
 function absoluteChromium() {
   const value = process.env.WCM_VISUAL_BROWSER_PATH || process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/chromium';

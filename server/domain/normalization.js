@@ -45,11 +45,10 @@ const bottleFields = [
   'comment',
 ];
 /**
- * Derives the filtered result from the supplied values.
- *
- * @param {*} source Input source to inspect.
- * @param {*} keys Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Copies only the permitted own properties of an input record.
+ * @param {Object} source Untrusted record.
+ * @param {string[]} keys Allowed property names.
+ * @return {Object} New record containing allowed fields.
  */
 function filtered(source, keys) {
   const obj = {};

@@ -1,15 +1,4 @@
 /**
- * Encodes HTML-sensitive characters for legacy scalar bindings.
- * Null and undefined are converted to an empty string.
- *
- * @param {*} v Value to convert to text and escape.
- * @return {string} Text with ampersands, angle brackets and quotes encoded.
- */
-export const escapeHtml = v => String(v ?? '').replace(/[&<>"']/g, c => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
-
-/**
  * Looks up a single matching element within the selected DOM root.
  *
  * @param {string} sel CSS selector.

@@ -8,11 +8,10 @@ import {normalizeTastingRecord, VALID_TASTING_FIELDS}
   from '../../shared/tasting-records.js';
 
 /**
- * Validates the clean state and rejects invalid inputs.
- *
- * @param {*} input Input element or value to inspect.
- * @param {*} old Value used by this operation.
- * @return {*} Value returned by the delegated operation.
+ * Normalizes an unowned tasting and converts validation errors to HTTP 400.
+ * @param {*} input Proposed tasting fields.
+ * @param {Object} old Previous record used for normalization.
+ * @return {Object} Normalized standalone tasting fields.
  */
 function clean(input, old) {
   try {return normalizeStandaloneTasting(input, old);}
@@ -22,11 +21,10 @@ function clean(input, old) {
 }
 
 /**
- * Validates the find state and rejects invalid inputs.
- *
- * @param {*} collection Collection data to process.
- * @param {*} id Identifier of the affected record.
- * @return {*} Result computed from the supplied inputs.
+ * Finds a standalone tasting or raises a not-found error.
+ * @param {import('../../shared/types.js').Collection} collection Collection containing external tastings.
+ * @param {string} id Standalone tasting ID.
+ * @return {import('../../shared/types.js').StandaloneTasting} Matching standalone tasting.
  */
 function find(collection, id) {
   const record = (collection.externalTastings || []).find(x => x.id === id);

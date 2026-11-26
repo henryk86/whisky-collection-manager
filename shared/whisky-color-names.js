@@ -96,12 +96,11 @@ const references = WHISKY_COLOR_REFERENCES.map(({key, hex}) => {
 // more strongly, while still comparing lightness and chroma continuously.
 const HUE_WEIGHT = 8;
 /**
- * Calculates the naming distance numeric value.
- *
- * @param {*} lab Value used by this operation.
- * @param {*} chroma Value used by this operation.
- * @param {*} reference Reference value to compare against.
- * @return {number} Calculated numeric value.
+ * Compares perceptual lightness, chroma and hue against a reference whisky shade.
+ * @param {number[]} lab Candidate Lab colour coordinates.
+ * @param {number} chroma Candidate chroma.
+ * @param {Object} reference Reference Lab coordinates and chroma.
+ * @return {number} Perceptual naming distance.
  */
 function namingDistance(lab, chroma, reference) {
   const lightnessDifference = lab[0] - reference.lab[0];

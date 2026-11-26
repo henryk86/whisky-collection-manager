@@ -4,7 +4,7 @@ import {t} from '../../i18n/index.js';
 /**
  * Backup admin key is intentionally held in memory only, never in localStorage.
  */
-import {query, escapeHtml as h} from '../../ui/dom.js';
+import {query} from '../../ui/dom.js';
 import {request, httpResponseError} from '../../api.js';
 import {jobErrorText} from '../../i18n/job-errors.js';
 import {toast} from '../../ui/notifications.js';

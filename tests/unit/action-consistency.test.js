@@ -1,4 +1,4 @@
-import {renderedText, captureContent} from '../helpers/rendering.js';
+import {renderedText, captureContent, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createShell} from '../../public/js/ui/shell.js';
@@ -153,8 +153,8 @@ test(
   'settings are accessible through the side menu with the shared, correct gear icon',
   () => {
     const shell = renderShell();
-    assert.doesNotMatch(renderedText(shell), /<button[^>]+data-act="settings"/, 'no duplicate settings action in the header');
-    assert.match(renderedText(shell), /<a[^>]+data-act="goto-settings-menu"[^>]*>/);
+    assert.equal(domElements(shell, 'button[data-act="settings"]').length, 0, 'no duplicate settings action in the header');
+    assert.ok(domElements(shell, 'a[data-act="goto-settings-menu"]').length > 0);
     assert.match(renderedText(shell), /<a[^>]+data-act="goto-settings-menu"[^>]*>[\s\S]*?Einstellungen\s*<\/a>/);
     assert.ok(renderedText(shell).includes(renderedText(settingsIconPaths)), 'sidebar uses exactly the shared gear drawing');
     const actions = [...renderedText(shell).matchAll(/<button[^>]+data-act="([^"]+)"[^>]*>/g),].map(match => match[1]);
@@ -166,9 +166,9 @@ test(
   'settings icon is a clean, symmetrical gear outline without stray paths',
   () => {
     assert.match(renderedText(settingsIcon), /<path d="M10\.5 2h3/);
-    assert.match(renderedText(settingsIcon), /<circle cx="12" cy="12" r="3"\/>/);
+    assert.ok(domElements(settingsIcon, 'circle[cx="12"][cy="12"][r="3"]').length > 0);
     assert.doesNotMatch(renderedText(settingsIcon), /H21|M21|<text|<polygon/);
-    assert.equal((renderedText(settingsIcon).match(/<svg/g) || []).length, 1);
+    assert.equal(domElements(settingsIcon, 'svg').length, 1);
     assert.equal((renderedText(settingsIcon).match(/<\/svg>/g) || []).length, 1);
   }
 );

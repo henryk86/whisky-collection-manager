@@ -36,12 +36,11 @@ export function furnitureOverlap(first, second) {
 }
 
 /**
- * Checks furniture placement against other items and the room.
- *
- * @param {*} room Room model containing dimensions and furniture.
- * @param {*} candidate Candidate used by this operation.
- * @param {*=} otherFurniture Other furniture used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Finds the first colliding furniture item, ignoring the candidate's own ID.
+ * @param {Object} room Room being checked.
+ * @param {Object} candidate Candidate furniture geometry.
+ * @param {Object[]=} otherFurniture Comparison items, defaulting to the room's furniture.
+ * @return {(Object|null)} First collision or null.
  */
 export function furnitureCollision(room, candidate, otherFurniture =
   room.furniture || []) {
@@ -78,11 +77,10 @@ export function moveFurnitureTowards(room, item, fromX, fromY, toX, toY) {
   const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 0.04));
   let x = fromX, y = fromY;
   /**
-   * Checks whether place applies.
-   *
-   * @param {*} nextX Value used by this operation.
-   * @param {*} nextY Value used by this operation.
-   * @return {boolean} Whether the operation matched or succeeded.
+   * Tests whether the furniture fits at a candidate room position without colliding.
+   * @param {number} nextX Candidate horizontal room position in metres.
+   * @param {number} nextY Candidate depth position in metres.
+   * @return {boolean} Whether the proposed position is valid.
    */
   const canPlace = (nextX, nextY) => {
     const candidate = {...item, x: nextX, y: nextY};

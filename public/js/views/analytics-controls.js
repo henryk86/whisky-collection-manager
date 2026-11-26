@@ -3,7 +3,7 @@ import {actionButton} from '../ui/buttons.js';
 import {t} from '../i18n/index.js';
 import {readAnalyticsDate} from '../domain/analytics-period.js';
 import {loadTemplates} from '../ui/templates.js';
-import {safe, countryName} from './analytics-components.js';
+import {countryName} from './analytics-components.js';
 
 const renderTemplate = await loadTemplates('analytics/analytics.html');
 
@@ -62,13 +62,13 @@ export function filterControls(state, options) {
   const select = (name, caption, options, selected) =>
     renderTemplate('select', {
       name: name,
-      ariaLabel: safe(caption),
+      ariaLabel: String(caption ?? ''),
       options: composeMarkup(options.map(([value, label]) => renderTemplate(
         'selectOption',
         {
-          value: safe(value),
+          value: String(value ?? ''),
           selectedAttributes: value === selected ? {"selected": true} : {},
-          label: safe(label),
+          label: String(label ?? ''),
         }
       ))),
     });

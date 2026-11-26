@@ -17,36 +17,32 @@ export const RELEASE_METADATA = [
   'docs/TESTSTATUS.md', 'wcm-source-manifest.json',
 ];
 /**
- * Normalizes the git text for subsequent processing.
- *
- * @param {!Array<*>} args Arguments forwarded to the operation.
- * @return {*} Result computed from the supplied inputs.
+ * Runs a Git command in the release repository.
+ * @param {...string} args Git arguments.
+ * @return {string} Trimmed standard output.
  */
 const git = (...args) => execFileSync('git', args, {cwd: ROOT, encoding: 'utf8'}).trim();
 
 /**
- * Normalizes the git at text for subsequent processing.
- *
- * @param {*} cwd Current working directory for path resolution.
- * @param {!Array<*>} args Arguments forwarded to the operation.
- * @return {*} Result computed from the supplied inputs.
+ * Runs Git in the supplied working directory.
+ * @param {string} cwd Working directory.
+ * @param {...string} args Git arguments.
+ * @return {string} Trimmed standard output.
  */
 const gitAt = (cwd, ...args) => execFileSync('git', args, {cwd, encoding: 'utf8'}).trim();
 
 /**
- * Derives the parents result from the supplied values.
- *
- * @param {*} rev Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Reads direct parent hashes for the revision.
+ * @param {string} rev Commit revision.
+ * @return {string[]} Parent commit hashes.
  */
 const parents = rev => git('rev-list', '--parents', '-n', '1', rev).split(/\s+/).slice(1);
 
 /**
- * Derives the ancestor result from the supplied values.
- *
- * @param {*} older Value used by this operation.
- * @param {*} newer Value used by this operation.
- * @return {boolean} Whether the operation matched or succeeded.
+ * Tests whether one revision is reachable from another.
+ * @param {string} older Potential ancestor.
+ * @param {string} newer Descendant revision.
+ * @return {boolean} Git ancestry result.
  */
 const ancestor = (older, newer) => {
   try {git('merge-base', '--is-ancestor', older, newer); return true;}
@@ -54,10 +50,9 @@ const ancestor = (older, newer) => {
 };
 
 /**
- * Parses version at data from JSON input.
- *
- * @param {*} ref Value used by this operation.
- * @return {*} Parsed JSON value.
+ * Reads the package version from a particular Git revision.
+ * @param {string} ref Revision containing package.json.
+ * @return {string} Version recorded in that revision.
  */
 const versionAt = ref => JSON.parse(git('show', `${ref}:package.json`)).version;
 
@@ -206,10 +201,9 @@ if (running) {
   try {
     const [command, ...args] = process.argv.slice(2);
     /**
-     * Derives the get result from the supplied values.
-     *
-     * @param {*} name Environment variable or setting name.
-     * @return {*} Result computed from the supplied inputs.
+     * Finds the value of a command-line option in the current arguments.
+     * @param {string} name Option name.
+     * @return {(string|null|undefined)} Following argument, null when absent, or undefined when no value follows.
      */
     const get = name => {
       const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null;

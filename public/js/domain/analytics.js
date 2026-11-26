@@ -33,11 +33,11 @@ const text = v => typeof v === 'string' && v.trim() ? v.trim() : '';
 const usableYear = v => Number.isSafeInteger(v) && v >= 1600 && v <= 2300 ? v : null;
 
 /**
- * Tests input text against the year of pattern.
+ * Prefers a supported explicit year, falling back to the year of a full date.
  *
- * @param {*} v Value to evaluate.
- * @param {*} explicit Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} v Candidate ISO calendar date.
+ * @param {*} explicit Explicit reporting year to prefer.
+ * @return {*} Reporting year from 1600 to 2300, or null.
  */
 const yearOf = (v, explicit) => usableYear(explicit) ?? (/^\d{4}-\d{2}-\d{2}$/.test(v || '') ? usableYear(Number(v.slice(0, 4))) : null);
 
@@ -50,10 +50,10 @@ const yearOf = (v, explicit) => usableYear(explicit) ?? (/^\d{4}-\d{2}-\d{2}$/.t
 const currencyOf = b => text(b.currency).toUpperCase() || 'UNBEKANNT';
 const idsOf = bottlingDistilleryIds;
 /**
- * Derives the amount result from the supplied values.
+ * Excludes missing, negative, non-numeric and non-finite amounts from statistics.
  *
- * @param {*} v Value to evaluate.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} v Candidate monetary amount or observation.
+ * @return {*} Non-negative finite number, or null.
  */
 const amount = v => isNumber(v) && v >= 0 ? v : null;
 
@@ -70,9 +70,9 @@ const dateMonth = value => {
 };
 
 /**
- * Derives the date day result from the supplied values.
+ * Extracts and validates the calendar day of a date or timestamp.
  *
- * @param {*} value Value to process.
+ * @param {*} value Candidate date or timestamp.
  * @return {string} Valid date portion, or empty text for an invalid calendar date.
  */
 const dateDay = value => readAnalyticsDate(typeof value === 'string' ? value.slice(0, 10) : '');
@@ -120,11 +120,11 @@ const grouped = (rows, key, {unknown = 'Unbekannt'} = {}) => {
 };
 
 /**
- * Derives the rank result from the supplied values.
+ * Keeps the leading entries of a previously ranked sequence.
  *
- * @param {*} rows Input records to process.
+ * @param {*} rows Records already ordered by rank.
  * @param {number=} limit Maximum number of entries to include.
- * @return {*} Result computed from the supplied inputs.
+ * @return {*} Leading entries in their original order.
  */
 const rank = (rows, limit = 10) => rows.slice(0, limit);
 
@@ -142,20 +142,20 @@ const stats = values => ({
 });
 
 /**
- * Filters records according to the by date selection rules.
+ * Counts records by valid calendar month and orders the groups chronologically.
  *
- * @param {*} rows Input records to process.
- * @param {*} dateSelector Value used by this operation.
- * @return {!Array<*>} Resulting entries in their output order.
+ * @param {*} rows Records to group.
+ * @param {*} dateSelector Callback selecting the record date.
+ * @return {!Array<*>} Monthly groups with their name and count.
  */
 const byDate = (rows, dateSelector) => grouped(rows.filter(row => dateMonth(dateSelector(row))), row => dateMonth(dateSelector(row))).sort((a, b) => a.name.localeCompare(b.name));
 
 /**
- * Filters records according to the by day selection rules.
+ * Counts records by valid calendar day and orders the groups chronologically.
  *
- * @param {*} rows Input records to process.
- * @param {*} dateSelector Value used by this operation.
- * @return {!Array<*>} Resulting entries in their output order.
+ * @param {*} rows Records to group.
+ * @param {*} dateSelector Callback selecting the record date.
+ * @return {!Array<*>} Daily groups with their name and count.
  */
 const byDay = (rows, dateSelector) => grouped(rows.filter(row => dateDay(dateSelector(row))), row => dateDay(dateSelector(row))).sort((a, b) => a.name.localeCompare(b.name));
 const statusLabels = {closed: 'Geschlossen', open: 'Geöffnet', empty: 'Leer'};
@@ -225,10 +225,10 @@ export function analyzeCollection(collection, filters = {}) {
   const distilleryNames = new Map((collection.distilleries || []).map(d => [d.id, d.name]));
   const distilleryLookup = new Map((collection.distilleries || []).map(d => [d.id, d]));
   /**
-   * Derives the origin for result from the supplied values.
+   * Resolves the known regions and countries of a bottling using the current distillery lookup.
    *
-   * @param {*} b Second entry or operand in the calculation.
-   * @return {*} Result computed from the supplied inputs.
+   * @param {*} b Bottling to resolve.
+   * @return {*} Distinct regions and countries of known contributors.
    */
   const originFor = b => bottlingOrigins(b, distilleryLookup);
   const distilleryCounts = new Map();
@@ -350,6 +350,7 @@ export function analyzeCollection(collection, filters = {}) {
   }))
     .sort((a, b) => b.avg - a.avg || b.count - a.count);
   const notesCount = bottlings.filter(b => ['nose', 'palate', 'finish'].some(key => text(latestTasting(b)?.tastingNotes?.[key]))).length;
+  /** @type {Array<[string, function(*): boolean]>} */
   const missingField = [
     ['Alter', b => isNumber(b.ageYears)],
     ['Alkoholgehalt', b => isNumber(b.abv)],
@@ -371,7 +372,9 @@ export function analyzeCollection(collection, filters = {}) {
     name, count: bottlings.filter(b => !has(b)).length,
     ids: bottlings.filter(b => !has(b)).map(b => b.id),
   })).sort((a, b) => b.count - a.count);
-  const missingPurchase = [['Kaufpreis', b => amount(b.purchasePrice) != null], ['Kaufdatum', b => !!dateMonth(b.purchaseDate)],].map(([name, has]) => ({
+  /** @type {Array<[string, function(*): boolean]>} */
+  const purchaseChecks = [['Kaufpreis', b => amount(b.purchasePrice) != null], ['Kaufdatum', b => !!dateMonth(b.purchaseDate)],];
+  const missingPurchase = purchaseChecks.map(([name, has]) => ({
     name, count: bottles.filter(b => !has(b)).length,
     ids: bottleEntries.filter(entry => !has(entry.bottle)).map(entry =>
       ({id: entry.bottling.id, bottleId: entry.bottle.id})),

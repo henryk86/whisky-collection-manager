@@ -1,5 +1,4 @@
 import {t} from '../../i18n/index.js';
-import {escapeHtml} from '../../ui/dom.js';
 import {loadTemplates} from '../../ui/templates.js';
 
 const renderTemplate = await loadTemplates('import/choice-template.html');
@@ -26,7 +25,7 @@ export function importChoice({
     {'data-import-field': field};
   const existing = currentValue === null || currentValue === undefined || currentValue === ''
     ? '' : renderTemplate('importChoiceCurrent', {
-      currentValue: t("imports.preview.currentValue", {value: escapeHtml(String(currentValue))}),
+      currentValue: t("imports.preview.currentValue", {value: String(currentValue)}),
     });
   return renderTemplate('importChoice', {
     attribute: attribute,

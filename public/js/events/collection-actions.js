@@ -8,84 +8,82 @@
 export function createCollectionActions({home, tastingsView}) {
   return {
     /**
-     * Handles the collection view save interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the dialog for saving the current collection view.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-view-save': () => home.openSaveView(),
 
     /**
-     * Handles the collection view save confirm interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Persists the current collection view under its entered name.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-view-save-confirm': () => home.saveCurrentView(),
 
     /**
-     * Handles the collection view update interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Updates the saved view with the current filter and sort configuration.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-view-update': () => home.updateCurrentView(),
 
     /**
-     * Handles the collection view rename interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the saved-view rename dialog.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-view-rename': () => home.renameCurrentView(),
 
     /**
-     * Handles the collection view rename confirm interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Confirms the entered saved-view name.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-view-rename-confirm': () => home.confirmRenameView(),
 
     /**
-     * Handles the collection view delete interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Starts removal of the active saved view.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-view-delete': () => home.deleteCurrentView(),
 
     /**
-     * Handles the collection flavor open interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the draft sensory filter editor.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-flavor-open': () => home.openFlavorFilter(),
 
     /**
-     * Handles the collection flavor close interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Closes the sensory filter editor.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-flavor-close': () => home.closeFlavorFilter(),
 
     /**
-     * Handles the collection flavor reset interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Clears the criteria in the draft sensory filter.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-flavor-reset': () => home.resetFlavorDraft(),
 
     /**
-     * Handles the collection flavor apply interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Applies the draft sensory criteria to the collection.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-flavor-apply': () => home.applyFlavorDraft(),
 
     /**
-     * Handles the collection view apply interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Restores the saved view identified by the selected action.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-view-apply': button => home.applySavedView(button.dataset.id),
 
     /**
-     * Handles the collection flavor add interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Adds another sensory filter criterion.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-flavor-add': () => home.addFlavorCriterion(),
 
     /**
-     * Handles the collection flavor remove interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Removes the draft criterion for the selected sensory axis.
+     * @param {!HTMLElement} button Action element carrying data-axis.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'collection-flavor-remove': button =>
       home.removeFlavorCriterion(button.dataset.axis),

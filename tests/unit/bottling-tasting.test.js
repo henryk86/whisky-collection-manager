@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {normalizeBottling, normalizeBottle}
@@ -55,28 +55,28 @@ test(
   () => {
     const html = glencairnRating(85);
     assert.equal((renderedText(html).match(/data-rating-points=/g) || []).length, 5);
-    assert.equal((renderedText(html).match(/class="tasting-glass"/g) || []).length, 5);
-    assert.match(renderedText(html), /data-tasting-score/);
-    assert.match(renderedText(html), /value="85"/);
+    assert.equal(domElements(html, '[class="tasting-glass"]').length, 5);
+    assert.ok(domElements(html, '[data-tasting-score]').length > 0);
+    assert.ok(domElements(html, '[value="85"]').length > 0);
     assert.match(renderedText(html), /--glass-fill:25%/); // the fifth GLASS is filled to 25% of its liquid height
-    assert.match(renderedText(html), /role="group"/);
-    assert.match(renderedText(html), /clip-path="url\(#rating-glass-4\)"/);
+    assert.ok(domElements(html, '[role="group"]').length > 0);
+    assert.ok(domElements(html, '[clip-path="url(#rating-glass-4)"]').length > 0);
     assert.match(renderedText(GLENCAIRN_INK), /M215,97/, 'original Glencairn shines inside the bowl');
-    assert.match(renderedText(html), /class="glencairn-rating-outline"/);
-    assert.match(renderedText(html), /class="glencairn-rating-fill"/);
+    assert.ok(domElements(html, '[class="glencairn-rating-outline"]').length > 0);
+    assert.ok(domElements(html, '[class="glencairn-rating-fill"]').length > 0);
     assert.match(renderedText(html), /data-rating-fill[^>]*y="267.75"[^>]*height="63.25"/);
-    assert.doesNotMatch(renderedText(html), /class="glencairn-gold"/, 'rating uses its dedicated gold liquid fill');
-    assert.match(renderedText(html), /class="tasting-score-control"/);
+    assert.equal(domElements(html, '[class="glencairn-gold"]').length, 0, 'rating uses its dedicated gold liquid fill');
+    assert.ok(domElements(html, '[class="tasting-score-control"]').length > 0);
     assert.match(renderedText(html), /<span id="tasting-score-suffix">\/ 100<\/span>/);
     assert.doesNotMatch(
       renderedText(html),
       /data-tasting-rating-total|tasting-rating-total/,
       'only the editable score displays the point value'
     );
-    assert.match(renderedText(html), /data-glass-state="partial"/);
+    assert.ok(domElements(html, '[data-glass-state="partial"]').length > 0);
     assert.doesNotMatch(renderedText(html), /★|☆/);
-    assert.match(renderedText(glencairnRating(null)), /placeholder="–"/);
-    assert.match(renderedText(glencairnRating(null)), /value=""/);
+    assert.ok(domElements(glencairnRating(null), '[placeholder="–"]').length > 0);
+    assert.ok(domElements(glencairnRating(null), '[value=""]').length > 0);
   }
 );
 test(
@@ -147,7 +147,7 @@ test(
     assert.equal(renderedText(parseTastingScore('')), null);
     for (const bad of ['-1', '100.1', '87.55', 'word', '1e2']) assert.throws(() => parseTastingScore(bad));
     assert.throws(() => normalizeBottling({name: 'Release', rating: 87.5}));
-    assert.match(renderedText(glencairnRating(87.5)), /value="87,5"/);
+    assert.ok(domElements(glencairnRating(87.5), '[value="87,5"]').length > 0);
     assert.match(renderedText(glencairnRating(87.5)), /--glass-fill:37.5%/);
   }
 );
@@ -156,7 +156,7 @@ test(
   () => {
     assert.equal(WHISKY_COLORS.length, 12);
     const chosen = whiskyColorSelector('butter');
-    assert.match(renderedText(chosen), /data-color-key="butter" aria-pressed="true"/);
+    assert.ok(domElements(chosen, '[data-color-key="butter"][aria-pressed="true"]').length > 0);
     assert.match(renderedText(chosen), /whisky-color-choice is-selected/);
     assert.doesNotMatch(
       renderedText(chosen),
@@ -170,8 +170,8 @@ test(
     }));
     const html = whiskyColorSelector('amber');
     assert.equal((renderedText(html).match(/data-color-key=/g) || []).length, 12);
-    assert.match(renderedText(html), /data-whisky-color="amber"/);
-    assert.match(renderedText(html), /style="fill:#d17b20"/);
+    assert.ok(domElements(html, '[data-whisky-color="amber"]').length > 0);
+    assert.ok(domElements(html, '[style="fill:#d17b20"]').length > 0);
     const history = createTastingHistory({
       flavorProfile: null,
       tastingNotes: notes(''),
@@ -189,13 +189,13 @@ test(
   () => {
     const html = whiskyColorSelector('custom:#b74154');
     assert.equal((renderedText(html).match(/class="whisky-color-choice/g) || []).length, 12, 'reference colours stay unchanged');
-    assert.match(renderedText(html), /class="whisky-custom-row is-selected"/);
-    assert.match(renderedText(html), /data-whisky-picker-area/);
-    assert.match(renderedText(html), /<input type="hidden" data-whisky-custom-hex value="#b74154">/);
+    assert.ok(domElements(html, '[class="whisky-custom-row is-selected"]').length > 0);
+    assert.ok(domElements(html, '[data-whisky-picker-area]').length > 0);
+    assert.ok(domElements(html, 'input[type="hidden"][data-whisky-custom-hex][value="#b74154"]').length > 0);
     assert.doesNotMatch(renderedText(html), /whisky-custom-hex-row|>HEX<|type="text" data-whisky-custom-hex/);
-    assert.match(renderedText(html), /value="#b74154"/);
-    assert.match(renderedText(html), /style="fill:#b74154"/);
-    assert.match(renderedText(html), /data-whisky-custom-name aria-live="polite">Rubinrot<\/output>/);
+    assert.ok(domElements(html, '[value="#b74154"]').length > 0);
+    assert.ok(domElements(html, '[style="fill:#b74154"]').length > 0);
+    assert.equal(domElements(html, 'output[data-whisky-custom-name][aria-live="polite"]')[0].text.trim(), 'Rubinrot');
     assert.match(renderedText(whiskyColorDisplay('custom:#b74154')), />Rubinrot<\/strong>/);
     assert.doesNotMatch(
       renderedText(whiskyColorDisplay('custom:#b74154')).match(/<strong>(.*?)<\/strong>/)?.[1] || '',
@@ -208,13 +208,13 @@ test(
     // HEX.
     for (const fixedSelection of ['honey', null]) {
       const fixedHtml = whiskyColorSelector(fixedSelection);
-      assert.match(renderedText(fixedHtml), /data-whisky-custom-hex[^>]*value=""/);
-      assert.match(renderedText(fixedHtml), /id="custom-color-glass"/);
-      assert.match(renderedText(fixedHtml), /class="glencairn-liquid"[^>]*style="fill:transparent"/);
-      assert.match(renderedText(fixedHtml), /class="whisky-custom-row"/);
-      assert.doesNotMatch(renderedText(fixedHtml), /class="whisky-custom-row is-selected"/);
+      assert.ok(domElements(fixedHtml, '[data-whisky-custom-hex][value=""]').length > 0);
+      assert.ok(domElements(fixedHtml, '[id="custom-color-glass"]').length > 0);
+      assert.ok(domElements(fixedHtml, '[class="glencairn-liquid"][style="fill:transparent"]').length > 0);
+      assert.ok(domElements(fixedHtml, '[class="whisky-custom-row"]').length > 0);
+      assert.equal(domElements(fixedHtml, '[class="whisky-custom-row is-selected"]').length, 0);
       assert.doesNotMatch(renderedText(fixedHtml), /#b74154/);
-      assert.match(renderedText(fixedHtml), /data-whisky-custom-name aria-live="polite"><\/output>/);
+      assert.equal(domElements(fixedHtml, 'output[data-whisky-custom-name][aria-live="polite"]')[0].text.trim(), '');
     }
     assert.equal(renderedText(normalizeWhiskyColor('custom:#F4B3C1')), 'custom:#f4b3c1', 'rose HEX is normalized');
     for (const hex of ['#b74154', '#f4b3c1', '#9b2125', '#eaa52e', '#50392d',

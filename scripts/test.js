@@ -6,10 +6,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 /**
- * Derives the collect result from the supplied values.
- *
- * @param {*} directory Directory containing the requested data.
- * @return {*} Combined text from the input values.
+ * Recursively discovers JavaScript test files below a directory.
+ * @param {string} directory Directory to scan, including nested test folders.
+ * @return {string[]} Paths of files ending in .test.js.
  */
 function collect(directory) {
   return fs.readdirSync(directory, {withFileTypes: true, }).flatMap(entry => {

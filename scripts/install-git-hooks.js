@@ -7,10 +7,9 @@ import {spawnSync} from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /**
- * Normalizes the git text for subsequent processing.
- *
- * @param {!Array<*>} args Arguments forwarded to the operation.
- * @return {*} Result computed from the supplied inputs.
+ * Executes Git in the project root and reports unsuccessful invocations.
+ * @param {...string} args Git command arguments.
+ * @return {string} Trimmed command output.
  */
 function git(...args) {
   const result = spawnSync('git', args, {cwd: root, encoding: 'utf8'});

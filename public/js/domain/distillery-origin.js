@@ -49,10 +49,10 @@ const countryNames = Object.freeze({
   'china': 'China',
 });
 /**
- * Formats a country identifier into its display label.
+ * Resolves a known country label case-insensitively, preserving unknown country names.
  *
- * @param {*} value Input value to process.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} value Candidate country name.
+ * @return {*} Localized country label or the supplied normalized name.
  */
 export function countryLabel(value) {
   const name = text(value);
@@ -74,8 +74,8 @@ export function bottlingDistilleryIds(bottling) {
  * Resolves geographic origins for all contributing distilleries.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @param {!Array<*>=} distilleries Distilleries used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @param {Array<import('../../../shared/types.js').Distillery>|Map<string, import('../../../shared/types.js').Distillery>=} distilleries Distillery records or lookup indexed by ID.
+ * @return {{countries: string[], regions: string[]}} Unique producing countries and regions.
  */
 export function bottlingOrigins(bottling, distilleries = []) {
   const lookup = distilleries instanceof Map ? distilleries : new Map(distilleries.map(d => [d.id, d]));

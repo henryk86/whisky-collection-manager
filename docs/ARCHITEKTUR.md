@@ -56,7 +56,7 @@ oder einen skalaren Text ein. `{{attr:name}}` bindet einen skalaren Wert
 in einem Attribut; `{{attrs:name}}` erwartet ein strukturiertes Objekt aus
 Attributnamen und Werten. `{{tag:name}}` ist für validierte strukturelle
 Tag-Varianten vorgesehen. Dynamische Daten werden nicht als HTML geparst.
-Browser und Node erzeugen dieselben RenderPläne. Die Anwendung montiert ausschließlich native DOM-Knoten. UI-Assertions materialisieren RenderPläne mit dem produktiven Renderer in Chromium; historische Text-Assertions verwenden nur eine testinterne Vergleichsdarstellung, deren DOM gegen das native Ergebnis geprüft wird. Neue DOM-Tests prüfen Elemente, Attribute und Textinhalte direkt. Bindungen erhalten fachliche Namen.
+Browser und Node erzeugen dieselben RenderPläne. Die Anwendung montiert ausschließlich native DOM-Knoten. UI-Assertions materialisieren RenderPläne mit dem produktiven Renderer in Chromium; DOM-Tests prüfen Elemente, Attribute, Textinhalte und Formulareigenschaften direkt. Verbliebene Markup-Assertions erhalten ausschließlich die native Chromium-Serialisierung, keinen zweiten HTML-Renderer. Dynamische Text- und Attributwerte bleiben literal; nur statische HTML-Entitäten werden vom Browser geparst. Bindungen erhalten fachliche Namen.
 
 Die Hauptansichten bereiten Auswahldaten, Filterergebnisse, Geometrie und
 abgeleitete Kennzahlen in `public/js/views/models/` auf. ViewModels verändern

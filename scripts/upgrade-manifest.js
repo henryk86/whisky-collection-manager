@@ -7,10 +7,9 @@ import crypto from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {readSourceManifest, verifySourceManifest} from './release-manifest.js';
 /**
- * Reads hash data from the local filesystem.
- *
- * @param {*} file File resource to read, write or inspect.
- * @return {*} Result computed from the supplied inputs.
+ * Computes the upgrade manifest's file checksum.
+ * @param {string} file File path.
+ * @return {string} Hexadecimal SHA-256 digest.
  */
 const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 

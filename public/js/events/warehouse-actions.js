@@ -8,10 +8,9 @@
 export function createWarehouseActions({warehouseView, state, navigate, render}) {
   return {
     /**
-     * Handles the warehouse section interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Navigates to the storage subsection supplied by the action.
+     * @param {!HTMLElement} button Action element carrying data-section.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     'warehouse-section': button => navigate('warehouse', button.dataset.section),
 
@@ -36,17 +35,16 @@ export function createWarehouseActions({warehouseView, state, navigate, render})
     },
 
     /**
-     * Handles the warehouse visibility toggle interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Toggles visibility of the identified furniture in the current room.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {boolean} Whether the identified furniture is visible after toggling.
      */
     'warehouse-visibility-toggle': button =>
       warehouseView.toggleFurnitureVisibility(button.dataset.id),
 
     /**
-     * Handles the warehouse show all interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Restores all hidden furniture in the current room.
+     * @return {number} Number of furniture items made visible.
      */
     'warehouse-show-all': () => warehouseView.showAllFurniture(),
 
@@ -58,330 +56,306 @@ export function createWarehouseActions({warehouseView, state, navigate, render})
     },
 
     /**
-     * Handles the warehouse find location interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Focuses the identified physical bottle in its storage location.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-find-location': button =>
       warehouseView.showBottleLocation(button.dataset.id),
 
     /**
-     * Handles the warehouse return find interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Returns from a located bottle to the finder.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-return-find': () => warehouseView.returnToFinder(),
 
     /**
-     * Handles the warehouse find clear interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Clears the current storage search focus.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-find-clear': () => warehouseView.clearFindFocus(),
 
     /**
-     * Handles the warehouse find prev interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Moves back one page of storage search results.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-find-prev': () => warehouseView.stepFinderPage(-1),
 
     /**
-     * Handles the warehouse find next interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Moves forward one page of storage search results.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-find-next': () => warehouseView.stepFinderPage(1),
 
     /**
-     * Handles the warehouse open shelves interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the compartment-management section.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     'warehouse-open-shelves': () => navigate('warehouse', 'shelves'),
 
     /**
-     * Handles the warehouse room new interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens a new-room form.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-room-new': () => warehouseView.openForm('room'),
 
     /**
-     * Handles the warehouse rooms transfer interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens room import and export controls.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-rooms-transfer': () => warehouseView.openRoomTransfer(),
 
     /**
-     * Handles the warehouse room edit interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the edit form for the identified room.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-room-edit': button =>
       warehouseView.openForm('room', button.dataset.id),
 
     /**
-     * Handles the warehouse room delete interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens confirmation for deletion of the identified room.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-room-delete': button =>
       warehouseView.askDelete('room', button.dataset.id),
 
     /**
-     * Handles the warehouse select room interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Selects the identified room and navigates to its management view.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-select-room': button =>
       warehouseView.selectRoom(button.dataset.id),
 
     /**
-     * Handles the warehouse furniture new interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens a new-furniture form.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-furniture-new': () => warehouseView.openForm('furniture'),
 
     /**
-     * Handles the warehouse furniture manage interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the manager for the identified furniture.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-furniture-manage': button =>
       warehouseView.openFurnitureManager(button.dataset.id),
 
     /**
-     * Handles the warehouse furniture bulk interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the manager for selected furniture.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-furniture-bulk': () => warehouseView.openFurnitureBulkManager(),
 
     /**
-     * Handles the warehouse toggle furniture interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Toggles the identified furniture in the bulk-edit selection.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-toggle-furniture': button =>
       warehouseView.toggleFurnitureBulkSelection(button.dataset.id),
 
     /**
-     * Handles the warehouse bulk select all interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Selects all furniture in the current room for bulk editing.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-bulk-select-all': () => warehouseView.selectAllFurniture(),
 
     /**
-     * Handles the warehouse bulk clear interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Clears the bulk furniture selection.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-bulk-clear': () => warehouseView.clearFurnitureSelection(),
 
     /**
-     * Handles the warehouse bulk edit interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the form for editing selected furniture.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-bulk-edit': () => warehouseView.openForm('furniture-bulk'),
 
     /**
-     * Handles the warehouse bulk delete interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens confirmation for deleting selected furniture.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-bulk-delete': () => warehouseView.askBulkDelete(),
 
     /**
-     * Handles the warehouse furniture edit interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the edit form for the identified furniture.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-furniture-edit': button =>
       warehouseView.openForm('furniture', button.dataset.id),
 
     /**
-     * Handles the warehouse furniture copy interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens a form initialized from the identified furniture.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-furniture-copy': button =>
       warehouseView.openForm('furniture-copy', button.dataset.id),
 
     /**
-     * Handles the warehouse furniture delete interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens confirmation for deleting the identified furniture.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-furniture-delete': button =>
       warehouseView.askDelete('furniture', button.dataset.id),
 
     /**
-     * Handles the warehouse select furniture interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Selects the identified furniture in the current workspace.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-select-furniture': button =>
       warehouseView.selectFurniture(button.dataset.id),
 
     /**
-     * Handles the warehouse shelf new interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the compartment form for the identified owner.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-shelf-new': button =>
       warehouseView.openForm('shelf', button.dataset.id),
 
     /**
-     * Handles the warehouse shelf view interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the compartment details using the shelf ID or fallback action ID.
+     * @param {!HTMLElement} button Action element carrying data-shelf-id, data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-shelf-view': button =>
       warehouseView.openShelfDetails(button.dataset.shelfId || button.dataset.id),
 
     /**
-     * Handles the warehouse shelf up interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Moves the identified compartment one position upward.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-shelf-up': button => warehouseView.moveShelf(button.dataset.id, 'up'),
 
     /**
-     * Handles the warehouse shelf down interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Moves the identified compartment one position downward.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-shelf-down': button => warehouseView.moveShelf(button.dataset.id, 'down'),
 
     /**
-     * Handles the warehouse shelf edit interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the edit form for the identified compartment.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-shelf-edit': button =>
       warehouseView.openForm('shelf', button.dataset.id),
 
     /**
-     * Handles the warehouse shelf switch interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Switches to the compartment referenced by the action's target.
+     * @param {!HTMLElement} button Action element carrying data-target.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-shelf-switch': button =>
       warehouseView.switchShelf(button.dataset.target),
 
     /**
-     * Handles the warehouse photo move interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Moves the identified furniture photo in the requested direction.
+     * @param {!HTMLElement} button Action element carrying data-id, data-photo-id, data-direction.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-photo-move': button => warehouseView.moveFurniturePhoto(button.dataset.id, button.dataset.photoId, button.dataset.direction),
 
     /**
-     * Handles the warehouse photo delete interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Starts removal of the identified furniture photo.
+     * @param {!HTMLElement} button Action element carrying data-id, data-photo-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-photo-delete': button => warehouseView.deleteFurniturePhoto(button.dataset.id, button.dataset.photoId),
 
     /**
-     * Handles the warehouse photo open interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the furniture photo at the supplied path and title.
+     * @param {!HTMLElement} button Action element carrying data-path, data-title.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-photo-open': button => warehouseView.openFurniturePhoto(button.dataset.path, button.dataset.title),
 
     /**
-     * Handles the warehouse shelf copy interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens a form initialized from the identified compartment.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-shelf-copy': button =>
       warehouseView.openForm('shelf-copy', button.dataset.id),
 
     /**
-     * Handles the warehouse shelf delete interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens confirmation for deleting the identified compartment.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-shelf-delete': button =>
       warehouseView.askDelete('shelf', button.dataset.id),
 
     /**
-     * Handles the warehouse assign interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the relocation form for the identified physical bottle.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-assign': button =>
       warehouseView.openForm('assign', button.dataset.id),
 
     /**
-     * Handles the warehouse bottles assign selected interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens relocation for the selected physical bottles.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-bottles-assign-selected': () =>
       warehouseView.assignSelectedBottles(),
 
     /**
-     * Handles the warehouse bottles select clear interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Clears the physical-bottle selection.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-bottles-select-clear': () =>
       warehouseView.clearBottleSelection(),
 
     /**
-     * Handles the warehouse bottles select all interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Selects all eligible physical bottles in the current selection scope.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-bottles-select-all': () => warehouseView.selectAllBottles(),
 
     /**
-     * Handles the warehouse bottle preview interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens the read-only preview of the identified physical bottle.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-bottle-preview': button =>
       warehouseView.openBottlePreview(button.dataset.id),
 
     /**
-     * Handles the warehouse bottle select interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Toggles the physical bottle in the wall selection.
+     * @param {!HTMLElement} button Action element carrying data-id.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-bottle-select': button =>
       warehouseView.toggleWallBottleSelection(button.dataset.id),
 
     /**
-     * Handles the warehouse bottles preview selected interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Opens a preview when exactly one physical bottle is selected.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-bottles-preview-selected': () =>
       warehouseView.previewSelectedBottle(),
 
     /**
-     * Handles the warehouse unassigned prev interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Moves back one page of the unassigned-bottle tray.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-unassigned-prev': () => warehouseView.stepUnassignedWallPage(-1),
 
     /**
-     * Handles the warehouse unassigned next interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Moves forward one page of the unassigned-bottle tray.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-unassigned-next': () => warehouseView.stepUnassignedWallPage(1),
 
@@ -407,14 +381,14 @@ export function createWarehouseActions({warehouseView, state, navigate, render})
     },
 
     /**
-     * Handles the warehouse confirm delete interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Confirms the pending storage deletion.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-confirm-delete': () => warehouseView.deleteConfirmed(),
 
     /**
-     * Handles the warehouse confirm delete unassign interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Confirms deletion and removal of associated bottle assignments.
+     * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'warehouse-confirm-delete-unassign': () =>
       warehouseView.deleteConfirmed(true),

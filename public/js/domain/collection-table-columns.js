@@ -210,12 +210,11 @@ export function saveTableColumns(preferences, storage) {
 }
 
 /**
- * Clicking an already sorted header reverses it, otherwise use its useful
- * default.
+ * Toggles an active column's sort direction or selects its preferred initial direction.
  *
- * @param {*} column Column definition used for layout and sorting.
- * @param {*} currentSort Current sorting key and direction.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} column Column definition, if available.
+ * @param {*} currentSort Previously selected sort key.
+ * @return {*} Next sort key, or the unchanged key if no column is supplied.
  */
 export function sortForColumn(column, currentSort) {
   if (!column) return currentSort;

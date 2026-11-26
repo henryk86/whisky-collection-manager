@@ -11,9 +11,8 @@ let shuttingDown = false;
 let exitCode = 0;
 
 /**
- * Performs the stop lifecycle action.
- *
- * @param {string=} signal Value used by this operation.
+ * Signals the running child processes and begins bounded supervisor shutdown.
+ * @param {string=} signal Signal forwarded to each live child.
  */
 function stop(signal = 'SIGTERM') {
   if (shuttingDown) return;

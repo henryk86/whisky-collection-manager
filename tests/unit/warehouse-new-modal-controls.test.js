@@ -1,4 +1,4 @@
-import {renderedText, captureContent} from '../helpers/rendering.js';
+import {renderedText, captureContent, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -87,7 +87,7 @@ test(
     const html = helpView('backups');
     assert.match(renderedText(html), /help-content-panel/);
     assert.match(renderedText(html), /help-technical-guides/);
-    assert.match(renderedText(html), /class="help-guide"/);
+    assert.ok(domElements(html, '[class="help-guide"]').length > 0);
     assert.match(renderedText(html), /backup-admin-token/);
     assert.match(renderedText(html), /rclone config/);
     assert.match(renderedText(html), /OneDrive/);

@@ -36,11 +36,10 @@ const targets = [
 ];
 
 /**
- * Derives the valid result from the supplied values.
- *
- * @param {*} bytes Value used by this operation.
- * @param {*} entry Entry currently being processed.
- * @return {boolean} Whether the operation matched or succeeded.
+ * Checks asset byte length and the configured integrity digest.
+ * @param {Buffer} bytes Downloaded or cached asset bytes.
+ * @param {Object} entry Manifest entry with optional byte limits and SHA-256.
+ * @return {boolean} Whether all specified integrity constraints pass.
  */
 function valid(bytes, entry) {
   if (entry.bytes != null && bytes.length !== entry.bytes) return false;

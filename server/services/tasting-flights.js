@@ -10,11 +10,10 @@ import {normalizeTastingRecord} from '../../shared/tasting-records.js';
 import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
 
 /**
- * Validates the find state and rejects invalid inputs.
- *
- * @param {*} collection Collection data to process.
- * @param {*} id Identifier of the affected record.
- * @return {*} Result computed from the supplied inputs.
+ * Finds an existing tasting flight or raises a not-found error.
+ * @param {import('../../shared/types.js').Collection} collection Collection containing flights.
+ * @param {string} id Flight ID.
+ * @return {import('../../shared/types.js').TastingFlight} Matching flight.
  */
 const find = (collection, id) => {
   const flight = (collection.tastingFlights || []).find(f => f.id === id);
@@ -23,11 +22,10 @@ const find = (collection, id) => {
 };
 
 /**
- * Validates the normalize state and rejects invalid inputs.
- *
- * @param {*} body Body content to validate or process.
- * @param {*} old Value used by this operation.
- * @return {*} Value returned by the delegated operation.
+ * Validates flight metadata and converts normalization errors into HTTP 400.
+ * @param {*} body Incoming flight metadata.
+ * @param {Object} old Previous flight metadata.
+ * @return {Object} Normalized flight fields.
  */
 const normalize = (body, old) => {
   try {return normalizeFlightFields(body, old);}

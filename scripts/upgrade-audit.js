@@ -12,19 +12,17 @@ import {fileURLToPath} from 'node:url';
 // config, vendor assets and third-party files are never candidates.
 export const SOURCE_ROOTS = ['public/js', 'server', 'shared', 'worker'];
 /**
- * Reads hash file data from the local filesystem.
- *
- * @param {*} file File resource to read, write or inspect.
- * @return {*} Result computed from the supplied inputs.
+ * Calculates the SHA-256 checksum of a candidate upgrade file.
+ * @param {string} file File path.
+ * @return {string} Hexadecimal SHA-256 digest.
  */
 const hashFile = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 
 /**
- * Validates the contained file state and rejects invalid inputs.
- *
- * @param {*} root Root node or directory for the operation.
- * @param {*} relative Relative path or position to resolve.
- * @return {*} Result computed from the supplied inputs.
+ * Resolves a candidate file and rejects paths outside the upgrade root.
+ * @param {string} root Allowed root directory.
+ * @param {string} relative Relative candidate path.
+ * @return {string} Validated absolute file path.
  */
 function containedFile(root, relative) {
   const full = path.resolve(root, relative);
@@ -41,10 +39,9 @@ function containedFile(root, relative) {
 function sourceFiles(directory) {
   const found = new Set();
   /**
-   * Derives the walk result from the supplied values.
-   *
-   * @param {*} folder Value used by this operation.
-   * @param {*} prefix Value used by this operation.
+   * Traverses a source directory and records eligible upgrade paths while enforcing containment.
+   * @param {string} folder Directory being scanned.
+   * @param {string} prefix Repository-relative path prefix.
    */
   function walk(folder, prefix) {
     if (!fs.existsSync(folder)) return;

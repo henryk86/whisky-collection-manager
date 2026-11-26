@@ -1,17 +1,7 @@
 /** @fileoverview Shared validation and normalization of template bindings. */
 const attributeName = /^[a-zA-Z_:][\w:.-]*$/;
 const tagName = /^(?:a|article|button|dd|div|dl|dt|h2|h3|p|section|span|strong)$/;
-const entities = {'amp': '&', 'lt': '<', 'gt': '>', 'quot': '"', '#39': "'"};
 const booleanAttributes = new Set(['checked', 'disabled', 'hidden', 'open', 'required', 'selected', 'multiple', 'readonly', 'autofocus']);
-
-/**
- * Decodes the entities produced by legacy escapeHtml call sites exactly once.
- * @param {*} value Previously escaped scalar.
- * @return {string} Literal value.
- */
-export function decodeEscaped(value) {
-  return String(value ?? '').replace(/&(amp|lt|gt|quot|#39);/g, (_, name) => entities[name]);
-}
 
 /**
  * Validates a dynamic tag against the supported semantic element choices.
@@ -40,7 +30,7 @@ export function checkedAttribute(name) {
  * Converts an attribute map into validated literal values. Nullish values
  * omit attributes; false only omits HTML boolean attributes (ARIA retains it).
  * @param {*} value Attribute map, not an HTML string.
- * @return {!Array<!Array<*>>} Name, value and boolean-attribute flag.
+ * @return {Array<[string, string, boolean]>} Validated name, literal value and boolean-attribute flag.
  */
 export function attributeEntries(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value) ||

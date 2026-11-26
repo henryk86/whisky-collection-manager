@@ -1,6 +1,6 @@
 /** @fileoverview Clones static templates and binds values through the DOM. */
 import {RenderPlan, SLOT, slotValue, scalarBinding} from './render-plan.js';
-import {attributeEntries, checkedAttribute, checkedTag, decodeEscaped} from './bindings.js';
+import {attributeEntries, checkedAttribute, checkedTag} from './bindings.js';
 
 /**
  * Parsed template slot located by an inert marker in the static DOM.
@@ -8,8 +8,8 @@ import {attributeEntries, checkedAttribute, checkedTag, decodeEscaped} from './b
  */
 
 /**
- * Attribute containing one or more scalar slot markers.
- * @typedef {{name: string, value: string}} BoundAttribute
+ * Original attribute name kept outside the static parser input.
+ * @typedef {{name: string}} BoundAttribute
  */
 
 /**
@@ -66,9 +66,8 @@ function prepare(plan) {
         if (!/wcm-slot-\d+-end/.test(quoted)) return whole;
         const index = boundAttributes.push({
           name: checkedAttribute(name),
-          value: decodeEscaped(quoted.slice(1, -1)),
         }) - 1;
-        return ` data-wcm-bound-${index}=""`;
+        return ` data-wcm-bound-${index}=${quoted}`;
       });
   });
   return {markup, slots, boundAttributes};
@@ -124,37 +123,41 @@ function setAttribute(element, name, value) {
  */
 function bind(root, plan, slots, boundAttributes, doc, context) {
   if (root.nodeType === 1) {
-    for (const attr of [...root.attributes]) {
+    const element = /** @type {!Element} */ (root);
+    for (const attr of [...element.attributes]) {
       const dynamic = attr.name.match(/^data-wcm-slot-(\d+)-end$/);
       const bound = attr.name.match(/^data-wcm-bound-(\d+)$/);
       if (bound) {
-        const {name, value} = boundAttributes[Number(bound[1])];
-        root.removeAttribute(attr.name);
-        setAttribute(root, name, value.replace(marker, (_, index) => scalarBinding(plan, slots[Number(index)].mode, slots[Number(index)].key)));
+        const {name} = boundAttributes[Number(bound[1])];
+        const value = attr.value;
+        element.removeAttribute(attr.name);
+        setAttribute(element, name, value.replace(marker, (_, index) => scalarBinding(plan, slots[Number(index)].mode, slots[Number(index)].key)));
       } else if (dynamic) {
         const {mode, key} = slots[Number(dynamic[1])];
-        root.removeAttribute(attr.name);
+        element.removeAttribute(attr.name);
         for (const [name, value] of attributeEntries(slotValue(plan, mode, key))) {
-          setAttribute(root, name, value);
+          setAttribute(element, name, value);
         }
       } else {
         const value = attr.value.replace(marker, (_, index) => scalarBinding(plan, slots[Number(index)].mode, slots[Number(index)].key));
-        if (value !== attr.value) setAttribute(root, attr.name, value);
+        if (value !== attr.value) setAttribute(element, attr.name, value);
       }
     }
-    context = root;
+    context = element;
   } else if (root.nodeType === 8) {
-    const match = root.data.match(/^wcm-slot-(\d+)-end$/);
+    const comment = /** @type {!Comment} */ (root);
+    const match = comment.data.match(/^wcm-slot-(\d+)-end$/);
     if (match) {
       const slot = slots[Number(match[1])];
       const value = slotValue(plan, slot.mode, slot.key);
-      const fragment = slot.mode === 'content' ? materialize(value, doc, context) : doc.createTextNode(scalarBinding(plan, slot.mode, slot.key));
-      root.replaceWith(fragment);
+      const fragment = slot.mode === 'content' ? materialize(/** @type {import('./render-plan.js').RenderContent} */(value), doc, context) : doc.createTextNode(scalarBinding(plan, slot.mode, slot.key));
+      comment.replaceWith(fragment);
       return;
     }
   } else if (root.nodeType === 3) {
     // Raw-text elements such as textarea retain comment markers as text.
-    root.data = root.data.replace(/<!--wcm-slot-(\d+)-end-->/g, (_, index) => scalarBinding(plan, slots[Number(index)].mode, slots[Number(index)].key));
+    const text = /** @type {!Text} */ (root);
+    text.data = text.data.replace(/<!--wcm-slot-(\d+)-end-->/g, (_, index) => scalarBinding(plan, slots[Number(index)].mode, slots[Number(index)].key));
   }
   for (const child of [...root.childNodes]) {
     bind(child, plan, slots, boundAttributes, doc, context);
@@ -163,15 +166,15 @@ function bind(root, plan, slots, boundAttributes, doc, context) {
 
 /**
  * Produces fresh DOM nodes from a render plan. No dynamic HTML is parsed.
- * @param {import('./render-plan.js').RenderContent} value Render plan, native node, or previously escaped text.
+ * @param {import('./render-plan.js').RenderContent} value Render plan, native node, or literal text.
  * @param {!Document} doc Owning document.
  * @param {?Element=} context Parent parser context for static child templates.
  * @return {!Node} Fresh fragment or text node, or the supplied native node unchanged.
  */
 export function materialize(value, doc, context = null) {
-  if (value?.nodeType && typeof value.cloneNode === 'function') return value;
+  if (value && typeof value === 'object' && 'nodeType' in value && value.nodeType && typeof value.cloneNode === 'function') return value;
   if (!(value instanceof RenderPlan)) {
-    return doc.createTextNode(decodeEscaped(value));
+    return doc.createTextNode(String(value ?? ''));
   }
   if (value.parts) {
     const group = doc.createDocumentFragment();

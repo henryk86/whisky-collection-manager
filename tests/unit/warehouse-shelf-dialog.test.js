@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderWarehouseRoomWall}
@@ -50,7 +50,7 @@ test(
     const w = warehouse();
     const html = renderWarehouseRoomWall(w.rooms[0], w);
     assert.equal((renderedText(html).match(/data-act="warehouse-bottle-select"/g) || []).length < 6, true);
-    assert.match(renderedText(html), /data-act="warehouse-shelf-view"/);
+    assert.ok(domElements(html, '[data-act="warehouse-shelf-view"]').length > 0);
     assert.match(renderedText(html), /warehouse-shelf-overflow/);
     const contents = shelfContents(w, 's');
     assert.equal(renderedText(contents.count), 15);
@@ -115,10 +115,10 @@ test(
       });
       assert.equal(renderedText(view.openFurnitureManager('f')), true);
       assert.doesNotMatch(renderedText(forms.at(-1).content), />Flaschen anzeigen<\/button>/);
-      assert.match(renderedText(forms.at(-1).content), /data-act="warehouse-bottle-preview" data-id="b0"/);
+      assert.ok(domElements(forms.at(-1).content, '[data-act="warehouse-bottle-preview"][data-id="b0"]').length > 0);
       assert.equal(renderedText(view.openShelfDetails('s')), true);
       assert.match(renderedText(forms.at(-1).content), /I-14/);
-      assert.doesNotMatch(renderedText(forms.at(-1).content), /data-act="warehouse-bottle-select"/);
+      assert.equal(domElements(forms.at(-1).content, '[data-act="warehouse-bottle-select"]').length, 0);
     } finally {
       if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
     }
@@ -180,13 +180,13 @@ test(
         refresh: async () => {},
       });
       view.render();
-      assert.match(renderedText(html), /data-act="warehouse-rooms-transfer"/);
-      assert.equal((renderedText(html).match(/data-act="warehouse-rooms-transfer"/g) || []).length, 1);
+      assert.ok(domElements(html, '[data-act="warehouse-rooms-transfer"]').length > 0);
+      assert.equal(domElements(html, '[data-act="warehouse-rooms-transfer"]').length, 1);
       state.selected = 'rooms'; view.render();
-      assert.match(renderedText(html), /data-act="warehouse-rooms-transfer"/);
-      assert.equal((renderedText(html).match(/data-act="warehouse-rooms-transfer"/g) || []).length, 1);
+      assert.ok(domElements(html, '[data-act="warehouse-rooms-transfer"]').length > 0);
+      assert.equal(domElements(html, '[data-act="warehouse-rooms-transfer"]').length, 1);
       state.selected = 'shelves'; view.render();
-      assert.match(renderedText(html), /data-act="warehouse-shelf-view"/);
+      assert.ok(domElements(html, '[data-act="warehouse-shelf-view"]').length > 0);
       view.openShelfDetails('s');
       assert.equal((renderedText(dialogs.at(-1)).match(/class="warehouse-shelf-detail-bottle/g) || []).length, 15);
     } finally {
@@ -204,7 +204,7 @@ test(
     const html = renderWarehouseRoomWall(w.rooms[0], w);
     assert.match(renderedText(html), /warehouse-wall-bay--unavailable/);
     assert.match(renderedText(html), /data-shelf-id="s" data-capacity="0" data-front=/);
-    assert.doesNotMatch(renderedText(html), /data-act="warehouse-shelf-view"/);
+    assert.equal(domElements(html, '[data-act="warehouse-shelf-view"]').length, 0);
     assert.doesNotMatch(renderedText(html), /role="button" aria-label="Cabinet/);
     assert.equal(renderedText(shelfContents(w, 's')?.unavailable), true);
   }
@@ -233,16 +233,11 @@ test(
     assert.match(renderedText(contents.html), /Alkoholgehalt:<\/span> 48,5 % Vol\./);
     assert.match(renderedText(contents.html), /Status:<\/span>/);
     assert.match(renderedText(contents.html), /Oak &lt;Wood&gt;/);
-    assert.match(renderedText(contents.html), /data-act="warehouse-assign" data-id="physical-1"/);
-    assert.match(
-      renderedText(contents.html),
-      new RegExp(
-        'href="\\/\\?bottling=bottling-1" data-act=' + '"open" data-id="bottling-1" data-bottle-id' + '="physical-1"'
-      )
-    );
-    assert.match(renderedText(contents.html), /data-act="warehouse-assign" data-id="physical-2"/);
+    assert.ok(domElements(contents.html, '[data-act="warehouse-assign"][data-id="physical-1"]').length > 0);
+    assert.equal(domElements(contents.html, 'a[href="/?bottling=bottling-1"][data-act="open"][data-id="bottling-1"][data-bottle-id="physical-1"]').length, 1);
+    assert.ok(domElements(contents.html, '[data-act="warehouse-assign"][data-id="physical-2"]').length > 0);
     assert.equal(
-      (renderedText(contents.html).match(/data-act="open"/g) || []).length,
+      domElements(contents.html, '[data-act="open"]').length,
       1,
       'no details link for a bottle without bottling ID'
     );
@@ -321,7 +316,7 @@ test(
       assert.match(renderedText(dialogs.at(-1).html), /warehouse-bottle-preview/);
       assert.doesNotMatch(renderedText(dialogs.at(-1).html), /warehouse-shelf-detail-grid/);
       assert.match(renderedText(dialogs.at(-1).html), /55 % Vol\./);
-      assert.match(renderedText(dialogs.at(-1).html), /data-act="warehouse-assign" data-id="selected"/);
+      assert.ok(domElements(dialogs.at(-1).html, '[data-act="warehouse-assign"][data-id="selected"]').length > 0);
       state.warehouseSelectedBottleIds = ['unassigned'];
       view.previewSelectedBottle();
       assert.match(renderedText(dialogs.at(-1).html), /warehouse-bottle-preview/);
@@ -346,14 +341,9 @@ test(
     ];
     w.assignments = {'without-photo': 's', 'with-photo': 's'};
     const html = shelfContents(w, 's').html;
-    assert.match(
-      renderedText(html),
-      new RegExp(
-        '<span class="warehouse-bottle-symbol wareh' + 'ouse-bottle-static has-photo" aria-hidden=' + '"true">'
-      )
-    );
-    assert.match(renderedText(html), /src="\/assets\/photo-placeholder\.svg"/);
-    assert.match(renderedText(html), /class="warehouse-bottle-photo" src="\/images\/test\.jpg"/);
+    assert.equal(domElements(html, 'span.warehouse-bottle-symbol.warehouse-bottle-static.has-photo[aria-hidden="true"]').length, 1);
+    assert.ok(domElements(html, '[src="/assets/photo-placeholder.svg"]').length > 0);
+    assert.ok(domElements(html, '[class="warehouse-bottle-photo"][src="/images/test.jpg"]').length > 0);
     assert.equal((renderedText(html).match(/photo-placeholder\.svg/g) || []).length, 1);
     assert.doesNotMatch(
       renderedText(html),
@@ -364,12 +354,12 @@ test(
     );
     assert.equal((renderedText(html).match(/class="warehouse-bottle-symbol warehouse-bottle-static/g) || []).length, 2);
     assert.doesNotMatch(renderedText(html), /<button[^>]*class="warehouse-bottle-symbol/);
-    assert.match(renderedText(html), /data-act="warehouse-assign" data-id="without-photo"/);
+    assert.ok(domElements(html, '[data-act="warehouse-assign"][data-id="without-photo"]').length > 0);
     // The shelf wall still allows multi-selection and keeps its original SVG
     // symbol.
     const wall = renderWarehouseRoomWall(w.rooms[0], w, ['without-photo']);
     assert.doesNotMatch(renderedText(wall), /photo-placeholder\.svg/);
-    assert.match(renderedText(wall), /class="warehouse-wall-bottle is-selected"/);
-    assert.match(renderedText(wall), /data-act="warehouse-bottle-select"/);
+    assert.ok(domElements(wall, '[class="warehouse-wall-bottle is-selected"]').length > 0);
+    assert.ok(domElements(wall, '[data-act="warehouse-bottle-select"]').length > 0);
   }
 );

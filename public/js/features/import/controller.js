@@ -1,7 +1,7 @@
 import {composeMarkup} from '../../ui/render-plan.js';
 import {appendContent, replaceContent} from '../../ui/dom-renderer.js';
 import {t} from '../../i18n/index.js';
-import {escapeHtml, query, queryAll} from '../../ui/dom.js';
+import {query, queryAll} from '../../ui/dom.js';
 import {whiskyTypeLabels} from '../../domain/labels.js';
 import {toast} from '../../ui/notifications.js';
 import {request} from '../../api.js';
@@ -26,7 +26,7 @@ export function createExternalImport({
     typeof sourceName !== 'string' || !sourceName.trim()) {
     throw new TypeError('An import source requires payload validation and duplicate matching');
   }
-  const safeSourceName = escapeHtml(sourceName);
+  const safeSourceName = String(sourceName ?? '');
   const IMPORT_FIELD_LABELS = {
     whiskyType: t('forms.bottling.whiskyCategory'),
     brand: t('forms.bottling.brandOrProductLine'),
@@ -115,7 +115,7 @@ export function createExternalImport({
       });
     }));
     mountContent(panel, renderTemplate('panel', {
-      title: t("imports.preview.title", {id: escapeHtml(importDetails.referenceId), }),
+      title: t("imports.preview.title", {id: String(importDetails.referenceId ?? ''), }),
       openPhoto: importDetails.imageToken ?
         renderTemplate('openPhoto', {
           openOverlay: t("imports.images.openOverlay", {source: safeSourceName}),

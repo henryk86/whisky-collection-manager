@@ -1,7 +1,7 @@
 import {t} from '../i18n/index.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {eyeIcon, eyeOffIcon} from '../ui/action-icons.js';
-import {safe, typeName} from './warehouse-presentation.js';
+import {typeName} from './warehouse-presentation.js';
 import {loadTemplates} from '../ui/templates.js';
 const renderTemplate = await loadTemplates('warehouse/warehouse.html');
 
@@ -36,27 +36,27 @@ export function renderWarehouseSelectionPanel(model, {isolate = false, compact =
           action: t(visible ? "warehouse.visibility.hide" : "warehouse.visibility.show"),
         }
       );
-      const name = safe(furniture.name);
+      const name = String(furniture.name ?? '');
       const summary = t(
         "warehouse.furniture.summary",
         {
-          type: safe(typeName(furniture.type)),
+          type: String(typeName(furniture.type) ?? ''),
           shelves: furniture.shelves.length,
           bottles: occupied,
         }
       );
       const furnitureControl = layoutOnly
         ? renderTemplate('warehouseSelectFurniture', {
-          id: safe(furniture.id),
+          id: String(furniture.id ?? ''),
           name: name,
           ariaCurrentAttributes: current ? {"aria-current": "true"} : {},
           furnitureName: name,
           summary: summary,
         })
         : renderTemplate('warehouseToggleFurniture', {
-          id: safe(furniture.id),
+          id: String(furniture.id ?? ''),
           has: selected,
-          ariaLabel: safe(t('warehouse.furniture.selectForBulkEdit', {name: furniture.name})),
+          ariaLabel: t('warehouse.furniture.selectForBulkEdit', {name: furniture.name}),
           name: name,
           summary: summary,
         });
@@ -67,10 +67,10 @@ export function renderWarehouseSelectionPanel(model, {isolate = false, compact =
         furnitureControl: furnitureControl,
         warehouseVisibilityToggle: isolate ?
           renderTemplate('warehouseVisibilityToggle', {
-            id: safe(furniture.id),
+            id: String(furniture.id ?? ''),
             visible: visible,
-            title: safe(actionLabel),
-            ariaLabel: safe(actionLabel),
+            title: String(actionLabel ?? ''),
+            ariaLabel: String(actionLabel ?? ''),
             visibilityIcon: visible ? eyeIcon : eyeOffIcon,
           }) : '',
       });

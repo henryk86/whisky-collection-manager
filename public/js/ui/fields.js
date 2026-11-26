@@ -1,36 +1,12 @@
 import {composeMarkup} from './render-plan.js';
-import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('components/fields.html');
 
 /**
- * Shared input accessibility and presentation options. The field builders
- * link description and validation messages using IDs derived from the name.
- * @typedef {Object} FieldOptions
- * @property {boolean} [required] Native required constraint.
- * @property {boolean} [disabled] Native disabled state.
- * @property {string} [description] Accessible hint text.
- * @property {string} [error] Validation message; sets aria-invalid.
- * @property {boolean} [full] Use the full-width field layout.
- * @property {string} [type] Native input type for textInput.
- * @property {string|number} [step] Native numeric input increment.
- * @property {string} [placeholder] Optional text input placeholder.
- */
-
-
-/**
- * Encodes a field value for a legacy scalar template binding.
- *
- * @param {*} value Initial field value; nullish values become empty text.
- * @return {string} Encoded scalar value.
- */
-const e = value => escapeHtml(String(value ?? ''));
-
-/**
  * Builds accessible input attributes with stable hint and error references.
  *
- * @param {string} name Form field name, escaped before interpolation.
+ * @param {string} name Form field name, used literally for binding.
  * @param {FieldOptions=} options Validation state and hint/error text.
  * @return {!Object} Accessible control attributes.
  */
@@ -55,17 +31,17 @@ function props(name, options = {}) {
 function help(name, options = {}) {
   return composeMarkup(options.description ?
     renderTemplate('dsFieldDescription', {
-      name: e(name),
-      description: e(options.description),
+      name: String(name ?? ''),
+      description: String(options.description ?? ''),
     }) : '', options.error ?
     renderTemplate('dsFieldError', {
-      name: e(name),
-      error: e(options.error),
+      name: String(name ?? ''),
+      error: String(options.error ?? ''),
     }) : '');
 }
 
 /**
- * Groups a trusted control and its escaped label and accessible messages.
+ * Groups a trusted control and its text label and accessible messages.
  *
  * @param {string} label User-facing field label.
  * @param {string} name Field name used by the associated help elements.
@@ -76,7 +52,7 @@ function help(name, options = {}) {
 function wrapper(label, name, control, options = {}) {
   return renderTemplate('formField', {
     full: options.full ? ' full' : '',
-    label: e(label),
+    label: String(label ?? ''),
     control: control,
     help: help(name, options),
   });
@@ -96,16 +72,16 @@ export const textInput = (label, name, value = '', options = {}) => wrapper(
   name,
   renderTemplate('textInputInput', {
     props: props(name, options),
-    type: e(options.type || 'text'),
+    type: String((options.type || 'text') ?? ''),
     stepAttributes: options.step != null ? {"step": options.step} : {},
-    value: e(value),
+    value: String(value ?? ''),
     placeholderAttributes: options.placeholder ? {"placeholder": options.placeholder} : {},
   }),
   options
 );
 
 /**
- * Renders a labeled select with escaped option values and captions.
+ * Renders a labeled select with literal option values and captions.
  *
  * @param {string} label User-facing control label.
  * @param {string} name Form input name.
@@ -123,9 +99,9 @@ export const selectInput =
       props: props(name, config),
       options: composeMarkup(options.map(([v, t]) =>
         renderTemplate('selectInputOption', {
-          v: e(v),
+          v: String(v ?? ''),
           selectedAttributes: String(v) === String(value ?? '') ? {"selected": true} : {},
-          t: e(t),
+          t: String(t ?? ''),
         }))),
     }),
     config
@@ -145,7 +121,7 @@ export const areaInput = (label, name, value = '', options = {}) => wrapper(
   name,
   renderTemplate('textarea', {
     props: props(name, options),
-    value: e(value),
+    value: String(value ?? ''),
   }),
   {...options, full: options.full !== false}
 );
@@ -164,6 +140,6 @@ export const checkboxInput = (label, name, checked = false, options = {}) =>
     full: options.full ? ' full' : '',
     props: props(name, options),
     checkedAttributes: checked ? {"checked": true} : {},
-    label: e(label),
+    label: String(label ?? ''),
     help: help(name, options),
   });

@@ -6,7 +6,6 @@ import {newBottlingIcon, inventoryScanIcon, themeMoonIcon, closeIcon}
   from './action-icons.js';
 import {MAIN_PAGES} from '../navigation/pages.js';
 import {reconcileChildren} from './dom-reconcile.js';
-import {escapeHtml} from './dom.js';
 import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('components/shell.html');

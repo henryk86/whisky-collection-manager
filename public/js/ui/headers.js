@@ -3,7 +3,6 @@
  * Returns render plans; layout and visual states live in styles/headers.css.
  * Action slots accept composed application content, never dynamic HTML.
  */
-import {escapeHtml} from './dom.js';
 import {arrowLeftIcon, helpCircleIcon} from './action-icons.js';
 import {loadTemplates} from './templates.js';
 
@@ -20,13 +19,13 @@ const renderTemplate = await loadTemplates('components/headers.html');
 export function headerActions(content, {className = ''} = {}) {
   if (!content) return '';
   return renderTemplate('actions', {
-    className: className ? ` ${escapeHtml(className)}` : '',
+    className: className ? ` ${String(className ?? '')}` : '',
     content: content,
   });
 }
 
 /**
- * Renders an escaped heading and optional trusted action markup.
+ * Renders a text heading and optional trusted action markup.
  *
  * @param {!Object} options Heading text, level and presentation settings.
  * @return {!import('./render-plan.js').RenderPlan} Heading with optional punctuation and action.
@@ -81,7 +80,7 @@ export function sectionHeader({
     id: titleId, trailingAction,
   });
   const copy = description || copyClass ? renderTemplate('copyDiv', {
-    copyClass: copyClass ? escapeHtml(copyClass) : 'ds-section-heading-copy',
+    copyClass: copyClass ? String(copyClass ?? '') : 'ds-section-heading-copy',
     heading: heading,
     p: description ?
       renderTemplate('copyP', {
@@ -91,7 +90,7 @@ export function sectionHeader({
   }) : heading;
   return renderTemplate('sectionHeaderDiv', {
     layout: layout,
-    className: className ? ` ${escapeHtml(className)}` : '',
+    className: className ? ` ${String(className ?? '')}` : '',
     copy: copy,
     actionsBare: actionsBare ? actions : headerActions(actions, {className: actionsClass}),
   });
@@ -114,7 +113,7 @@ export function pageHeader({
   copyClass = 'page-heading-copy',
   period = true
 } = {}) {
-  const classes = `section-head ds-page-header${className ? ` ${escapeHtml(className)}` : ''}`;
+  const classes = `section-head ds-page-header${className ? ` ${String(className ?? '')}` : ''}`;
   return renderTemplate('header', {
     classes: classes,
     classAttributes: copyClass ? {"class": copyClass} : {},
@@ -139,7 +138,7 @@ export function pageHeader({
  */
 export function backNavigation(action, label, region = '', variant = 'inline') {
   if (!['inline', 'page-action'].includes(variant)) throw new RangeError('Invalid back-navigation variant');
-  const text = escapeHtml(String(label).replace(/^\s*(?:(?:←|⟵|⬅)\s*)+/u, ''));
+  const text = String((String(label).replace(/^\s*(?:(?:←|⟵|⬅)\s*)+/u, '')) ?? '');
   const attr = {'data-act': action, 'data-region': region || null};
   if (variant === 'page-action') {
     return renderTemplate('dsBackNav', {
@@ -165,7 +164,7 @@ export function backNavigation(action, label, region = '', variant = 'inline') {
  */
 export function helpIconButton({label, action = 'flight-plan-help',
   disabled = false} = {}) {
-  const text = escapeHtml(String(label ?? ''));
+  const text = String(label ?? '');
   return renderTemplate('dsHelpIconButton', {
     action: action,
     text: text,

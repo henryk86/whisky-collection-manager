@@ -207,10 +207,9 @@ const codes = Object.freeze({
   "Nicht erlaubter Host. Adresse in ALLOWED_HOSTS oder CERT_DNS_NAMES/CERT_IP_ADDRESSES eintragen.": "api.errors.hostNotAllowedAddTheAddressToALLOWEDHOSTSOrCERTDNSNAMESCERTIPADDRESSES",
 });
 /**
- * Creates an application error identifier from a known error category.
- *
- * @param {*} message Message used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * Resolves a legacy error message to its stable public error code.
+ * @param {string} message Original error message.
+ * @return {(string|null)} Mapped code or null if unknown.
  */
 export function apiErrorCode(message) {
   return Object.hasOwn(codes, message) ? codes[message] : null;

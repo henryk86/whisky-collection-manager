@@ -1,4 +1,4 @@
-import {renderedText} from '../helpers/rendering.js';
+import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -150,12 +150,12 @@ test(
       assert.equal(renderedText(h.calls[0].title), 'Flaschenfoto');
       assert.equal(renderedText(h.calls[0].wide), true);
       assert.equal(renderedText(h.calls[0].keepParent), true, 'existing editor must remain in the modal stack');
-      assert.match(renderedText(h.html), /src="\/images\/two\.png"/);
+      assert.ok(domElements(h.html, '[src="/images/two.png"]').length > 0);
       assert.match(renderedText(h.html), /2 \/ 2/);
-      assert.match(renderedText(h.html), /data-act="photo-prev"/);
-      assert.match(renderedText(h.html), /data-act="photo-zoom-in"/);
-      assert.match(renderedText(h.html), /data-act="photo-zoom-out"/);
-      assert.match(renderedText(h.html), /data-act="photo-zoom-reset"/);
+      assert.ok(domElements(h.html, '[data-act="photo-prev"]').length > 0);
+      assert.ok(domElements(h.html, '[data-act="photo-zoom-in"]').length > 0);
+      assert.ok(domElements(h.html, '[data-act="photo-zoom-out"]').length > 0);
+      assert.ok(domElements(h.html, '[data-act="photo-zoom-reset"]').length > 0);
       assert.equal(renderedText(h.focus.called), true);
       assert.equal(renderedText(h.viewer.isOpen()), true);
       h.viewer.step(-1);
@@ -178,9 +178,9 @@ test(
     const h = harness({images: ['/images/only.png']});
     try {
       h.viewer.open(h.buttons[0]);
-      assert.match(renderedText(h.html), /src="\/images\/only\.png"/);
-      assert.doesNotMatch(renderedText(h.html), /data-act="photo-next"/);
-      assert.match(renderedText(h.html), /data-act="photo-zoom-in"/, 'single photos remain zoomable');
+      assert.ok(domElements(h.html, '[src="/images/only.png"]').length > 0);
+      assert.equal(domElements(h.html, '[data-act="photo-next"]').length, 0);
+      assert.ok(domElements(h.html, '[data-act="photo-zoom-in"]').length > 0, 'single photos remain zoomable');
       assert.equal(renderedText(h.calls[0].keepParent), false);
       h.viewer.step(1);
       assert.equal(renderedText(h.currentImage.src), '');
@@ -232,7 +232,7 @@ test(
       };
       h.viewer.open(hero);
       assert.equal(h.calls.length, 1);
-      assert.match(renderedText(h.html), /src="\/images\/two\.png"/);
+      assert.ok(domElements(h.html, '[src="/images/two.png"]').length > 0);
       assert.match(renderedText(h.html), /2 \/ 2/);
       h.viewer.step(1);
       assert.equal(renderedText(h.currentImage.src), '/images/one.png', 'cover viewer continues within same bottle gallery');
@@ -252,7 +252,7 @@ test('photo markup is escaped and old new-tab photo links are gone', () => {
       getAttribute: key => key === 'src' ? '/images/test.png' : '"<script>alert(1)</script>',
     });
     h.viewer.open(h.buttons[0]);
-    assert.doesNotMatch(renderedText(h.html), /<script>/);
+    assert.equal(domElements(h.html, 'script').length, 0);
     assert.match(renderedText(h.html), /&lt;script&gt;/);
   } finally {h.restore();}
 });

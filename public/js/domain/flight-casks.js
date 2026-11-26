@@ -274,7 +274,9 @@ function caskSegments(clause) {
  * @return {{groups: !Object, profiles: !Array<!Object>}} Classification.
  */
 export function classifyCask(text) {
-  const groups = {}, profiles = [];
+  /** @type {Object<string, number>} */
+  const groups = {};
+  const profiles = [];
   const separator = new RegExp('(' + [
     /[,;/+&]/,
     /\b(?:and|und|then|danach|anschliessend|followed by|with|mit)\b/,
@@ -341,6 +343,7 @@ function jaccard(a, b) {
  * @return {!Object<string, number>} Weighted feature set.
  */
 function featureWeights(profile, group, dimension) {
+  /** @type {Object<string, number>} */
   const weights = {};
   for (const entry of profile.profiles) {
     if (entry.group !== group) continue;

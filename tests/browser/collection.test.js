@@ -1616,7 +1616,7 @@ test(
             contentType: 'application/json',
             body: JSON.stringify({error: 'temporary outage'}),
           });
-        } else await route.continue();
+        } else await route.fallback();
       }, {times: 1});
       await page.locator('[data-act="new"]').first().click();
       await page.locator('#bottling-form [name="name"]').fill(name);
@@ -1636,10 +1636,10 @@ test(
       await open();
       let postCount = 0;
       await page.route('**/api/bottlings', async route => {
-        if (route.request().method() !== 'POST') return route.continue();
+        if (route.request().method() !== 'POST') return route.fallback();
         postCount++;
         await new Promise(resolve => setTimeout(resolve, 600));
-        await route.continue();
+        await route.fallback();
       });
       await page.locator('[data-act="new"]').first().click();
       await page.locator('#bottling-form [name="name"]').fill('N6 concurrent bottling');
@@ -1670,7 +1670,7 @@ test(
       await page.locator('#bottle-form [name="inventoryNumber"]').fill('009201');
       let postCount = 0;
       await page.route('**/api/bottles', async route => {
-        if (route.request().method() !== 'POST') return route.continue();
+        if (route.request().method() !== 'POST') return route.fallback();
         postCount++;
         if (postCount === 1) {
           await new Promise(resolve => setTimeout(resolve, 400));
@@ -1681,7 +1681,7 @@ test(
           });
         }
         await new Promise(resolve => setTimeout(resolve, 400));
-        await route.continue();
+        await route.fallback();
       });
       await page.evaluate(() => {
         const form = document.querySelector('#bottle-form');

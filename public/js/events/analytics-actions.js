@@ -8,10 +8,9 @@ import {routeUrl} from '../navigation/routes.js';
 export function createAnalyticsActions({navigate, state, render}) {
   return {
     /**
-     * Handles the analytics section interaction.
-     *
-     * @param {*} button Button control involved in the interaction.
-     * @return {*} Result computed from the supplied inputs.
+     * Navigates to the analytics subsection specified by the action.
+     * @param {!HTMLElement} button Action element carrying data-section.
+     * @return {void} Navigation is synchronous; no result is consumed.
      */
     'analytics-section': button => navigate('analytics', button.dataset.section),
 

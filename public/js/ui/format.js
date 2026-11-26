@@ -1,5 +1,4 @@
 import {currentLanguage} from '../i18n/index.js';
-import {escapeHtml} from './dom.js';
 /**
  * Encodes an application-relative stored image path for display.
  *
@@ -12,9 +11,9 @@ export const imageUrl = p => p ? `/${encodeURI(p)}` : '';
  * Formats missing scalar values as a dash and escapes other values.
  *
  * @param {*} n Display value; null, undefined and empty text indicate missing data.
- * @return {string} Escaped value or the missing-value dash.
+ * @return {string} Literal display value or the missing-value dash.
  */
-export const formatValue = n => n == null || n === '' ? '–' : escapeHtml(n);
+export const formatValue = n => n == null || n === '' ? '–' : String(n ?? '');
 
 /**
  * Formats a date in the current application language.

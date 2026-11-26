@@ -6,7 +6,6 @@ import {actionButton} from '../ui/buttons.js';
  * persistence.
  */
 import {t} from '../i18n/index.js';
-import {escapeHtml as esc} from '../ui/dom.js';
 import {loadTemplates} from '../ui/templates.js';
 
 const renderTemplate = await loadTemplates('warehouse/warehouse-room-transfer.html');
