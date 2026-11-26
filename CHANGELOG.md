@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.14.1 - 2026-11-26
+
+- fix: apply canonical CSS formatting
+- docs: provide localized screenshots for English README
+- fix: reuse existing WCM application icon in README files
+- fix: insurance action spacing
+
 ## 1.14.0 - 2026-11-26
 
 - fix: clarify README description of data storage
