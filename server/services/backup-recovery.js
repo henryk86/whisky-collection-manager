@@ -169,6 +169,7 @@ export async function applyZip(req, id, input) {
     const transactionId = crypto.randomUUID();
     const {fresh} = restoreDirectories(ROOT, transactionId);
     fs.mkdirSync(fresh, {mode: 0o700});
+    let committed = false;
     try {
       // Never trust the mutable preview directory as the restore source. Extract and authenticate the confirmed archive again.
       try {inspectReadableZip(archive, fresh, input?.password || '');}
@@ -192,20 +193,24 @@ export async function applyZip(req, id, input) {
         fs.renameSync(safetyTemporary, safetyPath);
         syncDirectory(BACKUP_DIR);
       } finally {fs.rmSync(safetyTemporary, {force: true});}
-      installRestore(ROOT, transactionId);
+      const {cleanupStatus} = installRestore(ROOT, transactionId);
+      committed = true;
       invalidateCollectionCache();
       invalidateWarehouseCache();
       try {fs.rmSync(dir, {recursive: true, force: true});}
       catch (error) {console.warn('Committed restore: import cleanup failed.', error.code);}
       return {
         applied: true,
+        cleanupStatus,
         ...summary,
         safetyBackup: path.join('backups', safetyName),
-        message: 'Sicherung übernommen. Vorherige Sammlung als Sicherheits-ZIP gespeichert.',
+        message: cleanupStatus !== 'complete' ? 'Sicherung übernommen. Bereinigung nicht vollständig bestätigt; Speichermedium prüfen und Server neu starten.' :
+          'Sicherung übernommen. Vorherige Sammlung als Sicherheits-ZIP gespeichert.',
       };
     } finally {
-      // Recovery owns the staging directories as long as a journal remains.
-      if (!hasInterruptedRestore(ROOT)) fs.rmSync(fresh, {recursive: true, force: true});
+      // After commit the transaction owns cleanup; do not turn success into a staging-cleanup error.
+      // Recovery also owns the staging directories as long as a journal remains.
+      if (!committed && !hasInterruptedRestore(ROOT)) fs.rmSync(fresh, {recursive: true, force: true});
     }
   });
 }

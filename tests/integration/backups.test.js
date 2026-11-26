@@ -368,6 +368,8 @@ test(
       assert.equal(wrongApply.status, 400);
       const applied = await request(ctx.base, endpoint, 'POST', {acknowledge: true, password: zipPass});
       assert.equal(applied.status, 200, JSON.stringify(applied.data));
+      assert.equal(applied.data.applied, true);
+      assert.equal(applied.data.cleanupStatus, 'complete');
       const restored = (await request(ctx.base, '/api/collection')).data;
       assert.deepEqual(restored, original);
       assert.equal(fs.readFileSync(path.join(ctx.dir, 'images', 'existing.png')).length, 3);

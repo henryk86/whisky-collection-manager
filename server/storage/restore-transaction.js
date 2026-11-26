@@ -173,7 +173,8 @@ export function recoverInterruptedRestore(root) {
  * Installs an already validated restore tree. A caller must hold exclusive storage access and create a verified safety archive first.
  * @param {string} root Application data root.
  * @param {string} id UUID used to stage the replacement under the data root.
- * @throws {Error} If preparation or installation fails. A failed rollback preserves the journal and blocks further requests.
+ * @return {{cleanupStatus: 'complete'|'pending'|'syncUnconfirmed'}} Durable commit outcome, including whether journal cleanup is complete, still pending or its final sync could not be confirmed.
+ * @throws {Error} If preparation, installation or confirmation of the durable commit fails. A failed rollback preserves the journal and blocks further requests.
  */
 export function installRestore(root, id) {
   if (hasInterruptedRestore(root)) throw Error('An unfinished restore must be recovered first');
@@ -200,16 +201,36 @@ export function installRestore(root, id) {
       moveDirectory(path.join(fresh, name), live);
     }
     writeJournal(root, {...journal, phase: 'committed'});
-    recoverInterruptedRestore(root);
   } catch (error) {
-    if (hasInterruptedRestore(root)) {
-      // If recovery itself fails, leave every remaining copy and the journal in place.
-      if (recoverInterruptedRestore(root) === 'committed') return;
-    } else {
-      // No live changes precede the journal. A failed final directory sync may also arrive here after a committed cleanup.
+    if (!hasInterruptedRestore(root)) {
+      // No live changes precede the journal.
       removeDirectory(fresh);
       if (directoryExists(parked) && !fs.readdirSync(parked).length) removeDirectory(parked);
+      throw error;
     }
-    throw error;
+    if (readJournal(root).phase === 'prepared') {
+      // If rollback fails, leave every remaining copy and the journal in place.
+      recoverInterruptedRestore(root);
+      throw error;
+    }
+    // Publication may have succeeded before the journal's directory sync failed.
+    // Do not acknowledge a commit or discard originals until that sync succeeds.
+    syncDirectory(root);
   }
+  // The commit is durable. Cleanup can fail, but must never turn it into a failed restore.
+  try {recoverInterruptedRestore(root);}
+  catch {
+    try {
+      if (hasInterruptedRestore(root)) recoverInterruptedRestore(root);
+      else syncDirectory(root);
+    } catch (error) {
+      console.warn('Committed restore: transaction cleanup failed.', error);
+      try {return {cleanupStatus: hasInterruptedRestore(root) ? 'pending' : 'syncUnconfirmed'};}
+      catch (inspectionError) {
+        console.warn('Committed restore: journal state could not be checked.', inspectionError);
+        return {cleanupStatus: 'pending'};
+      }
+    }
+  }
+  return {cleanupStatus: 'complete'};
 }

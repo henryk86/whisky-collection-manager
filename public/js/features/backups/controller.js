@@ -441,7 +441,7 @@ export function createBackupController({state, render, showModal, closeModal}) {
   }
 
   /**
-   * Applies the verified archive after explicit acknowledgment and reloads the application.
+   * Applies the verified archive, then reloads or reports a committed restore that needs cleanup.
    *
    * @param {!Event} event Event that triggered this operation.
    * @return {!Promise<*>} Completion of the restore request.
@@ -453,14 +453,20 @@ export function createBackupController({state, render, showModal, closeModal}) {
     const button = /** @type {HTMLButtonElement} */ (form.querySelector('[type="submit"]'));
     button.disabled = true;
     try {
-      await get(
+      const result = await get(
         `/api/backups/import-zip/${encodeURIComponent(form.dataset.id)}/apply`,
         {
           method: 'POST',
           body: JSON.stringify({acknowledge: true, password: restorePassword}),
         }
       );
-      restorePassword = ''; closeModal();
+      restorePassword = ''; closeModal(true);
+      if (['pending', 'syncUnconfirmed'].includes(result.cleanupStatus)) {
+        showModal(t('backups.restore.committedTitle'), renderTemplate('backupCommittedCleanupPending', {
+          closeModalButton: actionButton({label: t('common.actions.close'), action: 'close-modal'}),
+        }));
+        return;
+      }
       window.location.reload();
     } catch (error) {toast(error.message, true); button.disabled = false;}
   }

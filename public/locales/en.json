@@ -626,6 +626,8 @@
   "backups.profiles.updated": "Backup profile updated",
   "backups.providers.local": "USB / NAS / local folder",
   "backups.providers.other": "Other Rclone connection",
+  "backups.restore.committedCleanupPending": "Backup restored. Cleanup could not be fully confirmed. Check the storage medium and restart the server. Do not restore again.",
+  "backups.restore.committedTitle": "Backup restored",
   "backups.restore.confirmInspectBackup": "I want to inspect this backup snapshot.",
   "backups.restore.confirmReplaceCollection": "I want to replace the current collection with this backup.",
   "backups.restore.confirmationCreatesSafetyBackup": "The current collection is replaced only after your confirmation. A safety ZIP backup is created automatically beforehand.",

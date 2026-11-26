@@ -626,6 +626,8 @@
   "backups.profiles.updated": "Backup-Profil aktualisiert",
   "backups.providers.local": "USB / NAS / lokaler Ordner",
   "backups.providers.other": "Andere Rclone-Verbindung",
+  "backups.restore.committedCleanupPending": "Sicherung übernommen. Die Bereinigung konnte nicht vollständig bestätigt werden. Speichermedium prüfen und Server neu starten. Nicht erneut wiederherstellen.",
+  "backups.restore.committedTitle": "Sicherung übernommen",
   "backups.restore.confirmInspectBackup": "Ich möchte diesen Sicherungsstand prüfen.",
   "backups.restore.confirmReplaceCollection": "Ich möchte die aktuelle Sammlung durch diese Sicherung ersetzen.",
   "backups.restore.confirmationCreatesSafetyBackup": "Die aktuelle Sammlung wird erst nach deiner Bestätigung ersetzt. Zuvor wird automatisch ein Sicherheits-ZIP erstellt.",
