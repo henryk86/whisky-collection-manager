@@ -1,11 +1,7 @@
-import {renderedText} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {backupJobError, serializeBackupJobError}
-  from '../../shared/backup-job-errors.js';
-import {jobErrorText} from '../../public/js/i18n/job-errors.js';
-import {renderBackupSection} from '../../public/js/views/backups.js';
+import {backupJobError, serializeBackupJobError} from '../../shared/backup-job-errors.js';
 
 test(
   'structured worker errors preserve known causes and only bounded, neutral parameters',
@@ -42,38 +38,6 @@ test(
 );
 
 test(
-  'backup job list displays specific structured code, not raw error text',
-  () => {
-    const job = {
-      id: 'job',
-      type: 'run',
-      state: 'failed',
-      profileId: 'profile',
-      errorCode: 'backup.errors.mountMarkerMissing',
-      error: '<img src=x onerror=alert(1)>',
-    };
-    const html = renderBackupSection({
-      backupUnlocked: true, backupDashboard: {
-        profiles: [],
-        targets: [],
-        jobs: [job],
-        worker: {online: true},
-        snapshots: {},
-        remotes: [],
-        timeZone: 'Europe/Berlin',
-      },
-    });
-    assert.match(renderedText(html), /Backup-Marker fehlt/);
-    assert.doesNotMatch(renderedText(html), /onerror=|img src=/);
-    assert.equal(
-      renderedText(jobErrorText(job)),
-      'Backup-Ziel nicht bereit: USB-/NAS-Laufwerk ist nicht korrekt eingehängt (Backup-Marker fehlt).'
-    );
-  }
-);
-
-
-test(
   'command diagnostics preserve causes but redact credentials, paths, controls and long output',
   async () => {
     const {sanitizeBackupDiagnostic, commandFailureDiagnostic} = await import('../../worker/backup-diagnostics.js');
@@ -86,22 +50,21 @@ test(
       ' key=123456789012345678901234567890123456789012345678901234' +
       ' token=shortSecret123 \"token\":\"anotherSecret\" password=123456\n';
     const diagnostic = sanitizeBackupDiagnostic(output);
-    assert.match(renderedText(diagnostic), /invalid_grant: maybe token expired/);
+    assert.match(diagnostic, /invalid_grant: maybe token expired/);
     assert.doesNotMatch(
-      renderedText(diagnostic),
+      diagnostic,
       new RegExp(
         'sensitivePW123|xYzToken123456789|aBCdef012' + '3456789|secret@example|supersecret|rclone-' +
         'private\\.conf|123456789012345678901234|sh' +
         'ortSecret123|anotherSecret|123456'
       )
     );
-    assert.doesNotMatch(renderedText(diagnostic), /\u001b|\n/);
+    assert.doesNotMatch(diagnostic, /\u001b|\n/);
     assert.ok(diagnostic.length <= 700);
-    assert.match(renderedText(commandFailureDiagnostic('rclone', 1, null, output)), /rclone \(Exit 1\):/);
+    assert.match(commandFailureDiagnostic('rclone', 1, null, output), /rclone \(Exit 1\):/);
     assert.ok(sanitizeBackupDiagnostic('x'.repeat(4000)).length <= 700);
   }
 );
-
 
 test(
   'unexpected worker failures report safe exception type, source position and system code to operators only',
@@ -117,12 +80,12 @@ test(
         '    at async /home/operator/private/worker/backup-worker.js:440:11';
       logBackupJobFailure('job-programming', code, programming);
       assert.match(
-        renderedText(failures[0]),
+        failures[0],
         new RegExp(
           'job-programming.*backup\\.errors\\.unexpec' + 'ted.*TypeError; Position backup-worker\\.j' + 's:421:22'
         )
       );
-      assert.doesNotMatch(renderedText(failures[0]), /never-show-me|operator|secret\.json|\/home\//);
+      assert.doesNotMatch(failures[0], /never-show-me|operator|secret\.json|\/home\//);
       assert.deepEqual(serializeBackupJobError(programming), code);
 
       const filesystem = Object.assign(
@@ -133,15 +96,15 @@ test(
         'Error: EISDIR\n    at readFileSync (node:fs:452:1)\n' +
         '    at load (/srv/whisky/shared/backup-password.js:24:16)';
       logBackupJobFailure('job-file', code, filesystem);
-      assert.match(renderedText(failures[1]), /job-file.*Systemcode EISDIR; Position backup-password\.js:24:16/);
-      assert.doesNotMatch(renderedText(failures[1]), /\/srv\/|\/run\/secrets|illegal operation/);
+      assert.match(failures[1], /job-file.*Systemcode EISDIR; Position backup-password\.js:24:16/);
+      assert.doesNotMatch(failures[1], /\/srv\/|\/run\/secrets|illegal operation/);
 
       const unusual = new Error('refresh_token=never-show');
       unusual.name = 'SuperSensitiveErrorToken';
       unusual.stack = 'SuperSensitiveErrorToken: refresh_token=never-show';
-      assert.equal(renderedText(unexpectedBackupDiagnostic(unusual)), 'Fehler; Quellposition nicht verfügbar');
+      assert.equal(unexpectedBackupDiagnostic(unusual), 'Fehler; Quellposition nicht verfügbar');
       logBackupJobFailure('job-no-stack', code, unusual);
-      assert.doesNotMatch(renderedText(failures[2]), /never-show|SuperSensitive/);
+      assert.doesNotMatch(failures[2], /never-show|SuperSensitive/);
     } finally {
       console.error = oldError;
     }
@@ -155,7 +118,7 @@ test(
     const en = JSON.parse(fs.readFileSync(new URL('../../public/locales/en.json', import.meta.url), 'utf8'));
     for (const catalog of [de, en]) {
       assert.ok(catalog['backup.errors.controlNotConfigured']);
-      assert.notEqual(renderedText(catalog['backup.errors.controlNotConfigured']), renderedText(catalog['backup.errors.unexpected']));
+      assert.notEqual(catalog['backup.errors.controlNotConfigured'], catalog['backup.errors.unexpected']);
     }
   }
 );

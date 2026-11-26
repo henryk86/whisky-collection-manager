@@ -86,8 +86,14 @@ test(
       const dimensions = await page.evaluate(() => {
         const fixture = document.createElement('div');
         fixture.className = 'photo-tile';
-        fixture.innerHTML =
-          '<button class="photo-open" type="button"><img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" /></button>';
+        const button = document.createElement('button');
+        button.className = 'photo-open';
+        button.type = 'button';
+        const image = document.createElement('img');
+        image.alt = '';
+        image.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+        button.append(image);
+        fixture.append(button);
         document.body.append(fixture);
         const outer = getComputedStyle(fixture);
         const inner = getComputedStyle(fixture.firstElementChild);

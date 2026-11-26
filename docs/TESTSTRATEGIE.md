@@ -5,12 +5,12 @@
 | Befehl / Umgebung | Prüfumfang |
 |---|---|
 | `npm run check` | JS-Syntax, Imports, Modulgrenzen, Übersetzungen, Dokumentationslinks und Deploymentkonfiguration |
-| `npm test` | Unit- und Integrationstests für Fachregeln, Persistenz, API, Backup, Migration, Negativfälle und native DOM-Assertions in Chromium |
-| `npm run test:browser` | Playwright/Chromium: Navigation, Formularbedienung, Modals, Fokus, responsive Geometrie, Sprachen, Scroll |
+| `npm test` | Unit- und Integrationstests für Fachregeln, Persistenz, API, Backup, Migration, Negativfälle (ohne Browser) |
+| `npm run test:browser` | Playwright/Chromium: isolierte Komponenten, native DOM-Assertions, Navigation, Formularbedienung, Modals, Fokus, responsive Geometrie, Sprachen, Scroll |
 | `npm run test:visual` | 144 Aufnahmen: Überlauf und Modalinteraktion; PR-CI vergleicht frische Geometrie und Pixel |
 | GitHub Actions | Vollständige PR-/Push-Prüfungen mit Screenshots und Differenzbildern als Fehlerartefakte |
 
-Die UI-Assertions in `npm test` verwenden Chromium und den produktiven DOM-Renderer, nicht eine zweite Rendering-Implementierung der Anwendung. Chromium muss vor `npm test` installiert sein. Ein bestandener Unit-Test ersetzt keinen Browserlauf; Screenshots ersetzen keine Interaktionsprüfung. Der eingeschränkte Modus `WHISKY_BROWSER_DOM_ONLY=true` prüft kein echtes Vorwärts-/Rückwärts-/Neuladen im HTTP-Browser. Reale Mobilgeräte, Safari/Firefox, Screenreader, WebGL/GPU und Dauerbetrieb benötigen getrennte Abnahmen.
+UI-Assertions liegen unter `tests/browser/` und verwenden den produktiven DOM-Renderer in Chromium. Sie prüfen native DOM-Eigenschaften, nicht serialisiertes HTML. Reine Fachlogik-, Controller- und ViewModel-Tests unter `tests/unit/` laufen ohne Chromium. Chromium muss erst vor `npm run test:browser` installiert sein. Ein bestandener Unit-Test ersetzt keinen Browserlauf; Screenshots ersetzen keine Interaktionsprüfung. Der eingeschränkte Modus `WHISKY_BROWSER_DOM_ONLY=true` prüft kein echtes Vorwärts-/Rückwärts-/Neuladen im HTTP-Browser. Reale Mobilgeräte, Safari/Firefox, Screenreader, WebGL/GPU und Dauerbetrieb benötigen getrennte Abnahmen.
 
 **Testgrundsatz:** Verhalten, API-Ausgaben und DOM messen; keine Unit-Tests, die nur konkrete CSS-/JS-Quelltextzeilen erwarten. Ein fehlgeschlagener Verhaltenstest darf nicht durch das bloße Entfernen seiner Assertion „behoben“ werden.
 

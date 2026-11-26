@@ -1,8 +1,6 @@
-import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createWhiskybase}
-  from '../../public/js/features/whiskybase/controller.js';
+import {createWhiskybase} from '../../public/js/features/whiskybase/controller.js';
 
 const payload = {
   version: 2, source: 'external',
@@ -130,43 +128,17 @@ test('incoming hash import is processed in an already open manager tab', () => {
 });
 
 test(
-  'incoming hash import does not discard an already open form without confirmation',
-  () => {
-    const {calls, controller, restore} = mockImport({openEditor: true});
-    try {
-      controller.importFromExtension();
-      assert.deepEqual(calls[0], ['history', '/?bottling=local-bottling']);
-      const confirmation = calls.find(call => call[0] === 'showModal');
-      assert.ok(confirmation, 'requires the in-app confirmation modal');
-      assert.equal(renderedText(confirmation[1]), 'Externe Importdaten bereit');
-      assert.match(renderedText(confirmation[2]), /ungespeicherte Eingaben/);
-      assert.ok(domElements(confirmation[2], '[data-act="import-continue"]').length > 0);
-      assert.equal(renderedText(confirmation[4]), true, 'keep the existing dialog nested underneath');
-      assert.ok(!calls.some(call => call[0] === 'navigate'));
-      assert.ok(!calls.some(call => call[0] === 'createBottling'));
-
-      controller.confirmPendingImport();
-      assert.ok(calls.some(call => call[0] === 'closeModal' && call[1] === true));
-      assert.ok(calls.some(call => call[0] === 'navigate' && call[1] === 'home'));
-      assert.ok(calls.some(call => call[0] === 'createBottling'));
-      assert.ok(!calls.some(call => call[0] === 'toast'), 'the confirmed import should not throw');
-    } finally {restore();}
-  }
-);
-
-test(
   'a valid no-image import remains valid when preview validates it again',
   async () => {
     const {validateExtensionPayload} = await import('../../public/js/features/whiskybase/payload.js');
     const once = validateExtensionPayload(payload);
-    assert.equal(renderedText(once.imageToken), null);
+    assert.equal(once.imageToken, null);
     const twice = validateExtensionPayload(once);
-    assert.equal(renderedText(twice.fields.whiskybaseId), '54321');
-    assert.equal(renderedText(twice.imageToken), null);
+    assert.equal(twice.fields.whiskybaseId, '54321');
+    assert.equal(twice.imageToken, null);
     assert.throws(() => validateExtensionPayload({...payload, imageToken: '../bad-token'}), /Bild-Token/);
   }
 );
-
 
 test('old import fragment is ignored without changing the active form', () => {
   const {calls, controller, restore} = mockImport({openEditor: true});

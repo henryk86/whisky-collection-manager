@@ -1,11 +1,7 @@
-import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {shelfLevels, effectiveShelfFront, totalExplicitHeightCm}
-  from '../../shared/warehouse-compartments.js';
-import {warehouse3DGeometry, furnitureFootprint}
-  from '../../public/js/domain/warehouse-3d-model.js';
-import {createWarehouseView} from '../../public/js/views/warehouse.js';
+import {shelfLevels, effectiveShelfFront, totalExplicitHeightCm} from '../../shared/warehouse-compartments.js';
+import {warehouse3DGeometry, furnitureFootprint} from '../../public/js/domain/warehouse-3d-model.js';
 
 const base = {
   id: 'c',
@@ -24,7 +20,9 @@ const base = {
     {id: 'top', name: 'Glas oben', front: 'glass', heightCm: 60, capacity: 5},
   ],
 };
+
 const room = {id: 'r', name: 'Zimmer', width: 5, height: 4, furniture: [base]};
+
 const warehouse = {rooms: [room], assignments: {}, bottles: []};
 
 test(
@@ -35,16 +33,16 @@ test(
     assert.deepEqual(levels.map(x => [x.front, x.heightCm]), [['door', 60], ['open', 80], ['glass', 60]]);
     assert.deepEqual(levels.map(x => Number(x.bottom.toFixed(2))), [0.2, 0.8, 1.6]);
     assert.deepEqual(levels.map(x => Number(x.top.toFixed(2))), [0.8, 1.6, 2.2]);
-    assert.equal(JSON.stringify(base), renderedText(before));
+    assert.equal(JSON.stringify(base), before);
     const mixedAuto = {
       ...base,
       shelves: [{id: 'a', heightCm: 40}, {id: 'b', front: 'glass'}, {id: 'c'}],
     };
     assert.deepEqual(shelfLevels(mixedAuto).map(level => level.heightCm), [40, 80, 80]);
-    assert.equal(renderedText(totalExplicitHeightCm(base.shelves)), 200);
-    assert.equal(renderedText(effectiveShelfFront({}, 'schrank')), 'door');
-    assert.equal(renderedText(effectiveShelfFront({}, 'vitrine')), 'glass');
-    assert.equal(renderedText(effectiveShelfFront({}, 'regal')), 'open');
+    assert.equal(totalExplicitHeightCm(base.shelves), 200);
+    assert.equal(effectiveShelfFront({}, 'schrank'), 'door');
+    assert.equal(effectiveShelfFront({}, 'vitrine'), 'glass');
+    assert.equal(effectiveShelfFront({}, 'regal'), 'open');
   }
 );
 
@@ -97,82 +95,6 @@ test(
 );
 
 test(
-  'shelf edit form offers front and centimeter height and panel lists fronts top to bottom',
-  () => {
-    let html = ''; let form = '';
-    const state = {
-      warehouse,
-      selected: 'shelves',
-      warehouseRoomId: 'r',
-      warehouseFurnitureId: 'c',
-      warehousePlanMode: '2d',
-    };
-    const doc = globalThis.document;
-    globalThis.document = {
-      /**
-       * Simulates an element lookup that finds nothing.
-       * @return {null} Null to represent a missing element.
-       */
-      querySelector: () =>
-        null,
-      /**
-       * Simulates an element query with no matches.
-       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
-       */
-      querySelectorAll: () => [],
-    };
-    try {
-      const view = createWarehouseView({
-        state,
-        /**
-         * Captures the rendered page in the fixture for later assertions.
-         *
-         * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
-         * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
-         */
-        shell: output => html = output,
-        /**
-         * Suppresses navigation so the scenario can inspect the current view.
-         */
-        navigate: () => {},
-        modal: {
-          /**
-           * Renders modal in the current view.
-           *
-           * @param {*} _name Value used by this operation.
-           * @param {*} content Content to render, store or examine.
-           * @return {*} Result computed from the supplied inputs.
-           */
-          showModal: (_name, content) => form = content,
-        },
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.render();
-      assert.ok(renderedText(html).indexOf('Glas oben') < renderedText(html).indexOf('Offenes Fach'));
-      assert.ok(renderedText(html).indexOf('Offenes Fach') < renderedText(html).indexOf('Untertür'));
-      view.openFurnitureManager('c');
-      assert.match(renderedText(form), /Glastür · 1-flügelig · ohne Rahmen · 60 cm/);
-      assert.match(renderedText(form), /Fach nach oben verschieben/);
-      assert.doesNotMatch(renderedText(html), /warehouse-furniture-panel/, 'furniture editing is modal only');
-      view.openForm('shelf', 'mid');
-      assert.ok(domElements(form, '[name="heightCm"]').length > 0);
-      assert.ok(domElements(form, '[name="front"]').length > 0);
-      assert.ok(domElements(form, '[name="doorLeaves"]').length > 0);
-      assert.ok(domElements(form, '[name="glassFrame"]').length > 0);
-      assert.match(renderedText(form), />Holztür</);
-      assert.match(renderedText(form), />Glastür</);
-    } finally {
-      if (doc === undefined) delete globalThis.document; else globalThis.document = doc;
-    }
-  }
-);
-
-
-test(
   'single/double wood and glass doors with and without glazing frames rotate with furniture',
   () => {
     for (const rotation of [0, 90, 180, 270]) for (const front of ['door',
@@ -184,10 +106,10 @@ test(
           shelves: [{id: 's', front, doorLeaves, glassFrame, heightCm: 100}],
         };
         const parts = warehouse3DGeometry({...room, furniture: [item]}, warehouse).objects[0].parts;
-        assert.equal(parts.filter(p => p.role === (front === 'glass' ? 'glass-front' : 'door')).length, renderedText(doorLeaves));
+        assert.equal(parts.filter(p => p.role === (front === 'glass' ? 'glass-front' : 'door')).length, doorLeaves);
         assert.equal(
           parts.filter(p => p.role === 'glass-frame').length,
-          renderedText(front === 'glass' && glassFrame ? 4 * doorLeaves : 0)
+          front === 'glass' && glassFrame ? 4 * doorLeaves : 0
         );
         assert.ok(parts.every(p => p.size.every(n => n > 0)));
       }
@@ -227,69 +149,6 @@ test(
       assert.equal(parts.filter(p => p.role === 'glass-front').length, 3);
       assert.equal(parts.filter(p => p.role === 'glass-frame').length, 8);
       assert.equal(parts.filter(p => p.role === 'door').length, 2);
-    }
-  }
-);
-
-test(
-  'furniture edit and bulk edit both offer door leaf and glass frame defaults',
-  () => {
-    const state = {
-      warehouse,
-      selected: 'shelves',
-      warehouseRoomId: 'r',
-      warehouseFurnitureId: 'c',
-    };
-    let form = ''; const doc = globalThis.document;
-    globalThis.document = {
-      /**
-       * Simulates an element lookup that finds nothing.
-       * @return {null} Null to represent a missing element.
-       */
-      querySelector: () =>
-        null,
-      /**
-       * Simulates an element query with no matches.
-       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
-       */
-      querySelectorAll: () => [],
-    };
-    try {
-      const view = createWarehouseView({
-        state,
-        /**
-         * Discards page content in this scenario; no real DOM is mounted.
-         */
-        shell: () => {},
-        /**
-         * Suppresses navigation so the scenario can inspect the current view.
-         */
-        navigate: () => {},
-        modal: {
-          /**
-           * Captures the dialog body without mounting the modal overlay.
-           *
-           * @param {string} _title Dialog title ignored by this fixture.
-           * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Dialog content captured for assertions.
-           * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured dialog content.
-           */
-          showModal: (_title, content) => form = content,
-        },
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.openForm('furniture', 'c');
-      assert.ok(domElements(form, '[name="doorLeaves"]').length > 0);
-      assert.ok(domElements(form, '[name="glassFrame"]').length > 0);
-      state.warehouseSelectedFurnitureIds = ['c'];
-      view.openForm('furniture-bulk');
-      assert.ok(domElements(form, '[name="doorLeaves"]').length > 0);
-      assert.ok(domElements(form, '[name="glassFrame"]').length > 0);
-    } finally {
-      if (doc === undefined) delete globalThis.document; else globalThis.document = doc;
     }
   }
 );

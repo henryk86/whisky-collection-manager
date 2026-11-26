@@ -1,4 +1,4 @@
-import {captureContent} from '../helpers/rendering.js';
+import {captureContent} from '../helpers/capture-rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {toast} from '../../public/js/ui/notifications.js';
@@ -81,43 +81,6 @@ function fakeDocument() {
     querySelector: selector => body.querySelector(selector),
   };
 }
-
-test(
-  'error toast is dismissible by an accessible close button and still auto-expires',
-  () => {
-    const oldDocument = globalThis.document;
-    const oldSetTimeout = globalThis.setTimeout;
-    const doc = fakeDocument();
-    const scheduled = [];
-    globalThis.document = doc;
-    globalThis.setTimeout =
-      (callback, delay) => {
-        scheduled.push({callback, delay});
-        return scheduled.length;
-      };
-    try {
-      toast('Ungültiges Leerdatum', true, captureContent);
-      assert.equal(doc.body.children.length, 1);
-      const note = doc.body.children[0];
-      assert.equal(note.className, 'toast error');
-      assert.equal(note.attributes.role, 'alert');
-      assert.equal(note.children[0].textContent, 'Ungültiges Leerdatum');
-      const close = note.children[1];
-      assert.equal(close.tagName, 'BUTTON');
-      assert.equal(close.type, 'button');
-      assert.equal(close.attributes['aria-label'], 'Schließen');
-      assert.match(close.innerHTML, /<svg/);
-      assert.equal(scheduled[0].delay, 4600);
-      close.listeners.click();
-      assert.equal(doc.body.children.length, 0, 'close removes the notification immediately');
-      scheduled[0].callback();
-      assert.equal(doc.body.children.length, 0, 'automatic cleanup is harmless after manual close');
-    } finally {
-      if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
-      globalThis.setTimeout = oldSetTimeout;
-    }
-  }
-);
 
 test(
   'success toast remains unchanged and a second toast replaces the previous notification',

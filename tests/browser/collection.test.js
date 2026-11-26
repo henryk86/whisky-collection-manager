@@ -572,10 +572,11 @@ test(
         };
       });
       const initialTheme = await page.locator('html').getAttribute('data-theme');
-      const firstSvg = await themeButton.locator('svg').evaluate(svg => svg.outerHTML);
+      const svg = themeButton.locator('svg');
+      const firstSvg = await svg.evaluateHandle(node => node.cloneNode(true));
       await themeButton.click();
-      const secondSvg = await themeButton.locator('svg').evaluate(svg => svg.outerHTML);
-      assert.notEqual(secondSvg, firstSvg, 'Sun and moon must have distinct shapes');
+      const secondSvg = await svg.evaluateHandle(node => node.cloneNode(true));
+      assert.equal(await svg.evaluate((node, previous) => node.isEqualNode(previous), firstSvg), false, 'Sun and moon must have distinct shapes');
       await themeButton.click();
       assert.equal(await page.locator('html').getAttribute('data-theme'), initialTheme);
       for (const width of [1366, 960, 740, 450, 390, 360, 320]) {
@@ -589,18 +590,20 @@ test(
         assert.equal(layout.overflow, false, `No horizontal overflow at ${width}px`);
         assert.equal(layout.iconSize, 19, `Identical icon size at ${width}px`);
         assert.equal(
-          await themeButton.locator('svg').evaluate(svg => svg.outerHTML),
-          firstSvg,
+          await svg.evaluate((node, expected) => node.isEqualNode(expected), firstSvg),
+          true,
           `First theme icon is identical at ${width}px`
         );
         await themeButton.click();
         assert.equal(
-          await themeButton.locator('svg').evaluate(svg => svg.outerHTML),
-          secondSvg,
+          await svg.evaluate((node, expected) => node.isEqualNode(expected), secondSvg),
+          true,
           `Opposite theme icon is identical at ${width}px`
         );
         await themeButton.click();
       }
+      await firstSvg.dispose();
+      await secondSvg.dispose();
     });
   }
 );
@@ -620,10 +623,9 @@ test(
         assert.equal(await heroButton.locator('span').innerText(), label);
         assert.equal(await headerButton.getAttribute('aria-label'), label);
         assert.equal(await heroButton.getAttribute('aria-label'), label);
-        assert.equal(
-          await headerButton.locator('svg').evaluate(svg => svg.outerHTML),
-          await heroButton.locator('svg').evaluate(svg => svg.outerHTML)
-        );
+        const heroSvg = await heroButton.locator('svg').elementHandle();
+        assert.equal(await headerButton.locator('svg').evaluate((node, expected) => node.isEqualNode(expected), heroSvg), true);
+        await heroSvg.dispose();
       }
       assert.equal(await page.locator('header [data-act="settings"]').count(), 0);
       const buttons = await page.locator('.top-actions > button').evaluateAll(items => items.map(item => item.dataset.act));

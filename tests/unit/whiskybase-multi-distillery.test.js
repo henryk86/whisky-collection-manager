@@ -1,11 +1,7 @@
-import {renderedText, domElements} from '../helpers/rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {splitDistilleryNames, matchImportedDistilleries}
-  from '../../public/js/features/import/distillery-matching.js';
-import {importChoice} from '../../public/js/features/import/choice-template.js';
-import {validateExtensionPayload}
-  from '../../public/js/features/whiskybase/payload.js';
+import {splitDistilleryNames, matchImportedDistilleries} from '../../public/js/features/import/distillery-matching.js';
+import {validateExtensionPayload} from '../../public/js/features/whiskybase/payload.js';
 
 const distilleries = [
   {id: 'd-caol', name: 'Caol Ila'}, {id: 'd-bow', name: 'Bowmore'},
@@ -58,27 +54,6 @@ test(
 );
 
 test(
-  'Whiskybase: unknown contributors are listed separately, disabled and escaped in preview',
-  () => {
-    const matches = matchImportedDistilleries('Ardbeg, New & <Scotch> Works', distilleries);
-    assert.deepEqual(matches, [{name: 'Ardbeg', id: 'd-ard'}, {name: 'New & <Scotch> Works', id: null}]);
-    const known = importChoice({
-      label: 'Destillerie', value: matches[0].name,
-      distillery: true, distilleryId: matches[0].id, checked: true,
-    });
-    const unknown = importChoice({
-      label: 'Destillerie', value: matches[1].name,
-      distillery: true, disabled: true,
-    });
-    assert.ok(domElements(known, '[name="import-distillery"][value="d-ard"][checked]').length > 0);
-    assert.ok(domElements(unknown, '[name="import-distillery"][disabled]').length > 0);
-    assert.match(renderedText(unknown), /New &amp; &lt;Scotch&gt; Works/);
-    assert.equal(domElements(unknown, 'Scotch').length, 0);
-    assert.match(renderedText(unknown), /Nicht gefunden/);
-  }
-);
-
-test(
   'Whiskybase: longer contributor lists are not truncated midway through a name',
   () => {
     const names = Array.from({length: 14}, (_, n) => `Brennerei ${n + 1} mit extra langen Namen`);
@@ -95,7 +70,6 @@ test(
   }
 );
 
-
 test('new fragment schema rejects old and unmarked payload versions', () => {
   const fields = {
     whiskybaseId: '9999', name: 'Test',
@@ -103,5 +77,5 @@ test('new fragment schema rejects old and unmarked payload versions', () => {
   };
   assert.throws(() => validateExtensionPayload({version: 1, fields}));
   assert.throws(() => validateExtensionPayload({version: 2, fields}));
-  assert.equal(renderedText(validateExtensionPayload({version: 2, source: 'external', fields}).version), 2);
+  assert.equal(validateExtensionPayload({version: 2, source: 'external', fields}).version, 2);
 });

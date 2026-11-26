@@ -1,9 +1,8 @@
-import {renderedText, captureContent, domElements} from '../helpers/rendering.js';
+import {captureContent} from '../helpers/capture-rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import {createModal} from '../../public/js/ui/modal.js';
-import {helpView} from '../../public/js/views/help.js';
+
 test(
   'modal supports choice and replaces current sibling while preserving the original stack',
   async () => {
@@ -20,7 +19,7 @@ test(
        *
        * @param {*} html HTML markup to render or inspect.
        */
-      set innerHTML(html) {
+      set renderedContent(html) {
         overlay = html ?
           {
             html,
@@ -64,7 +63,7 @@ test(
       modal.showModal('First', '<p>First</p>');
       modal.showModal('Second', '<p>Second</p>', false, 'replace');
       modal.closeModal();
-      assert.equal(renderedText(host.firstElementChild), renderedText(parent));
+      assert.equal(host.firstElementChild, parent);
       const prompt = modal.choose(
         'Unsaved',
         'Choose',
@@ -74,22 +73,10 @@ test(
           {id: 'save', label: 'Save'},
         ]
       );
-      assert.equal(renderedText(modal.acceptChoice('discard')), true);
-      assert.equal(renderedText(await prompt), 'discard');
+      assert.equal(modal.acceptChoice('discard'), true);
+      assert.equal(await prompt, 'discard');
       modal.closeModal();
-      assert.equal(renderedText(state.modal), null);
+      assert.equal(state.modal, null);
     } finally {globalThis.document = prior;}
-  }
-);
-test(
-  'help retains existing short guidance and includes technical accordion guides in the same content panel',
-  () => {
-    const html = helpView('backups');
-    assert.match(renderedText(html), /help-content-panel/);
-    assert.match(renderedText(html), /help-technical-guides/);
-    assert.ok(domElements(html, '[class="help-guide"]').length > 0);
-    assert.match(renderedText(html), /backup-admin-token/);
-    assert.match(renderedText(html), /rclone config/);
-    assert.match(renderedText(html), /OneDrive/);
   }
 );

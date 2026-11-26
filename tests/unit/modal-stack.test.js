@@ -1,4 +1,4 @@
-import {fixtureMarkup, renderedText, captureContent, captureAppend, domElements} from '../helpers/rendering.js';
+import {captureContent} from '../helpers/capture-rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createModal} from '../../public/js/ui/modal.js';
@@ -20,7 +20,7 @@ function fakeModalHost() {
      *
      * @param {*} text Text to process.
      */
-    set innerHTML(text) {
+    set renderedContent(text) {
       overlay = text ? {
         html: text, form: {name: '', files: []},
         /**
@@ -47,7 +47,6 @@ function fakeModalHost() {
     replaceChildren(element) {overlay = element;},
   };
 }
-
 
 test(
   'background scroll lock preserves the scrollbar gutter until the last nested modal closes',
@@ -126,19 +125,19 @@ test(
         onClose() {},
       });
       modal.showModal('Parent', '<form></form>');
-      assert.equal(renderedText(body.style.position), 'fixed');
-      assert.equal(renderedText(body.style.top), '-420px');
-      assert.equal(renderedText(html.style.overflowY), 'scroll', 'keep the classic scrollbar track');
-      assert.notEqual(renderedText(html.style.overflow), 'hidden');
+      assert.equal(body.style.position, 'fixed');
+      assert.equal(body.style.top, '-420px');
+      assert.equal(html.style.overflowY, 'scroll', 'keep the classic scrollbar track');
+      assert.notEqual(html.style.overflow, 'hidden');
       modal.showModal('Help', '<p>Help</p>');
       modal.closeModal();
-      assert.equal(renderedText(state.modal.title), 'Parent');
-      assert.equal(renderedText(body.style.position), 'fixed', 'nested close must not unlock the page');
-      assert.equal(renderedText(html.style.overflowY), 'scroll');
+      assert.equal(state.modal.title, 'Parent');
+      assert.equal(body.style.position, 'fixed', 'nested close must not unlock the page');
+      assert.equal(html.style.overflowY, 'scroll');
       modal.closeModal();
-      assert.equal(renderedText(state.modal), null);
-      assert.equal(renderedText(body.style.position), undefined);
-      assert.equal(renderedText(html.style.overflowY), undefined);
+      assert.equal(state.modal, null);
+      assert.equal(body.style.position, undefined);
+      assert.equal(html.style.overflowY, undefined);
       assert.deepEqual(scrollCalls, [{top: 420, left: 0, behavior: 'instant'}]);
     } finally {
       if (previousDocument === undefined) delete globalThis.document;
@@ -176,15 +175,15 @@ test(
       original.form.name = 'Unsaved whisky';
       original.form.files = ['image.png'];
       modal.showModal('Neue Destillerie', '<form id="distillery-form"></form>', false, true);
-      assert.notEqual(renderedText(host.firstElementChild), renderedText(original));
-      assert.equal(renderedText(state.modal.title), 'Neue Destillerie');
+      assert.notEqual(host.firstElementChild, original);
+      assert.equal(state.modal.title, 'Neue Destillerie');
       modal.closeModal();
-      assert.equal(renderedText(host.firstElementChild), renderedText(original));
-      assert.equal(renderedText(host.firstElementChild.form.name), 'Unsaved whisky');
+      assert.equal(host.firstElementChild, original);
+      assert.equal(host.firstElementChild.form.name, 'Unsaved whisky');
       assert.deepEqual(host.firstElementChild.form.files, ['image.png']);
-      assert.equal(renderedText(state.modal.title), 'Abfüllung');
+      assert.equal(state.modal.title, 'Abfüllung');
       modal.closeModal();
-      assert.equal(renderedText(state.modal), null);
+      assert.equal(state.modal, null);
     } finally {globalThis.document = previous;}
   }
 );
@@ -212,53 +211,13 @@ test('closing all dialogs discards nested parents during navigation', () => {
     modal.showModal('Parent', '<p>Parent</p>');
     modal.showModal('Child', '<p>Child</p>', false, true);
     modal.closeModal(true);
-    assert.equal(renderedText(state.modal), null);
-    assert.equal(renderedText(host.firstElementChild), null);
+    assert.equal(state.modal, null);
+    assert.equal(host.firstElementChild, null);
     modal.showModal('Other', '<p>Other</p>');
     modal.closeModal();
-    assert.equal(renderedText(state.modal), null);
+    assert.equal(state.modal, null);
   } finally {globalThis.document = previous;}
 });
-
-test(
-  'in-app confirmation restores the original edit form after acceptance, never using browser confirm',
-  async () => {
-    const host = fakeModalHost();
-    const oldDocument = globalThis.document;
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       * @return {!Object} Result computed from the supplied inputs.
-       */
-      querySelector: () => host,
-    };
-    try {
-      const state = {modal: null};
-      const modal = createModal({
-        mountContent: captureContent,
-        state,
-        /**
-         * Handles the close interaction.
-         */
-        onClose() {},
-      });
-      modal.showModal('Assign bottles', '<form id="warehouse-form"></form>');
-      const original = host.firstElementChild;
-      original.form.name = 'Selected destination';
-      const answer = modal.confirm('Increase capacity', 'Increase from 3 to 5?', 'Increase and assign');
-      assert.equal(renderedText(state.modal.title), 'Increase capacity');
-      assert.ok(domElements(host.firstElementChild.html, '[data-act="modal-confirm-accept"]').length > 0);
-      assert.ok(domElements(host.firstElementChild.html, '[data-act="close-modal"]').length > 0);
-      assert.equal(renderedText(modal.acceptConfirmation()), true);
-      assert.equal(renderedText(await answer), true);
-      assert.equal(renderedText(host.firstElementChild), renderedText(original));
-      assert.equal(renderedText(original.form.name), 'Selected destination');
-      modal.closeModal();
-    } finally {
-      if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
-    }
-  }
-);
 
 test(
   'closing a capacity confirmation via cancel or page navigation returns false',
@@ -285,12 +244,12 @@ test(
       modal.showModal('Assignment', '<form id="warehouse-form"></form>');
       const answer = modal.confirm('Full', 'More places?', 'Increase');
       modal.closeModal();
-      assert.equal(renderedText(await answer), false);
-      assert.equal(renderedText(state.modal.title), 'Assignment');
+      assert.equal(await answer, false);
+      assert.equal(state.modal.title, 'Assignment');
       const second = modal.confirm('Full', 'More places?', 'Increase');
       modal.closeModal(true);
-      assert.equal(renderedText(await second), false);
-      assert.equal(renderedText(state.modal), null);
+      assert.equal(await second, false);
+      assert.equal(state.modal, null);
     } finally {
       if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
     }
@@ -326,17 +285,17 @@ test(
       const shelf = host.firstElementChild;
       shelf.form.name = 'Edited shelf';
       modal.showModal('Bottle', '<div id="bottle-preview"></div>');
-      assert.equal(renderedText(state.modal.title), 'Bottle');
+      assert.equal(state.modal.title, 'Bottle');
       modal.closeModal();
-      assert.equal(renderedText(state.modal.title), 'Shelf');
-      assert.equal(renderedText(host.firstElementChild), renderedText(shelf));
-      assert.equal(renderedText(shelf.form.name), 'Edited shelf');
+      assert.equal(state.modal.title, 'Shelf');
+      assert.equal(host.firstElementChild, shelf);
+      assert.equal(shelf.form.name, 'Edited shelf');
       modal.closeModal();
-      assert.equal(renderedText(state.modal.title), 'Furniture');
-      assert.equal(renderedText(host.firstElementChild), renderedText(furniture));
-      assert.equal(renderedText(furniture.form.name), 'Furniture not saved');
+      assert.equal(state.modal.title, 'Furniture');
+      assert.equal(host.firstElementChild, furniture);
+      assert.equal(furniture.form.name, 'Furniture not saved');
       modal.closeModal();
-      assert.equal(renderedText(state.modal), null);
+      assert.equal(state.modal, null);
     } finally {
       if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
     }
@@ -367,120 +326,8 @@ test('explicit replacement can discard older modal history', () => {
     modal.showModal('Shelf', '<div></div>');
     modal.showModal('Standalone', '<div></div>', false, false);
     modal.closeModal();
-    assert.equal(renderedText(state.modal), null);
+    assert.equal(state.modal, null);
   } finally {
     if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
   }
 });
-
-
-test(
-  'flight planner help opens as a child dialog and closing restores its live form, preview and heading action',
-  () => {
-    const host = fakeModalHost();
-    // The real modal renderer uses the overlay as a DOM element. For this test
-    // only the overlay lookup is needed; planner option lookup can return null.
-    host.querySelector = selector => selector === '.overlay' ? host.firstElementChild : null;
-    const previous = globalThis.document;
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       * @return {!Object} Result computed from the supplied inputs.
-       */
-      querySelector: () => host,
-    };
-    try {
-      const state = {modal: null};
-      const modal = createModal({
-        mountContent: captureContent,
-        state,
-        /**
-         * Handles the close interaction.
-         */
-        onClose() {},
-      });
-      const plannerHelpButton = fixtureMarkup('<button type="button" data-act="flight-plan-help">?</button>');
-      modal.showModal('Flight planen', fixtureMarkup('<form id="flight-plan"></form>'), true, false, plannerHelpButton);
-      const planner = host.firstElementChild;
-      planner.form.name = 'Not yet saved flight';
-      planner.form.files = ['draft-proposal'];
-      assert.match(renderedText(planner.html), /ds-heading-with-action/);
-      assert.ok(domElements(planner.html, '[data-act="flight-plan-help"]').length > 0);
-      modal.showModal('So wird ein Flight geplant', fixtureMarkup('<section>Formeln</section>'), true, true);
-      assert.equal(renderedText(state.modal.title), 'So wird ein Flight geplant');
-      assert.notEqual(renderedText(host.firstElementChild), renderedText(planner));
-      modal.closeModal();
-      assert.equal(renderedText(state.modal.title), 'Flight planen');
-      assert.equal(renderedText(state.modal.headingAction), renderedText(plannerHelpButton));
-      assert.equal(renderedText(host.firstElementChild), renderedText(planner), 'the exact original DOM must return');
-      assert.equal(renderedText(planner.form.name), 'Not yet saved flight');
-      assert.deepEqual(planner.form.files, ['draft-proposal']);
-    } finally {
-      if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
-    }
-  }
-);
-
-test(
-  'tasting view returns from flight planning help to the original unsaved planner dialog',
-  async () => {
-    const {createTastingsView} = await import('../../public/js/views/tastings.js');
-    const host = fakeModalHost();
-    host.querySelector = selector => selector === '.overlay' ? host.firstElementChild : null;
-    const previous = globalThis.document;
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       * @return {!Object} Result computed from the supplied inputs.
-       */
-      querySelector: () => host,
-    };
-    try {
-      const state = {
-        modal: null,
-        collection: {bottlings: [], tastingFlights: []},
-        flightCandidateIds: null,
-      };
-      const modal = createModal({
-        mountContent: captureContent,
-        state,
-        /**
-         * Handles the close interaction.
-         */
-        onClose() {},
-      });
-      const view = createTastingsView({
-        mountContent: captureContent, mountAppend: captureAppend,
-        state, selectors: {},
-        /**
-         * Discards page content in this scenario; no real DOM is mounted.
-         */
-        shell() {},
-        /**
-         * Suppresses navigation so the scenario can inspect the current view.
-         */
-        navigate() {},
-        /**
-         * Performs the refresh lifecycle action.
-         */
-        refresh() {},
-        showModal: modal.showModal, closeModal: modal.closeModal,
-      });
-      view.startPlannedFlight();
-      const planner = host.firstElementChild;
-      assert.equal(renderedText(state.modal.title), 'Flight planen');
-      assert.ok(domElements(planner.html, '[data-act="flight-plan-help"]').length > 0);
-      planner.form.name = 'Kept draft';
-      planner.form.files = ['kept-proposal'];
-      view.showFlightPlanningHelp();
-      assert.equal(renderedText(state.modal.title), 'So wird ein Flight geplant');
-      modal.closeModal();
-      assert.equal(renderedText(state.modal.title), 'Flight planen');
-      assert.equal(renderedText(host.firstElementChild), renderedText(planner));
-      assert.equal(renderedText(planner.form.name), 'Kept draft');
-      assert.deepEqual(planner.form.files, ['kept-proposal']);
-    } finally {
-      if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
-    }
-  }
-);

@@ -1,15 +1,10 @@
-import {renderedText, captureContent, domElements} from '../helpers/rendering.js';
+import {captureContent} from '../helpers/capture-rendering.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {
-  WAREHOUSE_CAMERAS, furnitureFootprint, cameraDirection,
-  cameraForFurniture, warehouse3DGeometry, shelfIdAtHeight
-}
-  from '../../public/js/domain/warehouse-3d-model.js';
+import {WAREHOUSE_CAMERAS, furnitureFootprint, cameraDirection, cameraForFurniture, warehouse3DGeometry, shelfIdAtHeight} from '../../public/js/domain/warehouse-3d-model.js';
 import {createWarehouseView} from '../../public/js/views/warehouse.js';
-import {warehouseCameraHalfHeight}
-  from '../../public/js/ui/warehouse-three-scene.js';
+import {warehouseCameraHalfHeight} from '../../public/js/ui/warehouse-three-scene.js';
 
 const room = {
   id: 'room', name: 'Zimmer', width: 5, height: 4, furniture: [
@@ -54,9 +49,11 @@ const room = {
     },
   ],
 };
+
 const warehouse = {
   rooms: [room], bottles: [{id: 'b1'}], assignments: {b1: 's2', },
 };
+
 /**
  * Derives the model result from the supplied values.
  * @return {*} Result computed from the supplied inputs.
@@ -71,8 +68,8 @@ test(
       const [x, z] = cameraDirection(id); assert.equal(Math.abs(x), 1);
       assert.equal(Math.abs(z), 1);
     }
-    assert.equal(renderedText(cameraForFurniture(room.furniture[0], 'sw')), 'sw');
-    assert.equal(renderedText(cameraForFurniture(room.furniture[2], 'se')), 'nw');
+    assert.equal(cameraForFurniture(room.furniture[0], 'sw'), 'sw');
+    assert.equal(cameraForFurniture(room.furniture[2], 'se'), 'nw');
     assert.deepEqual(furnitureFootprint(room.furniture[2]), {width: 0.5, depth: 1.5});
   }
 );
@@ -112,7 +109,7 @@ test(
   'physical compartments follow stored shelves; occupied ones contain bottle models',
   () => {
     const rack = model().objects.find(o => o.id === 'rack');
-    assert.equal(renderedText(rack.shelfCount), 2);
+    assert.equal(rack.shelfCount, 2);
     assert.equal(rack.parts.filter(p => p.role === 'bottle').length, 1);
     const isolated = warehouse3DGeometry(room, warehouse, 'rack');
     assert.deepEqual(isolated.objects.map(o => o.id), ['rack']);
@@ -140,61 +137,10 @@ test(
 );
 
 test(
-  '3D is mounted lazily in the warehouse page, with no SVG/2D regression',
-  () => {
-    let html = ''; const state = {
-      warehouse,
-      selected: 'rooms',
-      warehouseRoomId: room.id,
-      warehousePlanMode: '2d',
-    };
-    const old = globalThis.document;
-    globalThis.document = {
-      /**
-       * Simulates an element lookup that finds nothing.
-       * @return {null} Null to represent a missing element.
-       */
-      querySelector: () => null,
-    };
-    try {
-      const view = createWarehouseView({
-        state,
-        /**
-         * Captures the rendered page in the fixture for later assertions.
-         *
-         * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
-         */
-        shell: value => {html = value;},
-        /**
-         * Suppresses navigation so the scenario can inspect the current view.
-         */
-        navigate: () => {},
-        modal: {},
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.render(); assert.ok(domElements(html, '[class="warehouse-floor"]').length > 0);
-      state.warehousePlanMode = '3d'; view.render(); assert.ok(domElements(html, '[class="warehouse-three-viewport"]').length > 0);
-      assert.equal(domElements(html, '[class="warehouse-isometric"]').length, 0);
-      assert.equal(domElements(html, '[data-act="warehouse-camera"]').length, 4);
-      assert.equal(domElements(html, '[data-act="warehouse-visibility-toggle"]').length, 3);
-      assert.equal((renderedText(html).match(/class="warehouse-bulk-item/g) || []).length, 3, 'only one furniture list');
-      assert.doesNotMatch(renderedText(html), /warehouse-iso-number|warehouse-iso-legend-items/);
-      assert.equal(renderedText(view.update3DZoom(150)), false);
-    } finally {
-      if (old === undefined) delete globalThis.document; else globalThis.document = old;
-    }
-  }
-);
-
-test(
   'Three.js is served locally from a fixed allowlist and is not loaded from CDN',
   () => {
     const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-    assert.equal(renderedText(pkg.dependencies.three), '0.187.0');
+    assert.equal(pkg.dependencies.three, '0.187.0');
   }
 );
 
@@ -215,7 +161,7 @@ test(
       ]) {
         const result = warehouse3DGeometry({...room, furniture: [{...item, type, shelves: []}]}, warehouse).objects[0];
         const fronts = result.parts.filter(part => part.role === role);
-        assert.equal(fronts.length, renderedText(expected), `${type}, ${rotation}°`);
+        assert.equal(fronts.length, expected, `${type}, ${rotation}°`);
         for (const front of fronts) {
           const dx = front.center[0] - centre[0], dz = front.center[2] - centre[1];
           // Every panel lies outside the body exactly on its rotated front.
@@ -228,105 +174,6 @@ test(
         }
       }
     }
-  }
-);
-
-test(
-  'warehouse multi-edit selection panel and optional properties are wired for the current room',
-  () => {
-    let html = ''; let form = ''; const state = {
-      warehouse,
-      selected: 'shelves',
-      warehouseRoomId: room.id,
-      warehousePlanMode: '2d',
-      warehouseSelectedFurnitureIds: [],
-    };
-    const before = JSON.stringify(warehouse);
-    const previous = globalThis.document;
-    globalThis.document = {
-      /**
-       * Simulates an element lookup that finds nothing.
-       * @return {null} Null to represent a missing element.
-       */
-      querySelector: () =>
-        null,
-      /**
-       * Simulates an element query with no matches.
-       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
-       */
-      querySelectorAll: () => [],
-    };
-    try {
-      const view = createWarehouseView({
-        state,
-        /**
-         * Captures the rendered page in the fixture for later assertions.
-         *
-         * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
-         * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
-         */
-        shell: output => html = output,
-        /**
-         * Suppresses navigation so the scenario can inspect the current view.
-         */
-        navigate: () => {},
-        modal: {
-          /**
-           * Captures the dialog body without mounting the modal overlay.
-           *
-           * @param {string} _title Dialog title ignored by this fixture.
-           * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Dialog content captured for assertions.
-           * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured dialog content.
-           */
-          showModal: (_title, content) => form = content,
-        },
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.render();
-      assert.doesNotMatch(renderedText(html), /warehouse-bulk-check/, 'no furniture editor duplicates the shelf wall');
-      view.openFurnitureBulkManager();
-      assert.equal(domElements(form, '[class="warehouse-bulk-pick"]').length, 3);
-      assert.doesNotMatch(renderedText(form), /warehouse-furniture-panel/);
-      assert.ok(domElements(form, '[data-act="warehouse-bulk-edit"][disabled]').length > 0);
-      assert.ok(domElements(form, '[data-act="warehouse-bulk-delete"][disabled]').length > 0);
-      view.toggleFurnitureSelection('cabinet', true);
-      view.toggleFurnitureSelection('rack', true);
-      view.openFurnitureBulkManager();
-      assert.match(renderedText(form), /2 von 3 ausgewählt/);
-      assert.equal(domElements(form, '[aria-pressed="true"]').length, 2);
-      assert.ok(domElements(form, '[data-act="warehouse-bulk-delete"]').length > 0);
-      view.askBulkDelete();
-      assert.match(renderedText(form), /2 Lagermöbel wirklich löschen/);
-      view.openForm('furniture-bulk');
-      assert.ok(domElements(form, '[data-endpoint="/api/warehouse/furniture/bulk"]').length > 0);
-      for (const name of [
-        'rotation',
-        'elevation',
-        'itemHeight',
-        'width',
-        'depth',
-        'leftSidePanel',
-        'rightSidePanel',
-        'backPanel',
-      ]) assert.match(renderedText(form), new RegExp(`name="${name}"`));
-      assert.doesNotMatch(renderedText(form), /name="apply-/);
-      assert.match(renderedText(form), /Leere Felder bleiben unverändert/);
-      view.clearFurnitureSelection();
-      assert.deepEqual(state.warehouseSelectedFurnitureIds, []);
-      view.selectAllFurniture();
-      assert.equal(state.warehouseSelectedFurnitureIds.length, 3);
-      state.selected = 'shelves'; view.render();
-      view.openFurnitureBulkManager();
-      assert.equal(domElements(form, '[class="warehouse-bulk-pick"]').length, 3);
-      assert.doesNotMatch(renderedText(form), /warehouse-furniture-panel/);
-    } finally {
-      if (previous === undefined) delete globalThis.document; else globalThis.document = previous;
-    }
-    assert.equal(JSON.stringify(warehouse), renderedText(before), 'selection must not edit the warehouse until a save action');
   }
 );
 
@@ -351,240 +198,6 @@ test(
       const backDelta = [back.center[0] - center[0], back.center[2] - center[1]];
       assert.ok(leftDelta[0] * tangent[0] + leftDelta[1] * tangent[1] < 0, `left ${rotation}`);
       assert.ok(backDelta[0] * normal[0] + backDelta[1] * normal[1] < 0, `back ${rotation}`);
-    }
-  }
-);
-
-
-test(
-  'room plan furniture selection highlights layout without opening shelf details or scrolling',
-  () => {
-    const originalDocument = globalThis.document, originalWindow = globalThis.window;
-    let html = '', scrolls = 0, navigations = 0, replaced = '';
-    globalThis.document = {
-      /**
-       * Derives the query selector result from the supplied values.
-       *
-       * @param {function(...*): *} selector Selector used to obtain matching
-       *     values.
-       * @return {!Object} Result computed from the supplied inputs.
-       */
-      querySelector: selector => selector === '.warehouse-furniture-panel' ?
-        {
-          /**
-           * Updates the scroll into view state for its caller.
-           *
-           * @param {*} options Options controlling the operation.
-           */
-          scrollIntoView: options => {
-            assert.equal(renderedText(options.block), 'start');
-            assert.equal(renderedText(options.behavior), 'instant');
-            scrolls++;
-          },
-        } : null,
-      /**
-       * Simulates an element query with no matches.
-       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
-       */
-      querySelectorAll: () => [],
-    };
-    globalThis.window = {
-      history: {
-        /**
-         * Updates the replace state state for its caller.
-         *
-         * @param {*} _state Value used by this operation.
-         * @param {string} _title Value used by this operation.
-         * @param {*} url URL of the resource being processed.
-         */
-        replaceState: (_state, _title, url) => {replaced = url;},
-      },
-    };
-    const state = {
-      warehouse,
-      selected: 'rooms',
-      warehouseRoomId: room.id,
-      warehousePlanMode: '2d',
-    };
-    try {
-      const view = createWarehouseView({
-        state,
-        /**
-         * Captures the rendered page in the fixture for later assertions.
-         *
-         * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
-         */
-        shell: value => {html = value;},
-        /**
-         * Updates the navigate state for its caller.
-         */
-        navigate: () => {navigations++;},
-        modal: {},
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.selectFurniture('rack');
-      assert.equal(renderedText(state.warehouseFurnitureId), 'rack');
-      assert.equal(renderedText(state.selected), 'rooms');
-      assert.equal(renderedText(navigations), 0);
-      assert.equal(renderedText(scrolls), 0);
-      assert.match(renderedText(replaced), /section=rooms.*furniture=rack/);
-      assert.doesNotMatch(renderedText(html), /warehouse-furniture-panel|warehouse-room-wall/);
-      assert.equal((renderedText(html).match(/class="warehouse-bulk-item/g) || []).length, 3);
-      assert.doesNotMatch(renderedText(html), /warehouse-room-card/);
-    } finally {
-      if (originalDocument === undefined) delete globalThis.document; else globalThis.document = originalDocument;
-      if (originalWindow === undefined) delete globalThis.window; else globalThis.window = originalWindow;
-    }
-  }
-);
-
-
-test(
-  'room plans default to 3D while a deliberate 2D selection keeps the floor plan',
-  () => {
-    let html = '';
-    const original = globalThis.document;
-    globalThis.document = {
-      /**
-       * Simulates an element lookup that finds nothing.
-       * @return {null} Null to represent a missing element.
-       */
-      querySelector: () =>
-        null,
-      /**
-       * Simulates an element query with no matches.
-       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
-       */
-      querySelectorAll: () => [],
-    };
-    try {
-      const state = {warehouse, selected: 'rooms', warehouseRoomId: room.id};
-      const view = createWarehouseView({
-        state,
-        /**
-         * Captures the rendered page in the fixture for later assertions.
-         *
-         * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
-         */
-        shell: markup => {html = markup;},
-        /**
-         * Suppresses navigation so the scenario can inspect the current view.
-         */
-        navigate: () => {},
-        modal: {},
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.render();
-      assert.ok(domElements(html, '[class="warehouse-three-viewport"]').length > 0);
-      assert.ok(domElements(html, '[data-mode="3d"][class="btn small primary"][aria-pressed="true"]').length > 0);
-      assert.equal(domElements(html, '[class="warehouse-eye-icon"]').length, room.furniture.length);
-      assert.equal(domElements(html, '[data-act="warehouse-visibility-toggle"]').length, room.furniture.length);
-      assert.doesNotMatch(renderedText(html), /data-act="warehouse-iso-clear"|>Freistellen<|>Alle zeigen</);
-      assert.match(
-        renderedText(html),
-        new RegExp('aria-pressed="true" title="Schrank ausblen' + 'den" aria-label="Schrank ausblenden"')
-      );
-      const selectedId = state.warehouseFurnitureId;
-      assert.equal(renderedText(view.toggleFurnitureVisibility('cabinet')), false);
-      assert.deepEqual(state.warehouseHiddenFurnitureIds, ['cabinet']);
-      assert.equal(renderedText(state.warehouseFurnitureId), renderedText(selectedId), 'toggle must not select furniture');
-      view.render();
-      assert.match(
-        renderedText(html),
-        new RegExp('aria-pressed="false" title="Schrank einble' + 'nden" aria-label="Schrank einblenden"')
-      );
-      assert.ok(domElements(html, '[aria-pressed="true"][title="Regal ausblenden"]').length > 0);
-      assert.equal(renderedText(view.toggleFurnitureVisibility('wall')), false);
-      assert.deepEqual(
-        state.warehouseHiddenFurnitureIds,
-        ['cabinet', 'wall'],
-        'multiple pieces can be hidden independently'
-      );
-      assert.equal(renderedText(view.toggleFurnitureVisibility('cabinet')), true);
-      assert.deepEqual(state.warehouseHiddenFurnitureIds, ['wall']);
-      state.warehousePlanMode = '2d'; view.render();
-      assert.ok(domElements(html, '[class="warehouse-floor"]').length > 0);
-      assert.equal(domElements(html, '[data-act="warehouse-visibility-toggle"]').length, 0);
-    } finally {
-      if (original === undefined) delete globalThis.document; else globalThis.document = original;
-    }
-  }
-);
-
-test(
-  '3D furniture controls share a compact workspace with the room and provide one show-all action',
-  () => {
-    let html = '';
-    const original = globalThis.document;
-    globalThis.document = {
-      /**
-       * Simulates an element lookup that finds nothing.
-       * @return {null} Null to represent a missing element.
-       */
-      querySelector: () =>
-        null,
-      /**
-       * Simulates an element query with no matches.
-       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
-       */
-      querySelectorAll: () => [],
-    };
-    try {
-      const state = {
-        warehouse,
-        selected: 'rooms',
-        warehouseRoomId: room.id,
-        warehouseHiddenFurnitureIds: ['cabinet', 'rack'],
-      };
-      const view = createWarehouseView({
-        state,
-        /**
-         * Captures the rendered page in the fixture for later assertions.
-         *
-         * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
-         */
-        shell: markup => {html = markup;},
-        /**
-         * Suppresses navigation so the scenario can inspect the current view.
-         */
-        navigate: () => {},
-        modal: {},
-        /**
-         * Performs the refresh lifecycle action.
-         * @return {!Promise<*>} Promise for the asynchronous operation.
-         */
-        refresh: async () => {},
-      });
-      view.render();
-      assert.ok(domElements(html, '[class="warehouse-plan-workspace"]').length > 0);
-      assert.ok(domElements(html, '[class="warehouse-plan-stage"]').length > 0);
-      assert.ok(domElements(html, '[class="warehouse-bulk-panel warehouse-bulk-panel--sidebar"]').length > 0);
-      assert.ok(domElements(html, '[data-act="warehouse-show-all"]').length > 0);
-      assert.equal(domElements(html, '[data-act="warehouse-show-all"]').length, 1);
-      assert.equal(domElements(html, 'button.btn.small.warehouse-show-all[data-act="warehouse-show-all"]')[0].text.trim(), 'Alle einblenden');
-      assert.ok(renderedText(html).indexOf('warehouse-plan-stage') < renderedText(html).indexOf('warehouse-bulk-panel--sidebar'));
-      assert.equal((renderedText(html).match(/class="warehouse-bulk-item/g) || []).length, 3);
-      const previousSelection = state.warehouseFurnitureId;
-      const selectedIds = state.warehouseSelectedFurnitureIds = ['wall'];
-      assert.equal(renderedText(view.showAllFurniture()), 2);
-      assert.deepEqual(state.warehouseHiddenFurnitureIds, []);
-      assert.equal(renderedText(state.warehouseFurnitureId), renderedText(previousSelection));
-      assert.deepEqual(state.warehouseSelectedFurnitureIds, selectedIds);
-      assert.equal(renderedText(view.showAllFurniture()), 0, 'show all is idempotent');
-      view.render();
-      assert.equal(domElements(html, 'button.btn.small.warehouse-show-all[data-act="warehouse-show-all"][disabled]')[0].text.trim(), 'Alle einblenden');
-      state.warehousePlanMode = '2d'; view.render();
-      assert.doesNotMatch(renderedText(html), /warehouse-plan-workspace|warehouse-show-all/);
-    } finally {
-      if (original === undefined) delete globalThis.document; else globalThis.document = original;
     }
   }
 );
@@ -663,24 +276,23 @@ test(
          */
         refresh: async () => {},
       });
-      assert.equal(renderedText(view.showAllFurniture()), 2);
+      assert.equal(view.showAllFurniture(), 2);
       assert.deepEqual(
         state.warehouseHiddenFurnitureIds,
         ['elsewhere'],
         'hidden furniture in a different room must remain hidden'
       );
-      assert.equal(renderedText(all.disabled), true);
+      assert.equal(all.disabled, true);
       assert.ok(changes.some(change => change[0] === 'cabinet' && change[1] === 'aria-pressed' && change[2] === 'true'));
       assert.ok(changes.some(change => change[0] === 'rack' && change[1] === 'aria-pressed' && change[2] === 'true'));
       assert.equal(changes.some(change => change[0] === 'wall'), false, 'unchanged furniture buttons are untouched');
-      assert.equal(renderedText(view.toggleFurnitureVisibility('cabinet')), false);
-      assert.equal(renderedText(all.disabled), false, 'restoration button becomes enabled when any item is hidden');
+      assert.equal(view.toggleFurnitureVisibility('cabinet'), false);
+      assert.equal(all.disabled, false, 'restoration button becomes enabled when any item is hidden');
     } finally {
       if (original === undefined) delete globalThis.document; else globalThis.document = original;
     }
   }
 );
-
 
 test(
   '3D visibility switches real mesh geometry independently and reversibly',
@@ -825,30 +437,29 @@ test(
     assert.ok(meshes('cabinet').every(mesh => !mesh.visible));
     assert.ok(meshes('rack').every(mesh => !mesh.visible));
     assert.ok(meshes('wall').every(mesh => mesh.visible));
-    assert.equal(renderedText(scene.setHighlightedFurniture('cabinet')), null, 'hidden furniture cannot be highlighted');
-    assert.equal(renderedText(scene.setFurnitureVisible('cabinet', true)), true);
+    assert.equal(scene.setHighlightedFurniture('cabinet'), null, 'hidden furniture cannot be highlighted');
+    assert.equal(scene.setFurnitureVisible('cabinet', true), true);
     assert.ok(meshes('cabinet').every(mesh => mesh.visible));
     assert.ok(meshes('rack').every(mesh => !mesh.visible), 'showing one must not show the others');
     const cabinetMesh = meshes('cabinet')[0];
     const ordinaryMaterial = cabinetMesh.material;
     const ordinaryEdges = cabinetMesh.children[0].material;
-    assert.equal(renderedText(scene.setHighlightedFurniture('cabinet')), 'cabinet');
-    assert.notEqual(renderedText(cabinetMesh.material), renderedText(ordinaryMaterial), 'hover must highlight real mesh material');
-    assert.notEqual(renderedText(cabinetMesh.children[0].material), renderedText(ordinaryEdges), 'hover must highlight mesh edges');
-    assert.equal(renderedText(scene.setHighlightedFurniture('rack')), null, 'hidden target clears highlight');
-    assert.equal(renderedText(cabinetMesh.material), renderedText(ordinaryMaterial), 'leaving hover restores original material');
-    assert.equal(renderedText(cabinetMesh.children[0].material), renderedText(ordinaryEdges), 'leaving hover restores original edges');
-    assert.equal(renderedText(scene.setHighlightedFurniture('cabinet')), 'cabinet');
+    assert.equal(scene.setHighlightedFurniture('cabinet'), 'cabinet');
+    assert.notEqual(cabinetMesh.material, ordinaryMaterial, 'hover must highlight real mesh material');
+    assert.notEqual(cabinetMesh.children[0].material, ordinaryEdges, 'hover must highlight mesh edges');
+    assert.equal(scene.setHighlightedFurniture('rack'), null, 'hidden target clears highlight');
+    assert.equal(cabinetMesh.material, ordinaryMaterial, 'leaving hover restores original material');
+    assert.equal(cabinetMesh.children[0].material, ordinaryEdges, 'leaving hover restores original edges');
+    assert.equal(scene.setHighlightedFurniture('cabinet'), 'cabinet');
     scene.setFurnitureVisible('cabinet', false);
-    assert.equal(renderedText(cabinetMesh.material), renderedText(ordinaryMaterial), 'hiding highlighted furniture clears hover');
+    assert.equal(cabinetMesh.material, ordinaryMaterial, 'hiding highlighted furniture clears hover');
     assert.ok(meshes('cabinet').every(mesh => !mesh.visible));
     scene.setFurnitureVisible('rack', true);
     assert.ok(meshes('rack').every(mesh => mesh.visible));
-    assert.equal(renderedText(scene.setFurnitureVisible('invalid-id', true)), false);
+    assert.equal(scene.setFurnitureVisible('invalid-id', true), false);
     scene.dispose();
   }
 );
-
 
 test(
   '3D room uses almost the available viewport at default 100% zoom without clipping',
@@ -880,90 +491,23 @@ test(
         {id: 'top', heightCm: 45},
       ],
     };
-    assert.equal(renderedText(shelfIdAtHeight(rack, 1.95)), 'bottom');
-    assert.equal(renderedText(shelfIdAtHeight(rack, 2.20)), 'middle');
-    assert.equal(renderedText(shelfIdAtHeight(rack, 2.73)), 'top');
-    assert.equal(renderedText(shelfIdAtHeight(rack, 1.5)), null);
-    assert.equal(renderedText(shelfIdAtHeight(rack, 3.2)), null);
-    assert.equal(renderedText(shelfIdAtHeight(null, 2)), null);
-    assert.equal(renderedText(shelfIdAtHeight(rack, NaN)), null);
+    assert.equal(shelfIdAtHeight(rack, 1.95), 'bottom');
+    assert.equal(shelfIdAtHeight(rack, 2.20), 'middle');
+    assert.equal(shelfIdAtHeight(rack, 2.73), 'top');
+    assert.equal(shelfIdAtHeight(rack, 1.5), null);
+    assert.equal(shelfIdAtHeight(rack, 3.2), null);
+    assert.equal(shelfIdAtHeight(null, 2), null);
+    assert.equal(shelfIdAtHeight(rack, NaN), null);
     const withClearance = {
       ...rack,
       shelves: [{id: 'low', heightCm: 20}, {id: 'high', heightCm: 30}],
     };
-    assert.equal(renderedText(shelfIdAtHeight(withClearance, 2.35)), 'high');
-    assert.equal(renderedText(shelfIdAtHeight(withClearance, 2.8)), null, 'unused clearance above explicit heights is not a shelf');
+    assert.equal(shelfIdAtHeight(withClearance, 2.35), 'high');
+    assert.equal(shelfIdAtHeight(withClearance, 2.8), null, 'unused clearance above explicit heights is not a shelf');
     const blocked = {
       ...rack, shelves: [{id: 'blocked', capacity: 0}, {id: 'usable'}],
     };
-    assert.equal(renderedText(shelfIdAtHeight(blocked, 2)), null, 'unassignable shelves cannot be opened');
-    assert.equal(renderedText(shelfIdAtHeight(blocked, 2.8)), 'usable');
-  }
-);
-
-test(
-  '3D room-plan double-click opens only occupied shelf contents in place, never furniture editing',
-  () => {
-    const room = {
-      id: 'room', name: 'Raum', furniture: [{
-        id: 'rack', name: 'Regal', shelves: [
-          {id: 'occupied', name: 'Unten', capacity: 4},
-          {id: 'empty', name: 'Oben', capacity: 4},
-          {id: 'blocked', name: 'Gesperrt', capacity: 0},
-        ],
-      }],
-    };
-    const warehouse = {
-      rooms: [room],
-      assignments: {b: 'occupied'},
-      bottles: [{id: 'b', name: 'Flasche', number: '27'}],
-    };
-    const state = {
-      warehouse,
-      selected: 'rooms',
-      warehouseRoomId: 'room',
-      warehouseFurnitureId: null,
-    };
-    const modals = []; const navigation = [];
-    const view = createWarehouseView({
-      state,
-      /**
-       * Discards page content in this scenario; no real DOM is mounted.
-       */
-      shell: () => {},
-      /**
-       * Derives the navigate result from the supplied values.
-       *
-       * @param {!Array<*>} args Arguments forwarded to the operation.
-       * @return {number} Calculated numeric value.
-       */
-      navigate: (...args) => navigation.push(args),
-      modal: {
-        /**
-         * Renders modal in the current view.
-         *
-         * @param {!Array<*>} args Arguments forwarded to the operation.
-         * @return {number} Calculated numeric value.
-         */
-        showModal: (...args) => modals.push(args),
-      },
-      /**
-       * Performs the refresh lifecycle action.
-       * @return {!Promise<*>} Promise for the asynchronous operation.
-       */
-      refresh: async () => {},
-    });
-    assert.equal(renderedText(view.openOccupiedShelfDetails('empty')), false);
-    assert.equal(renderedText(view.openOccupiedShelfDetails('blocked')), false);
-    assert.equal(renderedText(view.openOccupiedShelfDetails('missing')), false);
-    assert.deepEqual(modals, []);
-    assert.equal(renderedText(view.openOccupiedShelfDetails('occupied')), true);
-    assert.equal(modals.length, 1);
-    assert.equal(renderedText(modals[0][0]), 'Raum / Regal / Unten');
-    assert.match(renderedText(modals[0][1]), /Flasche/);
-    assert.match(renderedText(modals[0][1]), /warehouse-shelf-detail-grid/);
-    assert.equal(renderedText(state.selected), 'rooms');
-    assert.equal(renderedText(state.warehouseFurnitureId), null);
-    assert.deepEqual(navigation, []);
+    assert.equal(shelfIdAtHeight(blocked, 2), null, 'unassignable shelves cannot be opened');
+    assert.equal(shelfIdAtHeight(blocked, 2.8), 'usable');
   }
 );

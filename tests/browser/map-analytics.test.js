@@ -924,7 +924,7 @@ test(
             const r = el.getBoundingClientRect();
             const parent = el.parentElement.getBoundingClientRect();
             return r.right > parent.right + 1 || r.left < parent.left - 1;
-          }).map(el => el.id || el.outerHTML.slice(0, 50)));
+          }).map(el => el.id || `${el.localName}.${[...el.classList].join('.')}`));
         assert.deepEqual(tooWide, [], `overview fields should not overflow at ${width}px`);
       }
       await page.setViewportSize({width: 390, height: 844});
@@ -964,7 +964,7 @@ test(
               const r = el.getBoundingClientRect();
               const parent = el.parentElement.getBoundingClientRect();
               return r.right > parent.right + 1 || r.left < parent.left - 1;
-            }).map(el => el.id || el.outerHTML.slice(0, 50)));
+            }).map(el => el.id || `${el.localName}.${[...el.classList].join('.')}`));
         assert.deepEqual(tooWide, [], `analysis fields should not overflow at ${width}px`);
       }
       await page.setViewportSize({width: 390, height: 844});

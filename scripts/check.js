@@ -32,8 +32,14 @@ for (const file of sources) {
     throw new Error(result.stderr || `Syntax check failed: ${file}`);
   }
   const source = fs.readFileSync(file, 'utf8').replace(/\\\r?\n/g, '');
-  const imports = [...source.matchAll(/^[ \t]*(?:import|export)\s+(?:[^;]*?\sfrom\s*)?['"]([^'"]+)['"]/gm)].map(match => match[1]).filter(specifier => specifier.startsWith('.'))
-    .map(specifier => path.resolve(path.dirname(file), specifier));
+  const specifiers = [...source.matchAll(/^[ \t]*(?:import|export)\s+(?:[^;]*?\sfrom\s*)?['"]([^'"]+)['"]/gm)].map(match => match[1]);
+  const imports = specifiers.filter(specifier => specifier.startsWith('.')).map(specifier => path.resolve(path.dirname(file), specifier));
+  const relative = path.relative('.', file).replaceAll(path.sep, '/');
+  if (/^tests\/(?:unit|integration|helpers)\//.test(relative)) {
+    if (specifiers.some(specifier => /^(?:@playwright\/|playwright(?:-core)?(?:\/|$))/.test(specifier)) || imports.some(dependency => path.relative('.', dependency).replaceAll(path.sep, '/').startsWith('tests/browser/'))) {
+      throw new Error(`Browser-independent tests must not import browser infrastructure: ${relative}`);
+    }
+  }
   for (const dependency of imports) {
     if (!fs.existsSync(dependency)) {
       throw new Error(`Missing import: ${file} -> ${dependency}`);
@@ -223,13 +229,12 @@ const docCheck = spawnSync(process.execPath, ['scripts/check-docs.js'], {encodin
 if (docCheck.status !== 0) throw new Error(docCheck.stderr || docCheck.stdout);
 process.stdout.write(docCheck.stdout);
 
-// B-5: Application-source-content tests are forbidden in *all* unit and
-// integration
-// suites. Test observable output/behaviour instead; configuration/security
+// B-5: Application-source-content tests are forbidden in unit, integration
+// and isolated browser component suites. Test observable output/behaviour instead; configuration/security
 // contracts belong in the dedicated deployment checker invoked below.
 for (const file of sources.filter(name => name.includes(`${path.sep}tests${path.sep}`))) {
-  if (!/(?:unit|integration)/.test(path.relative('tests', file))) continue;
   const relative = path.relative('.', file).replaceAll(path.sep, '/');
+  if (!/^tests\/(?:unit|integration)\//.test(relative) && !/^tests\/browser\/component-.*\.test\.js$/.test(relative)) continue;
   const source = fs.readFileSync(file, 'utf8').replace(/\\\r?\n/g, '');
   const forbidden =
     new RegExp(
@@ -247,7 +252,7 @@ for (const file of sources.filter(name => name.includes(`${path.sep}tests${path.
 const deployCheck = spawnSync(process.execPath, ['scripts/check-deployment-config.js'], {encoding: 'utf8'});
 if (deployCheck.status !== 0) throw new Error(deployCheck.stderr || deployCheck.stdout);
 process.stdout.write(deployCheck.stdout);
-console.log('B-5: No application-source-text unit/integration assertions.');
+console.log('B-5: No application-source-text unit/integration/component assertions.');
 
 // Repository-wide Google JavaScript formatting and public API JSDoc contracts.
 // Both are checked in CI via npm run check; no automatic formatting in CI.
