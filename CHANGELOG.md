@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.14.2 - 2026-11-26
+
+- fix: prevent analytics card text and chevron overflow
+- docs: simplify README badges and showcase tasting editor with flavor radar
+
 ## 1.14.1 - 2026-11-26
 
 - fix: apply canonical CSS formatting
