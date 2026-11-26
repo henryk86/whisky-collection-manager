@@ -127,9 +127,9 @@ test(
 );
 
 test(
-  'analytics: the seven views have descriptive titles without index numbers and all analytics URLs are reloadable',
+  'analytics: the eight views have descriptive titles without index numbers and all analytics URLs are reloadable',
   async () => {
-    assert.equal(ANALYSIS_PAGES.length, 7);
+    assert.equal(ANALYSIS_PAGES.length, 8);
     assert.ok(MAIN_PAGES.some(p => p.id === 'analytics' && p.action === 'goto-analysis'));
     const state = {
       collection: collection(),

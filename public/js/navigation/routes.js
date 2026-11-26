@@ -44,6 +44,7 @@ export function parseRoute(search) {
       'finance',
       'timeline',
       'quality',
+      'insurance',
     ]);
     const section = params.get('section') || 'overview';
     return {
@@ -133,6 +134,7 @@ export function routeUrl(page, selected, filters = {}) {
       'finance',
       'timeline',
       'quality',
+      'insurance',
     ].includes(selected) ? selected : 'overview';
     const params = new URLSearchParams({view: 'analysis'});
     if (section !== 'overview') params.set('section', section);

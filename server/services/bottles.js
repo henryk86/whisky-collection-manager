@@ -420,6 +420,25 @@ export async function addFile(bottleId, input) {
 }
 
 /**
+ * Records the user's designation of an existing attachment as purchase evidence.
+ * @param {string} bottleId Physical bottle identifier.
+ * @param {string} fileId Attachment identifier.
+ * @param {*} input Untrusted JSON with an explicit boolean purchaseEvidence.
+ * @return {Promise<import('../../shared/types.js').BottleFile>} Updated attachment metadata.
+ */
+export async function markPurchaseEvidence(bottleId, fileId, input) {
+  if (typeof input?.purchaseEvidence !== 'boolean') throw fail('Ungueltiger Dateianhang', 400, 'api.errors.invalidFileAttachment');
+  return change(collection => {
+    const {bottle} = requireBottle(collection, bottleId);
+    const file = (bottle.files || []).find(entry => entry.id === fileId);
+    if (!file) throw fail('Datei nicht gefunden', 404, 'api.errors.fileNotFound');
+    file.purchaseEvidence = input.purchaseEvidence;
+    bottle.updatedAt = now();
+    return file;
+  });
+}
+
+/**
  * Only an attachment referenced by the requested bottle can be downloaded.
  *
  * @param {string} bottleId Identifier of the physical bottle.

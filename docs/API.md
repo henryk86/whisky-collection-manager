@@ -54,6 +54,7 @@ Der Browser kann bei `POST`, `PUT`, `PATCH` und `DELETE` den optionalen Header `
 | DELETE | `/api/bottles/:id/photos/:photoId` | Einzelnes Foto entfernt |
 | POST | `/api/bottles/:id/files` | Anhang zu einer physischen Flasche, Status 201 |
 | GET | `/api/bottles/:id/files/:fileId` | Anhang als Datei herunterladen, nicht inline anzeigen |
+| PATCH | `/api/bottles/:id/files/:fileId` | Kaufnachweis-Markierung (`purchaseEvidence`: Boolean) setzen oder entfernen |
 | DELETE | `/api/bottles/:id/files/:fileId` | Anhang entfernen und zugehörige Datei löschen |
 | POST | `/api/distilleries` | Neue Destillerie, Status 201 |
 | PATCH | `/api/distilleries/:id` | Destillerie-Stammdaten (Name, Status, Herkunft, Koordinaten) aktualisieren |
@@ -268,7 +269,7 @@ Der Foto-Endpunkt akzeptiert `{ "image": "data:image/jpeg;base64,..." }`. Das is
 
 ## Dateien & Nachweise
 
-`POST /api/bottles/:id/files` benötigt ein JSON-Objekt mit `filename` (Originaldateiname) und `data` (Data-URL mit Base64-Kodierung, beispielsweise `data:application/pdf;base64,...`). Das Uploadformat ist **nicht** das Speicherformat. Die Datei liegt nach der Übertragung als normale Binärdatei in `documents/<bottleId>/`, in `collection.json` bleibt nur eine Referenz (`id`, `name`, `path`, `size`, `mimeType`, `sha256`, `uploadedAt`). Maximal 15 MiB pro Datei, bis 26 MiB JSON-Anfragegröße. Unterstützte Dateitypen: PDF, JPG/JPEG, PNG, WebP, GIF, HEIC/HEIF, TXT, CSV, EML, DOCX, XLSX, ODT und ODS. Der Server prüft Dateiname, Erweiterung und grundlegende Dateisignaturen.
+`POST /api/bottles/:id/files` benötigt ein JSON-Objekt mit `filename` (Originaldateiname) und `data` (Data-URL mit Base64-Kodierung, beispielsweise `data:application/pdf;base64,...`). Das Uploadformat ist **nicht** das Speicherformat. Die Datei liegt nach der Übertragung als normale Binärdatei in `documents/<bottleId>/`, in `collection.json` bleibt nur eine Referenz (`id`, `name`, `path`, `size`, `mimeType`, `sha256`, `uploadedAt`, optional `purchaseEvidence`). `PATCH /api/bottles/:id/files/:fileId` setzt mit `{"purchaseEvidence":true}` bzw. `false` ausschließlich die Benutzer-Kennzeichnung des Anhangs, ohne die Originaldatei zu verändern. Fehlende Kennzeichnung gilt als unklassifiziert. Maximal 15 MiB pro Datei, bis 26 MiB JSON-Anfragegröße. Unterstützte Dateitypen: PDF, JPG/JPEG, PNG, WebP, GIF, HEIC/HEIF, TXT, CSV, EML, DOCX, XLSX, ODT und ODS. Der Server prüft Dateiname, Erweiterung und grundlegende Dateisignaturen.
 
 Nur Dateien, die genau dieser physischen Flasche zugeordnet sind, können über den Download-Endpunkt geladen werden. Sie werden mit `Content-Disposition: attachment` und `application/octet-stream` ausgeliefert, nicht als öffentliches statisches HTML. Nach erfolgreichem Löschen wird die Datei vom Dateisystem entfernt. Beim Löschen der gesamten Flasche bleiben die Dateien aus Gründen der Wiederherstellbarkeit wie Fotos vorerst auf dem Datenträger, aber ohne aktiven JSON-Verweis.
 

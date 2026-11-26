@@ -22,6 +22,7 @@
  * @property {string} mimeType MIME type derived from the allowed extension.
  * @property {string} sha256 SHA-256 checksum of the stored bytes.
  * @property {string} uploadedAt ISO timestamp.
+ * @property {boolean} [purchaseEvidence] User-designated purchase evidence, not independently verified.
  *
  * @typedef {Object} Bottle
  * @property {string} id Stable UUID, independent of the inventory number.

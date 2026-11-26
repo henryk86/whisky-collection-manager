@@ -1,3 +1,4 @@
+import {insuranceSection} from './insurance.js';
 import {inventory, provenance, profile, finance, timeline, quality, overview} from './analytics-sections.js';
 import {filterControls} from './analytics-controls.js';
 import {createAnalyticsViewModel} from './models/analytics.js';
@@ -6,7 +7,7 @@ import {composeMarkup} from '../ui/render-plan.js';
 import {headingTitle, pageHeader} from '../ui/headers.js';
 import {t} from '../i18n/index.js';
 /**
- * Analytics dashboard and six thematic pages. All datasets come from pure
+ * Analytics dashboard and seven thematic pages. All datasets come from pure
  * domain calculations.
  */
 
@@ -115,6 +116,14 @@ export const ANALYSIS_PAGES = Object.freeze([
     get sub() {return t("analytics.quality.sectionDescription");},
     icon: analysisQualityIcon,
   },
+  {
+    id: 'insurance',
+    /** Returns the localized insurance heading. @return {string} Section title. */
+    get title() {return t('insurance.title');},
+    /** Returns the localized insurance description. @return {string} Section description. */
+    get sub() {return t('insurance.description');},
+    icon: analysisQualityIcon,
+  },
 ]);
 
 /**
@@ -166,9 +175,11 @@ export function createAnalyticsView({state, shell}) {
          * @return {import('../ui/render-plan.js').RenderPlan|string} Data-quality analysis for the current filters (or scalar/empty text when no plan is needed).
          */
         quality: () => quality(data),
+        /** Renders the unfiltered physical insurance inventory. @return {import('../ui/render-plan.js').RenderPlan|string} Insurance section. */
+        insurance: () => insuranceSection(state),
       };
       const content = composeMarkup(
-        filterControls(state, options),
+        current.id === 'insurance' ? '' : filterControls(state, options),
         headingTitle({
           title: current.title,
           level: 2,

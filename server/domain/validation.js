@@ -605,6 +605,10 @@ export function validate(collection) {
         "api.errors.invalidUploadDate"
       );
       assert(
+        file.purchaseEvidence === undefined || typeof file.purchaseEvidence === 'boolean',
+        'Ungueltiger Dateianhang', 400, 'api.errors.invalidFileAttachment'
+      );
+      assert(
         !fileIds.has(file.id) && !documentPaths.has(file.path),
         'Doppelter Dateianhang',
         400,

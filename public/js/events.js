@@ -368,6 +368,15 @@ export function bindEvents(
       }
     ),
     /**
+     * Updates the explicitly assigned purpose of an existing attachment.
+     * @param {!HTMLElement} button Attachment designation control.
+     * @return {Promise<*>} Mutation and collection refresh outcome.
+     */
+    'mark-purchase-evidence': button => action(() => request(
+      `/api/bottles/${encodeURIComponent(button.dataset.id)}/files/${encodeURIComponent(button.dataset.fileId)}`,
+      {method: 'PATCH', body: JSON.stringify({purchaseEvidence: button.dataset.evidence === 'true'})}
+    ), {scope: 'collection'}),
+    /**
      * Opens the file preview for the selected attachment.
      * @param {!HTMLElement} button Triggering action element passed to the controller.
      * @return {*} Delegated completion or result; the event dispatcher does not consume the value.

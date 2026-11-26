@@ -244,6 +244,12 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
             downloadNamed: t('detail.documents.downloadNamed', {name: file.name}),
             arrowDownIcon: arrowDownIcon,
             download: t('detail.documents.download'),
+            evidenceButton: actionButton({
+              label: file.purchaseEvidence ? t('insurance.unmarkReceipt') : t('insurance.markReceipt'),
+              action: 'mark-purchase-evidence', size: 'small',
+              data: {id: entry.id, 'file-id': file.id, evidence: !file.purchaseEvidence},
+              attributes: {'aria-pressed': String(Boolean(file.purchaseEvidence))},
+            }),
             deleteFileButton: actionButton({
               label: t('common.actions.delete'),
               action: 'delete-file',

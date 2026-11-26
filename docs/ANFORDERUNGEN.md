@@ -8,7 +8,7 @@ WhiskyCollectionManager ist eine lokale, responsive Whisky-Sammlungsverwaltung m
 | Verkostung | 0–n Verkostungen je Abfüllung; zusätzlich einzelne Verkostungen externer Whiskys; Datum, 10 Profilachsen, Farbe, Notizen, Bewertung 0–100 |
 | Tasting-Flights | Dokumentation einer geordneten Verkostungsgruppe und deterministische Planung auf Basis vorhandener Flaschen; keine externe KI |
 | Lager | Räume, Möbel, Fächer, Kapazitäten, Zuweisungen/Umlagerung, 2D-/3D-Raumplan, Möbel-/Fachfotos, Suche |
-| Analysen | Sechs Themenbereiche mit Filtern, Kennzahlen und Diagrammen, respektieren unbekannte Werte und Währungen |
+| Analysen | Sieben Themenbereiche mit Kennzahlen und Diagrammen; Versicherungsdokumentation mit Nachweisprüfung, Kaufnachweis-Kennzeichnung und PDF-/ZIP-Export; unbekannte Werte und Währungen bleiben getrennt |
 | Karte | OpenStreetMap mit Destilleriestandorten, Bestandsbezug und Detailnavigation |
 | Fotos | Reihenfolge, Original und optionale Freistellung, nicht-destruktiver Bildeditor; Dokumente pro physischer Flasche |
 | Daten | Collection-JSON/CSV, vollständiges verschlüsseltes ZIP, Backup-Zeitpläne und Restore; kein eigener XLSX-Export |
