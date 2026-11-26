@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.14.0 - 2026-11-26
+
+- fix: clarify README description of data storage
+- feat: separate distillery storage, harden collection transactions and generate searchable PDFs
+- refactor: split settings, external tastings and tasting flights into versioned JSON stores
+- fix: migrate collection schema to version 7 for purchase evidence
+- feat: add insurance documentation and evidence export
+
 ## 1.13.1 - 2026-11-26
 
 - fix: distinguish committed restore outcomes and expand persistence fault coverage
