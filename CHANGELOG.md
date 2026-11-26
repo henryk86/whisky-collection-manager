@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.13.1 - 2026-11-26
+
+- fix: distinguish committed restore outcomes and expand persistence fault coverage
+- fix: enforce restore validation, implement crash recovery and harden storage durability
+- fix: make login throttling concurrency-safe and harden backend security
+- refactor: organize backend routes by domain and enforce architectural boundaries
+- refactor: enforce complete production JavaScript type checks and finalize JSDoc contracts
+- refactor: improve production JSDoc contracts, expand semantic type checks and relax test documentation requirements
+- refactor: eliminate synchronous rendering test workers and separate native DOM tests from unit tests
+- refactor: stabilize browser tests, enforce semantic JSDoc contracts and simplify native DOM rendering
+- refactor: improve JSDoc contracts and strengthen documentation validation
+- refactor: separate photo editor and warehouse responsibilities and consolidate view models
+- fix: migrate browser test fixtures to native RenderPlan mounting
+- refactor: consolidate native rendering, semantic template bindings and frontend responsibilities
+- refactor: simplify template bindings, unify rendering and separate frontend responsibilities
+- refactor: centralize HTML templates and enforce directory structure
+- refactor: remove strict line length enforcement and restore readable JavaScript formatting
+- refactor: migrate frontend rendering to native DOM bindings and introduce view models
+- refactor: extract frontend markup into external HTML templates
+- fix: resolve formatting violations and improve JSDoc contracts
+- fix: prevent accidental modal dismissal during text selection
+- fix: correct cask classification and maturation phase preferences
+- fix: eliminate port allocation race in TLS integration test
+
 ## 1.13.0 - 2026-11-25
 
 - test: cover fully expanded tasting planner in visual regression
