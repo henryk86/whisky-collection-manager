@@ -61,7 +61,7 @@ const amount = v => isNumber(v) && v >= 0 ? v : null;
  * Tests input text against the date month pattern.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {?string} YYYY-MM month key, or null if the value has no supported month.
  */
 const dateMonth = value => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}(?:-\d{2})?(?:T.*)?$/.test(value)) return null;
@@ -73,7 +73,7 @@ const dateMonth = value => {
  * Derives the date day result from the supplied values.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {string} Valid date portion, or empty text for an invalid calendar date.
  */
 const dateDay = value => readAnalyticsDate(typeof value === 'string' ? value.slice(0, 10) : '');
 
@@ -86,10 +86,10 @@ const dateDay = value => readAnalyticsDate(typeof value === 'string' ? value.sli
 const sum = values => values.reduce((a, b) => a + b, 0);
 
 /**
- * Derives the avg result from the supplied values.
+ * Calculates the arithmetic mean of the supplied numeric values.
  *
- * @param {*} values Values to process.
- * @return {number} Calculated numeric value.
+ * @param {number[]} values Valid numeric observations.
+ * @return {?number} Mean, or null when no observations are available.
  */
 const avg = values => values.length ? sum(values) / values.length : null;
 
@@ -391,7 +391,7 @@ export function analyzeCollection(collection, filters = {}) {
      * Transforms the normalized text with the required substitutions.
      *
      * @param {*} name Environment variable or setting name.
-     * @return {string} Resulting text.
+     * @return {string} Unicode-normalized lowercase German lookup key with collapsed whitespace.
      */
     const normalized = name => text(name).normalize('NFKC').toLocaleLowerCase('de').replace(/\s+/g, ' ');
     if ([

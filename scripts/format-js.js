@@ -57,7 +57,7 @@ function format(file, original) {
       getScriptFileNames: () => [file],
       /**
        * Retrieves script version from the available state.
-       * @return {string} Resulting text.
+       * @return {string} Constant host version string; the formatter processes one immutable source snapshot.
        */
       getScriptVersion: () => '0',
       /**

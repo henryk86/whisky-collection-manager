@@ -5,7 +5,7 @@
  * supplies metadata.
  *
  * @param {*} value Input value to process.
- * @return {string} Resulting text.
+ * @return {string} Trimmed string, or empty text for non-string values.
  */
 const text = value => typeof value === 'string' ? value.trim() : '';
 const countryNames = Object.freeze({

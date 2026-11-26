@@ -129,13 +129,13 @@ test(
     const originalDocument = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () => null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
       /**
@@ -148,9 +148,9 @@ test(
       view = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} content Content to render, store or examine.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
          */
         shell: content => {html = content;},
         /**
@@ -209,13 +209,13 @@ test(
     const previousDocument = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () => null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
       /**
@@ -228,9 +228,9 @@ test(
       view = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} content Content to render, store or examine.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
          */
         shell: content => {html = content;},
         /**
@@ -373,9 +373,9 @@ test(
       view = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} content Content to render, store or examine.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
          */
         shell: content => {html = content;},
         /**

@@ -80,12 +80,12 @@ test(
            */
           setAttribute() {},
           /**
-           * Updates the remove state for its caller.
+           * Ignores removal in the simulated DOM.
            */
           remove() {},
           /**
-           * Derives the query selector result from the supplied values.
-           * @return {?*} Result or null when no value is available.
+           * Simulates an element lookup that finds nothing.
+           * @return {null} Null to represent a missing element.
            */
           querySelector() {return null;},
           /**
@@ -172,8 +172,7 @@ test(
         findBottle: () => null,
       },
       /**
-       * Derives the bottle form result from the supplied values.
-       * @return {string} Resulting text.
+       * Uses the real physical-bottle form builder for the external import scenario.
        */
       bottleForm: createBottleForm({
         state: {collection: {bottlings: [{id: 'bottling-1', name: 'Test'}]}},
@@ -195,7 +194,7 @@ test(
       showModal: (title, html) => modals.push({title, html}),
       /**
        * Retrieves pending image token from the available state.
-       * @return {string} Resulting text.
+       * @return {string} Fixed pending-image token accepted by the test fixture.
        */
       getPendingImageToken: () => 'valid-pending-token',
     });

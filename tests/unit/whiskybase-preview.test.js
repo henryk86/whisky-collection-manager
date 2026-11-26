@@ -84,8 +84,8 @@ test(
       querySelector: selector =>
         ({'.forms': fields, '#import-panel': panel}[selector] ?? null),
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };

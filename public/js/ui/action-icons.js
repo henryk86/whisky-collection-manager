@@ -8,8 +8,8 @@ export const newBottlingIcon = renderTemplate('newIcon');
 /**
  * For translated add/create labels that previously carried a typed '+' glyph.
  *
- * @param {*} label Label shown to the user.
- * @return {string} Resulting text.
+ * @param {string} label Localized add-action label, possibly prefixed with a plus.
+ * @return {!import('./render-plan.js').RenderPlan} Add-action icon and label with any redundant leading plus removed.
  */
 export const addActionLabel = label =>
   renderTemplate('addActionLabel', {
@@ -52,9 +52,9 @@ export const closedDistilleryIcon = renderTemplate('mapPagodaIcon2');
 /**
  * Reusable vector controls: no font-dependent arrow or chevron glyphs.
  *
- * @param {string} path Path to the resource.
- * @param {string=} extraClass Extra class used by this operation.
- * @return {string} Resulting text.
+ * @param {!import('./render-plan.js').RenderPlan} path Prepared SVG path or shape content.
+ * @param {string=} extraClass Additional SVG CSS classes.
+ * @return {!import('./render-plan.js').RenderPlan} Shared SVG symbol containing the supplied path content.
  */
 const uiSymbol = (path, extraClass = '') =>
   renderTemplate('uiSymbol', {
@@ -63,10 +63,10 @@ const uiSymbol = (path, extraClass = '') =>
   });
 
 /**
- * Renders the downward-chevron icon markup for action controls.
+ * Prepares downward-chevron SVG symbol with the requested CSS class.
  *
- * @param {string=} extraClass Extra class used by this operation.
- * @return {string} Resulting text.
+ * @param {string=} extraClass Additional SVG CSS classes.
+ * @return {!import('./render-plan.js').RenderPlan} Downward-chevron SVG symbol with the requested CSS class.
  */
 export const chevronDownIcon = (extraClass = '') => uiSymbol(renderTemplate('chevronDownIconPath'), extraClass);
 export const chevronRightIcon = uiSymbol(renderTemplate('chevronRightIconPath'));

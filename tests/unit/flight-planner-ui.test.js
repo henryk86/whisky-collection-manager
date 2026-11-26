@@ -40,13 +40,13 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} value Value to process.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
        */
       shell: value => {html = value;},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -55,8 +55,8 @@ test(
       refresh() {},
       selectors: {
         /**
-         * Derives the cover photo result from the supplied values.
-         * @return {*} Result computed from the supplied inputs.
+         * Simulates a missing cover photo.
+         * @return {null} No photo path.
          */
         coverPhoto: () => null,
       },
@@ -116,22 +116,22 @@ test(
        */
       bottles: () => collection.bottlings[0].bottles,
       /**
-       * Derives the cover photo result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates a missing cover photo.
+       * @return {null} No photo path.
        */
       coverPhoto: () => null,
       /**
-       * Derives the distillery names result from the supplied values.
-       * @return {string} Resulting text.
+       * Omits distillery labels for this test.
+       * @return {string} Empty label; no distillery name is supplied by this fixture.
        */
       distilleryNames: () => '',
     };
     const home = createHomeView({
       state, selectors,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} value Value to process.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
        */
       shell: value => {
         html = value;

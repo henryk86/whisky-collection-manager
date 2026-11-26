@@ -15,12 +15,12 @@ const renderTemplate = await loadTemplates('warehouse/warehouse-unassigned-tray.
 
 
 /**
- * Renders unassigned tray page for warehouse unassigned tray.
+ * Prepares paginated unassigned-bottle cards with selection states.
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {!Array<*>=} selectedIds Selected ids used by this operation.
  * @param {!Object=} options3 Destructured options for this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Paginated unassigned-bottle cards with selection states.
  */
 export function renderUnassignedTrayPage(warehouse, selectedIds = [],
   {query = '', page = 1} = {}) {
@@ -52,12 +52,12 @@ export function renderUnassignedTrayPage(warehouse, selectedIds = [],
 }
 
 /**
- * Renders unassigned tray for warehouse unassigned tray.
+ * Prepares unassigned-bottle tray with count, search and current page.
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {!Array<*>=} selectedIds Selected ids used by this operation.
  * @param {!Object=} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Unassigned-bottle tray with count, search and current page.
  */
 export function renderUnassignedTray(warehouse, selectedIds = [],
   options = {}) {

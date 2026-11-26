@@ -20,24 +20,24 @@ const renderTemplate = await loadTemplates('settings/settings.html');
  */
 export function createSettingsView(state, auth = {
   /**
-   * Derives the users section result from the supplied values.
-   * @return {string} Resulting text.
+   * Omits the user-management section from this settings view.
+   * @return {string} Empty section; this view does not render a user-management section.
    */
   usersSection: () => '',
 }) {
   /**
-   * Selects and transforms the settings records.
-   * @return {string} Resulting text.
+   * Prepares settings workspace with navigation and active panel.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Settings workspace with navigation and active panel.
    */
   function settings() {
     const {tabs, active, languages, distillerySearch, distilleries,
       matchCount, establishedYear} = createSettingsViewModel(state);
     /**
-     * Builds the localized panel text for the current language.
+     * Prepares settings section with visibility derived from the selected tab.
      *
      * @param {*} id Identifier of the affected record.
      * @param {*} content Content to render, store or examine.
-     * @return {string} Resulting text.
+     * @return {!import('../ui/render-plan.js').RenderPlan} Settings section with visibility derived from the selected tab.
      */
     const panel = (id, content) =>
       renderTemplate('settingsSection', {

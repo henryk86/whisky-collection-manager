@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {bottlingDetails} from '../../public/js/domain/bottling-details.js';
 
 /**
- * Derives the distillery names result from the supplied values.
- * @return {string} Resulting text.
+ * Supplies the fixed distillery label used by this fixture.
+ * @return {string} Fixture label 'Bowmore, Port Ellen'.
  */
 const distilleryNames = () => 'Bowmore, Port Ellen';
 

@@ -44,7 +44,7 @@ export function whiskyCustomColorName(hex) {
  * Renders the selectable whisky-colour samples and selected glass.
  *
  * @param {*} selected Selected used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('./render-plan.js').RenderPlan} Whisky color samples, selected glass and custom-color controls.
  */
 export function whiskyColorSelector(selected) {
   const custom = isCustomWhiskyColor(selected);
@@ -85,7 +85,7 @@ export function whiskyColorSelector(selected) {
  * Non-interactive display of the recorded colour for a saved tasting.
  *
  * @param {*} selected Selected used by this operation.
- * @return {string} Resulting text.
+ * @return {import('./render-plan.js').RenderPlan|string} Read-only glass for the recorded whisky color (or scalar/empty text when no plan is needed).
  */
 export function whiskyColorDisplay(selected) {
   const color = resolveWhiskyColor(selected);

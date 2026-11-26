@@ -135,12 +135,12 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
    * when requested. Cancels an unresolved confirmation or choice.
    *
    * @param {string} title Visible dialog heading.
-   * @param {string} content HTML markup for the dialog body.
+   * @param {import('./render-plan.js').RenderContent} content Prepared dialog body.
    * @param {boolean=} wide Enables the wide layout when no explicit variant
    *     overrides it.
    * @param {(boolean|string)=} nested Whether to suspend the parent; 'replace'
    *     swaps the active dialog without adding a stack entry.
-   * @param {string=} headingAction HTML markup for an optional heading action.
+   * @param {import('./render-plan.js').RenderContent=} headingAction Optional heading action.
    * @param {string=} variant Explicit dialog size or layout variant.
    */
   function showModal(
@@ -344,7 +344,7 @@ export function createModal({state, onClose, mountContent = replaceContent}) {
    * Replaces the active dialog body in both application state and DOM, leaving
    * its header and stack intact.
    *
-   * @param {string} content HTML markup to render inside the body.
+   * @param {import('./render-plan.js').RenderContent} content Replacement dialog body.
    */
   function updateContent(content) {
     if (!state.modal) return;

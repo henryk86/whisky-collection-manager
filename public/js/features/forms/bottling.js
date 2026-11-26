@@ -20,10 +20,10 @@ const renderTemplate = await loadTemplates('forms/bottling.html');
 export function createBottlingForm({state, selectors}) {
   const {distilleryIds} = selectors;
   /**
-   * Orders the distillery picker records using the configured comparison.
+   * Prepares alphabetical distillery choices with the current contributors selected.
    *
    * @param {*} bottling Bottling record being inspected or updated.
-   * @return {string} Resulting text.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Alphabetical distillery choices with the current contributors selected.
    */
   function distilleryPicker(bottling) {
     const selected = new Set(distilleryIds(bottling));
@@ -40,10 +40,10 @@ export function createBottlingForm({state, selectors}) {
   }
 
   /**
-   * Transforms the entries used by bottling form.
+   * Prepares bottling metadata editor with distillery and classification controls.
    *
    * @param {!Object=} bottling Bottling record being inspected or updated.
-   * @return {string} Resulting text.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Bottling metadata editor with distillery and classification controls.
    */
   function bottlingForm(bottling = {}) {
     return renderTemplate('bottlingForm', {

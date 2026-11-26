@@ -461,7 +461,7 @@ export const ageDistance = (a, b) => a === null || b === null ? null : Math.min(
  * Groups a whisky age into the flight-planning age bands.
  *
  * @param {*} age Age in years, or a value to validate.
- * @return {?string} Resulting text.
+ * @return {?string} Age-band identifier from 0–5 through 21+, or null for unknown age.
  */
 export const ageClass = age => age === null ? null : age <= 5 ? '0-5' : age <= 10 ? '6-10' : age <= 15 ? '11-15' : age <= 20 ? '16-20' : '21+';
 

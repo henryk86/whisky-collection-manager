@@ -47,23 +47,23 @@ const FORMULAS = Object.freeze({
  * Renders the explanatory content used by the flight planner.
  *
  * @param {*} t T used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('./render-plan.js').RenderPlan} Flight planning explanations, formulas and strategy descriptions.
  */
 export function flightPlanningHelpHtml(t) {
   /**
    * Builds the localized tx text for the current language.
    *
    * @param {*} key Key used to select or group values.
-   * @return {string} Resulting text.
+   * @return {string} Escaped translation of the requested flight-planning help entry.
    */
   const tx = key => escapeHtml(t(`flightPlan.help.${key}`));
 
   /**
-   * Produces the p text used by the caller.
+   * Prepares localized help paragraph with an optional CSS class.
    *
    * @param {*} key Key used to select or group values.
    * @param {string=} extraClass Value used by this operation.
-   * @return {string} Resulting text.
+   * @return {!import('./render-plan.js').RenderPlan} Localized help paragraph with an optional CSS class.
    */
   const p = (key, extraClass = '') => renderTemplate('p', {
     classAttributes: extraClass ? {"class": extraClass} : {},
@@ -71,27 +71,27 @@ export function flightPlanningHelpHtml(t) {
   });
 
   /**
-   * Produces the formula text used by the caller.
+   * Prepares formula display for the selected planning strategy.
    *
    * @param {*} key Key used to select or group values.
-   * @return {string} Resulting text.
+   * @return {!import('./render-plan.js').RenderPlan} Formula display for the selected planning strategy.
    */
   const formula = key => renderTemplate('flightPlanHelpFormula', {formula: FORMULAS[key], });
 
   /**
-   * Builds the localized heading text for the current language.
+   * Prepares localized help section heading.
    *
    * @param {*} key Key used to select or group values.
-   * @return {string} Resulting text.
+   * @return {!import('./render-plan.js').RenderPlan} Localized help section heading.
    */
   const heading = key => headingTitle({title: t(`flightPlan.help.${key}`)});
 
   /**
-   * Produces the variable text used by the caller.
+   * Prepares definition of the supplied formula symbol.
    *
    * @param {*} symbol Value used by this operation.
    * @param {*} key Key used to select or group values.
-   * @return {string} Resulting text.
+   * @return {!import('./render-plan.js').RenderPlan} Definition of the supplied formula symbol.
    */
   const variable = (symbol, key) =>
     renderTemplate('flightPlanHelpDefinition', {
@@ -100,10 +100,10 @@ export function flightPlanningHelpHtml(t) {
     });
 
   /**
-   * Produces the strategy text used by the caller.
+   * Prepares planning strategy explanation, formula and details.
    *
    * @param {*} key Key used to select or group values.
-   * @return {string} Resulting text.
+   * @return {!import('./render-plan.js').RenderPlan} Planning strategy explanation, formula and details.
    */
   const strategy = key => renderTemplate('flightPlanHelpStrategy', {
     tx: tx(`${key}.title`),

@@ -24,7 +24,7 @@ function fakeModalHost() {
       overlay = text ? {
         html: text, form: {name: '', files: []},
         /**
-         * Updates the add event listener state for its caller.
+         * Ignores listener registration in this DOM-free test double.
          */
         addEventListener() {},
       } : null;
@@ -453,11 +453,11 @@ test(
         mountContent: captureContent, mountAppend: captureAppend,
         state, selectors: {},
         /**
-         * Updates the shell state for its caller.
+         * Discards page content in this scenario; no real DOM is mounted.
          */
         shell() {},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate() {},
         /**

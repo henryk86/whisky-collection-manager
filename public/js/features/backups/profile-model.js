@@ -1,6 +1,26 @@
 /** @fileoverview Presentation data for editing a backup profile. */
 import {t} from '../../i18n/index.js';
 
+/**
+ * Prepared values for the ZIP profile editor. The arrays of options are
+ * separate from persisted configuration, and legacy profiles are disabled.
+ * @typedef {Object} BackupProfileViewModel
+ * @property {string} id Existing profile ID, or empty for a new profile.
+ * @property {string} name Profile name.
+ * @property {import('../../../../shared/backup-profile-types.js').BackupProvider} provider Selected backend.
+ * @property {{value: string, label: string}[]} providers Available backends.
+ * @property {boolean} legacy True for a saved non-ZIP profile.
+ * @property {boolean} enabled Automatic backup state.
+ * @property {string} targetPath Selected relative destination.
+ * @property {{value: string, label: string}[]} targets Local destination options.
+ * @property {string} remote Selected Rclone connection.
+ * @property {string[]} remotes Available connections.
+ * @property {string} cloudTargetPath Prepared remote subfolder.
+ * @property {{value: string, label: string}[]} frequencies Schedule options.
+ * @property {{value: number, label: string}[]} weekdays Localized weekdays in Sunday-first order.
+ * @property {import('../../../../shared/backup-profile-types.js').BackupSchedule} schedule Complete schedule with defaults.
+ * @property {import('../../../../shared/backup-profile-types.js').BackupRetention} retention Complete retention with defaults.
+ */
 export const providerOptions = {
   local: 'USB / NAS / lokaler Ordner',
   dropbox: 'Dropbox',
@@ -14,7 +34,7 @@ export const providerOptions = {
 /**
  * Resolves the provider names for the active language.
  *
- * @return {!Array<!Object>} Available provider values and display labels.
+ * @return {{value: string, label: string}[]} Available provider values and display labels.
  */
 function localizedProviders() {
   const labels = {
@@ -31,10 +51,10 @@ function localizedProviders() {
  * Normalizes profile defaults and derives the available form options.
  * Legacy profiles keep their original repository and start disabled.
  *
- * @param {!Object=} profile Existing or incomplete profile.
- * @param {!Array<string>=} remotes Available Rclone connections.
- * @param {!Array<!Object>=} targets Configured local storage targets.
- * @return {!Object} Display-ready profile without HTML or DOM dependencies.
+ * @param {import('../../../../shared/backup-profile-types.js').BackupProfileDraft=} profile Existing or incomplete profile.
+ * @param {string[]=} remotes Available Rclone connection names.
+ * @param {import('../../../../shared/backup-profile-types.js').BackupTarget[]=} targets Configured local storage targets.
+ * @return {BackupProfileViewModel} Display-ready profile without HTML or DOM dependencies.
  */
 export function createProfileViewModel(
   profile = {}, remotes = [], targets = []

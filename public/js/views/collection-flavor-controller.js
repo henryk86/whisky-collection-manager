@@ -41,8 +41,8 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
   }
 
   /**
-   * Selects and transforms the flavor editor content records.
-   * @return {string} Resulting text.
+   * Prepares flavor criteria and profile-status filtering controls.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Flavor criteria and profile-status filtering controls.
    */
   function flavorEditorContent() {
     const draft = flavorDraft || newFlavorDraft();
@@ -56,7 +56,7 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
      * Calculates options from the inputs.
      *
      * @param {*} selected Currently selected item or identifier.
-     * @return {string} Resulting text.
+     * @return {import('../ui/render-plan.js').RenderPlan|string} Selectable minimum and maximum sensory-axis scores (or scalar/empty text when no plan is needed).
      */
     const scoreOptions = (selected) => composeMarkup(Array.from(
       {length: 11},
@@ -117,8 +117,8 @@ export function createCollectionFlavorController({state, showModal, closeModal, 
   }
 
   /**
-   * Produces the flavor editor html text used by the caller.
-   * @return {string} Resulting text.
+   * Prepares expandable collection flavor-filter editor.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Expandable collection flavor-filter editor.
    */
   function flavorEditorHtml() {
     return renderTemplate('collectionFlavorEditor', {flavorEditorContent: flavorEditorContent(), });

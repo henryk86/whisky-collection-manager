@@ -2,6 +2,21 @@
 import {RenderPlan, SLOT, slotValue, scalarBinding} from './render-plan.js';
 import {attributeEntries, checkedAttribute, checkedTag, decodeEscaped} from './bindings.js';
 
+/**
+ * Parsed template slot located by an inert marker in the static DOM.
+ * @typedef {{mode: string, key: string}} SlotDescriptor
+ */
+
+/**
+ * Attribute containing one or more scalar slot markers.
+ * @typedef {{name: string, value: string}} BoundAttribute
+ */
+
+/**
+ * Static parser input and descriptors needed to bind a fresh clone.
+ * @typedef {{markup: string, slots: SlotDescriptor[], boundAttributes: BoundAttribute[]}} PreparedTemplate
+ */
+
 const templates = new WeakMap();
 const marker = /wcm-slot-(\d+)-end/g;
 const htmlNamespace = 'http://www.w3.org/1999/xhtml';
@@ -11,7 +26,8 @@ const xmlNamespace = 'http://www.w3.org/XML/1998/namespace';
  * Builds parser-safe static markup with inert markers instead of user values.
  * Tag names and dynamic attribute names are validated structural choices.
  * @param {!RenderPlan} plan Template instance.
- * @return {!Object} Static markup and slot descriptors.
+ * @return {!PreparedTemplate} Static markup and slot descriptors.
+ * @throws {Error} If a tag, attribute name or structural slot is invalid.
  */
 function prepare(plan) {
   const slots = [];
@@ -101,8 +117,8 @@ function setAttribute(element, name, value) {
  * Binds a static clone in document order, recursively composing child plans.
  * @param {!Node} root Static clone or element.
  * @param {!RenderPlan} plan Template instance.
- * @param {!Array<!Object>} slots Slot descriptors.
- * @param {!Array<!Object>} boundAttributes Dynamic attribute descriptors.
+ * @param {!Array<SlotDescriptor>} slots Slot descriptors.
+ * @param {!Array<BoundAttribute>} boundAttributes Dynamic attribute descriptors.
  * @param {!Document} doc Owning document.
  * @param {?Element} context Parent context for top-level slots.
  */
@@ -147,10 +163,10 @@ function bind(root, plan, slots, boundAttributes, doc, context) {
 
 /**
  * Produces fresh DOM nodes from a render plan. No dynamic HTML is parsed.
- * @param {*} value Render plan, native node, or previously escaped text.
+ * @param {import('./render-plan.js').RenderContent} value Render plan, native node, or previously escaped text.
  * @param {!Document} doc Owning document.
  * @param {?Element=} context Parent parser context for static child templates.
- * @return {!Node} Detached DOM node or fragment.
+ * @return {!Node} Fresh fragment or text node, or the supplied native node unchanged.
  */
 export function materialize(value, doc, context = null) {
   if (value?.nodeType && typeof value.cloneNode === 'function') return value;
@@ -172,7 +188,7 @@ export function materialize(value, doc, context = null) {
 /**
  * Replaces a host's content with native nodes.
  * @param {!Element} host Target element.
- * @param {*} value Render plan or native node.
+ * @param {import('./render-plan.js').RenderContent} value Content to mount; existing native nodes are moved.
  */
 export function replaceContent(host, value) {
   host.replaceChildren(materialize(value, host.ownerDocument, host));
@@ -181,7 +197,7 @@ export function replaceContent(host, value) {
 /**
  * Appends native content without rebuilding existing nodes.
  * @param {!Element} host Target element.
- * @param {*} value Render plan or native node.
+ * @param {import('./render-plan.js').RenderContent} value Content to mount; existing native nodes are moved.
  */
 export function appendContent(host, value) {
   host.append(materialize(value, host.ownerDocument, host));
@@ -190,7 +206,7 @@ export function appendContent(host, value) {
 /**
  * Replaces one element with native content in its original parent context.
  * @param {!Element} element Existing element.
- * @param {*} value Render plan or native node.
+ * @param {import('./render-plan.js').RenderContent} value Content to mount; existing native nodes are moved.
  */
 export function replaceElement(element, value) {
   element.replaceWith(materialize(value, element.ownerDocument, element.parentElement));

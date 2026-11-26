@@ -105,7 +105,7 @@ function walk(root, relative) {
  * Validates the required password state and rejects invalid inputs.
  *
  * @param {*} password Password or secret supplied by the caller.
- * @return {string} Resulting text.
+ * @return {string} Unmodified password meeting the minimum length of 14 characters.
  */
 function requiredPassword(password) {
   if (typeof password !== 'string' || password.length < 14) {

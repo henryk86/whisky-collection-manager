@@ -59,7 +59,7 @@ const scoresFromEditor = section => Object.fromEntries(FLAVOR_AXES.map(axis => {
  * Calculates radar-chart polygon points from flavour scores.
  *
  * @param {!Array<*>} values Values to aggregate or compare.
- * @return {string} Resulting text.
+ * @return {string} SVG polygon point list containing only assessed axes.
  */
 export function flavorPolygon(values) {
   // Omit unassessed points from older tastings instead of silently plotting
@@ -69,11 +69,11 @@ export function flavorPolygon(values) {
 }
 
 /**
- * Renders the radar chart for a tasting's flavour profile.
+ * Prepares taste radar and its labels, or the unrecorded-profile hint.
  *
  * @param {!Array<*>} values Values to aggregate or compare.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {string} Resulting text.
+ * @return {!import('./render-plan.js').RenderPlan} Taste radar and its labels, or the unrecorded-profile hint.
  */
 export function flavorChart(values, {editable = false, colorSection = null,
   compact = false} = {}) {

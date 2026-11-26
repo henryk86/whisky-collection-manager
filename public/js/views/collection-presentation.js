@@ -18,7 +18,7 @@ import {statusText, createCollectionRatingModel} from './models/home.js';
  * are not displayed again in the Standardflaschen count.
  *
  * @param {*} physicalBottles Physical bottles used by this operation.
- * @return {string} Resulting text.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Inventory status and quantity badges for the represented bottles (or scalar/empty text when no plan is needed).
  */
 export function inventoryBadges(physicalBottles) {
   return composeMarkup(inventoryCountGroups(physicalBottles).map(group => renderTemplate('badge', {
@@ -41,7 +41,7 @@ export function inventoryBadges(physicalBottles) {
  *
  * @param {*} value Input value to process.
  * @param {string=} suffix Suffix used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Escaped known metadata with its supplied suffix, or empty text when missing.
  */
 export function overviewField(value, suffix = '') {
   return hasBottlingDetail(value) ? `${escapeHtml(value)}${suffix}` : '';
@@ -120,7 +120,7 @@ export function collectionTableCell(columnId, model) {
  *
  * @param {!Object} bottling Bottling record being processed.
  * @param {null=} photoId Identifier of the photo.
- * @return {string} Resulting text.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Glencairn rating summary for a rated bottling (or scalar/empty text when no plan is needed).
  */
 export function collectionCardRating(bottling, photoId = null) {
   const model = createCollectionRatingModel(bottling);
@@ -142,20 +142,20 @@ export function collectionCardRating(bottling, photoId = null) {
  * @param {!Object} options Optional configuration for the operation.
  * @param {*} selectedSize Selected size used by this operation.
  * @param {string=} mode Requested display mode or configuration variant.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Collection pagination, result range and page-size controls.
  */
 export function pagerHtml({page, pageCount, total, from, to}, selectedSize,
   mode = 'bottlings') {
   const label = mode === 'bottles' ? t("forms.bottle.plural") : t("analytics.inventory.bottlings");
   const pageSizeLabel = mode === 'bottles' ? t("home.pagination.bottlesPerPage") : t("home.pagination.bottlingsPerPage");
   /**
-   * Produces the button text used by the caller.
+   * Prepares pagination button with target page and disabled state.
    *
    * @param {*} target Target of the operation.
    * @param {*} label Label shown to the user.
    * @param {*} title Title displayed or stored by this operation.
    * @param {boolean=} disabled Value used by this operation.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Pagination button with target page and disabled state.
    */
   const button = (target, label, title, disabled = false) =>
     renderTemplate('smallButton', {

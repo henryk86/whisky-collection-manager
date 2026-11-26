@@ -18,8 +18,8 @@ export const VALID_TASTING_FIELDS = Object.freeze([
 /**
  * Checks that a tasting date is a valid calendar day.
  *
- * @param {*} value Input value to process.
- * @return {boolean} Whether the condition is satisfied.
+ * @param {*} value Candidate YYYY-MM-DD string.
+ * @return {boolean} True for an actual calendar day in the required format.
  */
 export function validTastingDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -28,11 +28,12 @@ export function validTastingDate(value) {
 }
 
 /**
- * Normalizes tasting record for tasting records.
+ * Merges allowed tasting fields into defaults and validates every sensory and metadata field.
  *
- * @param {*} input Input to process.
- * @param {!Object=} old Old used by this operation.
- * @return {*} Whether the requested condition is met.
+ * @param {*} input Untrusted partial tasting fields; identity and timestamps are not accepted here.
+ * @param {Partial<import('./types.js').Tasting>=} old Previous values retained on update.
+ * @return {Omit<import('./types.js').Tasting, 'id'|'createdAt'|'updatedAt'> & Partial<Pick<import('./types.js').Tasting, 'id'|'createdAt'|'updatedAt'>>} Validated fields with any supplied previous identity metadata.
+ * @throws {Error} If the date, title, notes, rating, profile or color is invalid.
  */
 export function normalizeTastingRecord(input, old = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input) ||
@@ -64,8 +65,8 @@ export function normalizeTastingRecord(input, old = {}) {
 /**
  * Sorts tastings consistently for display and history navigation.
  *
- * @param {!Object} bottling Bottling record being processed.
- * @return {!Array<*>} Resulting list of values.
+ * @param {{tastings?: import('./types.js').Tasting[]}|null|undefined} bottling Owned bottling or other tasting container.
+ * @return {import('./types.js').Tasting[]} New array, newest tasting date first with creation time and ID as tie breakers.
  */
 export function sortedTastings(bottling) {
   return [...(bottling?.tastings || [])].sort((a, b) =>
@@ -76,8 +77,8 @@ export function sortedTastings(bottling) {
 /**
  * Finds the most recently recorded tasting for a bottling.
  *
- * @param {!Object} bottling Bottling record being processed.
- * @return {*} Value returned by the delegated operation.
+ * @param {{tastings?: import('./types.js').Tasting[]}|null|undefined} bottling Tasting container.
+ * @return {?import('./types.js').Tasting} Most recent tasting, or null.
  */
 export function latestTasting(bottling) {
   return sortedTastings(bottling)[0] || null;
@@ -87,8 +88,8 @@ export function latestTasting(bottling) {
  * The newest record is the sole rating source. No persisted summary or legacy
  * fallback.
  *
- * @param {!Object} bottling Bottling record being processed.
- * @return {*} Value returned by the delegated operation.
+ * @param {{tastings?: import('./types.js').Tasting[]}|null|undefined} bottling Tasting container.
+ * @return {?number} Rating of the newest tasting, even when it is unrated.
  */
 export function displayedTastingRating(bottling) {
   return latestTasting(bottling)?.rating ?? null;

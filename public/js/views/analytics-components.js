@@ -12,7 +12,7 @@ const renderTemplate = await loadTemplates('analytics/analytics.html');
  * Derives the number numeric value from its input.
  *
  * @param {*} v Value to evaluate.
- * @return {string} Resulting text.
+ * @return {string} Localized numeric label with at most one decimal place, or a dash for non-finite values.
  */
 export const number = v => Number.isFinite(v) ? new Intl.NumberFormat(currentLanguage(), {maximumFractionDigits: 1}).format(v) : '–';
 
@@ -131,26 +131,26 @@ export const countryName = name => COUNTRY_KEYS[name] ? t(COUNTRY_KEYS[name]) : 
  * Derives the safe result from the supplied values.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {string} Escaped value for the renderer's compatibility binding.
  */
 export const safe = value => escapeHtml(value);
 
 /**
- * Builds the localized empty text for the current language.
- * @return {string} Resulting text.
+ * Prepares localized no-matching-data message.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Localized no-matching-data message.
  */
 export const empty = () => emptyState({
   description: t("analytics.empty.noMatchingData"), variant: "inline",
 });
 
 /**
- * Derives the panel result from the supplied values.
+ * Prepares analytics section with a heading, content and optional explanatory note.
  *
  * @param {*} title Title displayed or stored by this operation.
  * @param {*} content Content to render, store or examine.
  * @param {string=} note Value used by this operation.
  * @param {string=} extra Additional context or configuration.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Analytics section with a heading, content and optional explanatory note.
  */
 export function panel(title, content, note = '', extra = '') {
   return contentPanel({
@@ -160,12 +160,12 @@ export function panel(title, content, note = '', extra = '') {
 }
 
 /**
- * Derives the metric result from the supplied values.
+ * Prepares analytics metric card with a value and optional detail.
  *
  * @param {*} label Label shown to the user.
  * @param {*} value Value to process.
  * @param {string=} detail Value used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Analytics metric card with a value and optional detail.
  */
 export function metric(label, value, detail = '') {
   return contentPanel({
@@ -179,20 +179,20 @@ export function metric(label, value, detail = '') {
 }
 
 /**
- * Produces the metric grid text used by the caller.
+ * Prepares grid of metric cards.
  *
  * @param {*} cards Value used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Grid of metric cards.
  */
 export function metricGrid(cards) {
   return renderTemplate('stats', {cards: composeMarkup(cards), });
 }
 
 /**
- * Derives the section heading result from the supplied values.
+ * Prepares second-level analytics group heading.
  *
  * @param {*} text Text to process.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Second-level analytics group heading.
  */
 export function sectionHeading(text) {
   return headingTitle({
@@ -202,21 +202,21 @@ export function sectionHeading(text) {
 }
 
 /**
- * Produces the two text used by the caller.
+ * Prepares two-column analytics layout containing the supplied panels.
  *
  * @param {!Array<*>} items Entries to process.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Two-column analytics layout containing the supplied panels.
  */
 export function two(...items) {
   return renderTemplate('analyticsTwo', {items: composeMarkup(items), });
 }
 
 /**
- * Transforms the entries used by rank bars.
+ * Prepares ranked bars with relative widths, optional drill actions and truncation notice.
  *
  * @param {*} rows Input records to process.
  * @param {!Object=} options Options controlling the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Ranked bars with relative widths, optional drill actions and truncation notice.
  */
 export function rankBars(rows, {value = 'count', format = number, limit = 14,
   drill = false} = {}) {
@@ -249,11 +249,11 @@ export function rankBars(rows, {value = 'count', format = number, limit = 14,
 }
 
 /**
- * Selects and transforms the composition records.
+ * Prepares positive category composition chart and accessible legend.
  *
  * @param {*} rows Input records to process.
  * @param {!Object=} options Options controlling the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Positive category composition chart and accessible legend.
  */
 export function composition(rows, {drill = null} = {}) {
   const {total, segments} = createCompositionViewModel(rows);
@@ -294,11 +294,11 @@ export function composition(rows, {drill = null} = {}) {
 }
 
 /**
- * Transforms the entries used by details table.
+ * Prepares analytics table with column headings and supplied cell content.
  *
  * @param {*} headings Value used by this operation.
  * @param {*} rows Input records to process.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Analytics table with column headings and supplied cell content.
  */
 export function detailsTable(headings, rows) {
   if (!rows.length) return empty();
@@ -309,11 +309,11 @@ export function detailsTable(headings, rows) {
 }
 
 /**
- * Produces the bottling link text used by the caller.
+ * Prepares bottling navigation control with an optional physical-bottle target.
  *
  * @param {*} item Current item under consideration.
  * @param {string=} extra Additional context or configuration.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Bottling navigation control with an optional physical-bottle target.
  */
 export function bottlingLink(item, extra = '') {
   return renderTemplate('open', {
@@ -325,10 +325,10 @@ export function bottlingLink(item, extra = '') {
 }
 
 /**
- * Produces the distillery link text used by the caller.
+ * Prepares distillery drill-down control.
  *
  * @param {*} item Current item under consideration.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Distillery drill-down control.
  */
 export function distilleryLink(item) {
   return renderTemplate('analyticsDistillery2', {
@@ -338,12 +338,12 @@ export function distilleryLink(item) {
 }
 
 /**
- * Orders the period rows records using the configured comparison.
+ * Prepares chronologically sorted period bars with optional currency formatting.
  *
  * @param {*} rows Input records to process.
  * @param {string=} field Field definition or input value to handle.
  * @param {string=} currency Value used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Chronologically sorted period bars with optional currency formatting.
  */
 function periodRows(rows, field = 'count', currency = '') {
   return rankBars(
@@ -357,13 +357,13 @@ function periodRows(rows, field = 'count', currency = '') {
 }
 
 /**
- * Orders the time chart records using the configured comparison.
+ * Prepares date-filtered and aggregated time-series panel.
  *
  * @param {*} title Title displayed or stored by this operation.
  * @param {*} rows Input records to process.
  * @param {*} state Current application state.
  * @param {!Object=} options Options controlling the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Date-filtered and aggregated time-series panel.
  */
 export function timeChart(title, rows, state, {field = 'count', currency = ''} = {}) {
   const data = aggregateAnalyticsPeriods(rows, state, field);

@@ -60,7 +60,7 @@ const typeName = type => TYPES.includes(type) ? t(FURNITURE_TYPE_KEYS[type]) : t
  * Derives the num result from the supplied values.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {string} Localized numeric value with at most two decimal places.
  */
 const num = value => formatNumber(Number(value), {maximumFractionDigits: 2});
 
@@ -79,7 +79,7 @@ const capacityLabel = s => s.shelves === 0 ?
  * Derives the safe result from the supplied values.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {string} Escaped scalar value, or empty text for nullish input.
  */
 const safe = value => esc(String(value ?? ''));
 
@@ -93,14 +93,14 @@ const safe = value => esc(String(value ?? ''));
 const count = (w, shelfId) => Object.values(w.assignments).filter(id => id === shelfId).length;
 
 /**
- * Produces the field text used by the caller.
+ * Prepares labeled warehouse input with the supplied field options.
  *
  * @param {*} name Environment variable or setting name.
  * @param {*} label Label shown to the user.
  * @param {string=} value Value to process.
  * @param {string=} type Type or category used to select behavior.
  * @param {!Object=} options Additional input attributes.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Labeled warehouse input with the supplied field options.
  */
 function field(name, label, value = '', type = 'text', options = {}) {
   return renderTemplate('formField', {
@@ -113,13 +113,13 @@ function field(name, label, value = '', type = 'text', options = {}) {
 }
 
 /**
- * Transforms the entries used by choices.
+ * Prepares labeled warehouse select with the current value selected.
  *
  * @param {*} name Environment variable or setting name.
  * @param {*} label Label shown to the user.
  * @param {*} options Options controlling the operation.
  * @param {string=} chosen Value used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Labeled warehouse select with the current value selected.
  */
 function choices(name, label, options, chosen = '') {
   return renderTemplate('formField2', {
@@ -135,8 +135,8 @@ function choices(name, label, options, chosen = '') {
 }
 
 /**
- * Builds the localized footer text for the current language.
- * @return {string} Resulting text.
+ * Prepares dialog cancellation and save controls.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Dialog cancellation and save controls.
  */
 function footer() {
   return renderTemplate('closeModal');
@@ -146,7 +146,7 @@ function footer() {
  * Produces the bottle label text used by the caller.
  *
  * @param {*} b Second entry or operand in the calculation.
- * @return {string} Resulting text.
+ * @return {string} Physical-bottle label containing inventory identifier, name and optional sample marker.
  */
 function bottleLabel(b) {
   return warehouseBottleLabel(b);
@@ -156,7 +156,7 @@ function bottleLabel(b) {
  * Read-only bottling facts; missing values are never synthesized.
  *
  * @param {!Object} bottle Physical bottle record being processed.
- * @return {string} Resulting text.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Available bottling facts without invented metadata (or scalar/empty text when no plan is needed).
  */
 function bottleListFacts(bottle) {
   const facts = [
@@ -181,12 +181,12 @@ function bottleListFacts(bottle) {
 }
 
 /**
- * Filters records according to the bottle row selection rules.
+ * Prepares searchable warehouse bottle row including placement and known facts.
  *
  * @param {*} w Width or value used by the calculation.
  * @param {*} bottle Physical bottle record under consideration.
  * @param {boolean=} selected Currently selected item or identifier.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Searchable warehouse bottle row including placement and known facts.
  */
 function bottleRow(w, bottle, selected = false) {
   const place = storagePath(w, w.assignments[bottle.id]);
@@ -238,12 +238,12 @@ function findFurniture(w, furnitureId) {
 }
 
 /**
- * Selects and transforms the room diagram records.
+ * Prepares scaled SVG room plan including its grid and furniture geometry.
  *
  * @param {*} room Warehouse room being inspected or modified.
  * @param {*} w Width or value used by the calculation.
  * @param {string=} layer Value used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Scaled SVG room plan including its grid and furniture geometry.
  */
 function roomDiagram(room, w, layer = 'all') {
   const {vbW, vbH, gridLines, shapes: geometry} = createRoomDiagramModel(room, w, layer);
@@ -278,11 +278,11 @@ function roomDiagram(room, w, layer = 'all') {
 }
 
 /**
- * Builds the localized bottle symbol text for the current language.
+ * Prepares bottle silhouette or missing-photo symbol for the requested context.
  *
  * @param {*} b Second entry or operand in the calculation.
  * @param {!Object=} options Options controlling the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Bottle silhouette or missing-photo symbol for the requested context.
  */
 function bottleSymbol(
   b,
@@ -332,7 +332,7 @@ function bottleSymbol(
  *
  * @param {!Object} bottle Physical bottle record being processed.
  * @param {!Object=} options2 Destructured options for this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Available detail and placement actions for a bottle.
  */
 function bottleActionButtons(bottle, {detailLabelKey =
   'warehouse.bottles.goToDetails'} = {}) {
@@ -357,7 +357,7 @@ function bottleActionButtons(bottle, {detailLabelKey =
  * @param {!Object} bottle Physical bottle record being processed.
  * @param {!Object} bottling Bottling record being processed.
  * @param {*} physicalBottle Physical bottle used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Read-only bottle preview with facts, photo and placement actions.
  */
 function bottlePreview(w, bottle, bottling, physicalBottle) {
   const fields = createBottlePreviewFacts(w, bottle, bottling, physicalBottle);
@@ -382,13 +382,13 @@ function bottlePreview(w, bottle, bottling, physicalBottle) {
 }
 
 /**
- * Selects and transforms the shelf panel records.
+ * Prepares furniture elevation showing compartment sizes and contents.
  *
  * @param {*} w Width or value used by the calculation.
  * @param {*} room Warehouse room being inspected or modified.
  * @param {*} furniture Warehouse furniture record being modified.
  * @param {!Object=} options Options controlling the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Furniture elevation showing compartment sizes and contents.
  */
 function shelfPanel(w, room, furniture, {managementOnly = false} = {}) {
   const {rows, height: furnitureHeight, topSpace} = createShelfPanelModel(w, furniture);

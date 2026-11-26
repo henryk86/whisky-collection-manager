@@ -8,14 +8,14 @@ import {bottlingDetails} from '../../public/js/domain/bottling-details.js';
  * Renders the detail field coverage.test state.
  *
  * @param {!Object=} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {import('../../public/js/ui/render-plan.js').RenderContent} Captured detail view plan used to inspect metadata fields.
  */
 function render({bottlingFields = {}, bottleFields = {}} = {}) {
   const previousDocument = globalThis.document;
   globalThis.document = {
     /**
-     * Derives the query selector all result from the supplied values.
-     * @return {!Array<*>} Resulting entries in their output order.
+     * Simulates an element query with no matches.
+     * @return {Array<never>} Empty match list; the simulated root has no matching elements.
      */
     querySelectorAll: () => [],
   };
@@ -41,20 +41,20 @@ function render({bottlingFields = {}, bottleFields = {}} = {}) {
          */
         bottles: () => [bottle],
         /**
-         * Derives the cover photo result from the supplied values.
-         * @return {string} Resulting text.
+         * Simulates a bottling without a cover photo.
+         * @return {string} Empty path to exercise the no-photo state.
          */
         coverPhoto: () => '',
         /**
-         * Derives the distillery names result from the supplied values.
-         * @return {string} Resulting text.
+         * Omits distillery labels for this test.
+         * @return {string} Empty label; no distillery name is supplied by this fixture.
          */
         distilleryNames: () => '',
       },
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} value Value to process.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
        */
       shell: value => {html = value;},
       /**

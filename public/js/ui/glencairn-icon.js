@@ -15,7 +15,7 @@ export const GLENCAIRN_CAVITY =
  * Renders the Glencairn glass symbol with its requested appearance.
  *
  * @param {!Object=} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {!import('./render-plan.js').RenderPlan} Glass SVG with a clamped liquid fill and requested color.
  */
 export function glencairnSymbol({
   fill = 0,
@@ -45,7 +45,7 @@ export function glencairnSymbol({
  * and the distinctive inner reflection remain visible at every fill level.
  *
  * @param {!Object=} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {!import('./render-plan.js').RenderPlan} Rating glass SVG with a clamped gold liquid fill.
  */
 export function glencairnRatingSymbol({fill = 0, id = 'rating-glass'} = {}) {
   const percent = Math.max(0, Math.min(100, Number(fill) || 0));

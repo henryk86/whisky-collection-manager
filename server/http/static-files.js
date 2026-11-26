@@ -32,7 +32,7 @@ export const SHARED_BROWSER_FILES = new Set([
  * Parses path from its input.
  *
  * @param {*} encoded Value used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Decoded URI path; invalid percent escapes cause a validation error.
  */
 function decodePath(encoded) {
   try {return decodeURIComponent(encoded);}

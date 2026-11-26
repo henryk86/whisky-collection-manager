@@ -8,11 +8,11 @@ import {safe, countryName} from './analytics-components.js';
 const renderTemplate = await loadTemplates('analytics/analytics.html');
 
 /**
- * Builds the localized date boundary text for the current language.
+ * Prepares reporting date boundary input.
  *
  * @param {*} boundary Value used by this operation.
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Reporting date boundary input.
  */
 function dateBoundary(boundary, value) {
   const caption = boundary === 'start' ? t("analytics.filters.from") : t("analytics.filters.until");
@@ -26,10 +26,10 @@ function dateBoundary(boundary, value) {
 }
 
 /**
- * Builds the localized period controls text for the current language.
+ * Prepares reporting period and date-range controls.
  *
  * @param {*} state Current application state.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Reporting period and date-range controls.
  */
 export function periodControls(state) {
   const selected = state.analyticsPeriod || 'month';
@@ -46,18 +46,18 @@ export function periodControls(state) {
  *
  * @param {!Object} state Current application state.
  * @param {!Object} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Collection analysis filters and reset controls.
  */
 export function filterControls(state, options) {
   const filters = state.analyticsFilters || {};
   /**
-   * Transforms the entries used by select.
+   * Prepares labeled analytics filter select.
    *
    * @param {*} name Environment variable or setting name.
    * @param {*} caption Value used by this operation.
    * @param {*} options Options controlling the operation.
    * @param {*} selected Currently selected item or identifier.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Labeled analytics filter select.
    */
   const select = (name, caption, options, selected) =>
     renderTemplate('select', {

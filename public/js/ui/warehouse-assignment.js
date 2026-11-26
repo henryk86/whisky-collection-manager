@@ -18,7 +18,7 @@ const renderTemplate = await loadTemplates('warehouse/warehouse-assignment.html'
  * Derives the safe result from the supplied values.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {string} Escaped scalar text, using empty text for nullish values.
  */
 const safe = value => escapeHtml(String(value ?? ''));
 
@@ -99,12 +99,12 @@ export async function approveShelfCapacityIncrease(warehouse, shelfId,
 }
 
 /**
- * Produces the option text used by the caller.
+ * Prepares select option with explicit selected and disabled states.
  *
  * @param {*} value Value to process.
  * @param {*} label Label shown to the user.
  * @param {!Object=} options Options controlling the operation.
- * @return {string} Resulting text.
+ * @return {!import('./render-plan.js').RenderPlan} Select option with explicit selected and disabled states.
  */
 function option(value, label, {selected = false, disabled = false} = {}) {
   return renderTemplate('option', {
@@ -116,11 +116,11 @@ function option(value, label, {selected = false, disabled = false} = {}) {
 }
 
 /**
- * Transforms the entries used by room options.
+ * Prepares room choices beginning with the unselected placeholder.
  *
  * @param {*} warehouse Value used by this operation.
  * @param {*} selected Currently selected item or identifier.
- * @return {string} Resulting text.
+ * @return {import('./render-plan.js').RenderPlan|string} Room choices beginning with the unselected placeholder (or scalar/empty text when no plan is needed).
  */
 function roomOptions(warehouse, selected) {
   return composeMarkup(
@@ -130,11 +130,11 @@ function roomOptions(warehouse, selected) {
 }
 
 /**
- * Transforms the entries used by furniture options.
+ * Prepares furniture choices in the selected room.
  *
  * @param {*} room Warehouse room being inspected or modified.
  * @param {*} selected Currently selected item or identifier.
- * @return {string} Resulting text.
+ * @return {import('./render-plan.js').RenderPlan|string} Furniture choices in the selected room (or scalar/empty text when no plan is needed).
  */
 function furnitureOptions(room, selected) {
   return composeMarkup(
@@ -144,13 +144,13 @@ function furnitureOptions(room, selected) {
 }
 
 /**
- * Transforms the entries used by shelf options.
+ * Prepares shelf choices including availability and capacity restrictions.
  *
  * @param {*} warehouse Value used by this operation.
  * @param {*} furniture Warehouse furniture record being modified.
  * @param {*} bottleId Value used by this operation.
  * @param {*} selected Currently selected item or identifier.
- * @return {string} Resulting text.
+ * @return {import('./render-plan.js').RenderPlan|string} Shelf choices including availability and capacity restrictions (or scalar/empty text when no plan is needed).
  */
 function shelfOptions(warehouse, furniture, bottleId, selected) {
   return composeMarkup(
@@ -187,7 +187,7 @@ function occupancyMessage(warehouse, shelfId, bottleId) {
  *
  * @param {!Object} warehouse Warehouse model being processed.
  * @param {!Object} bottle Physical bottle record being processed.
- * @return {string} Resulting text.
+ * @return {!import('./render-plan.js').RenderPlan} Storage destination controls for a single bottle or a group.
  */
 export function renderWarehouseAssignment(warehouse, bottle) {
   const isBulk = Array.isArray(bottle);

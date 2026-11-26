@@ -11,8 +11,8 @@ export const GRID_COLUMN_OPTIONS = Object.freeze([1, 2, 3, 4]);
  * Prevent an invalid URL or old page number from making the collection look
  * empty.
  *
- * @param {string=} search Search used by this operation.
- * @return {number} Calculated numeric result.
+ * @param {string=} search URL query string, optionally starting with a question mark.
+ * @return {number} Requested positive page number, or 1 for invalid or absent input.
  */
 export function pageFromSearch(search = '') {
   const raw = new URLSearchParams(search).get('page');
@@ -23,8 +23,8 @@ export function pageFromSearch(search = '') {
 /**
  * Decodes the overview display mode from URL search parameters.
  *
- * @param {string=} search Search used by this operation.
- * @return {(string)} New instance constructed from the inputs.
+ * @param {string=} search URL query string, optionally starting with a question mark.
+ * @return {'bottles'|'bottlings'} Overview unit selected by the URL.
  */
 export function overviewModeFromSearch(search = '') {
   return new URLSearchParams(search).get('mode') === 'bottles' ? 'bottles' : 'bottlings';
@@ -34,9 +34,9 @@ export function overviewModeFromSearch(search = '') {
  * The bottle view has its own shareable URL; old bottling URLs remain
  * unchanged.
  *
- * @param {*} page Page used by this operation.
+ * @param {number} page One-based page number; page 1 uses the base route.
  * @param {string=} mode Requested display mode or configuration variant.
- * @return {string} Resulting text.
+ * @return {string} Relative collection URL including only non-default parameters.
  */
 export function homePageUrl(page, mode = 'bottlings') {
   const params = new URLSearchParams();
@@ -48,10 +48,11 @@ export function homePageUrl(page, mode = 'bottlings') {
 /**
  * Slice after filtering and sorting, never before.
  *
- * @param {!Array<*>} items Items used by this operation.
- * @param {number=} requestedPage Requested page used by this operation.
- * @param {number=} requestedSize Requested size used by this operation.
- * @return {!Object} Structured result for the caller.
+ * @template T
+ * @param {!Array<T>} items Filtered and sorted records; never mutated.
+ * @param {number|string=} requestedPage Requested one-based page, clamped to the available range.
+ * @param {number|string=} requestedSize Requested page size from 1 to 240; invalid sizes use the default.
+ * @return {{items: T[], total: number, page: number, pageCount: number, pageSize: number, from: number, to: number}} Page slice, effective settings and one-based result range (0 for empty results).
  */
 export function paginate(items, requestedPage = 1, requestedSize =
   DEFAULT_PAGE_SIZE) {
@@ -77,9 +78,9 @@ export function paginate(items, requestedPage = 1, requestedSize =
  * Short, predictable page-number list for both desktop and small phone
  * screens.
  *
- * @param {*} current Current resource data to update.
- * @param {*} totalPages Total pages used by this operation.
- * @return {!Array<*>} Resulting list of values.
+ * @param {number} current Current one-based page.
+ * @param {number} totalPages Total available pages.
+ * @return {!Array<number|string>} Ordered visible page numbers with ellipsis strings for gaps.
  */
 export function visiblePages(current, totalPages) {
   if (totalPages <= 7) return Array.from({length: totalPages}, (_, index) => index + 1);

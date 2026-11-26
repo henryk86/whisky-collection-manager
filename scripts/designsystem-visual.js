@@ -356,7 +356,7 @@ async function fitFlightPlanner(width) {
 
 /**
  * Locates the DOM elements used by geometry expression.
- * @return {string} Resulting text.
+ * @return {string} JavaScript expression that serializes page geometry for the visual test runner.
  */
 function geometryExpression() {
   return `JSON.stringify((()=>{

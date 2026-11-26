@@ -9,7 +9,7 @@ const MAX_BYTES = 15 * 1024 * 1024;
  * Formats file size for files.
  *
  * @param {*} bytes Bytes used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Human-readable KB or MB value, or empty text when size is not finite.
  */
 export function formatFileSize(bytes) {
   if (!Number.isFinite(bytes)) return '';

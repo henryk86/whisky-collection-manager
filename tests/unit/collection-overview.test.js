@@ -57,8 +57,8 @@ const sample = () => ({
 });
 const selectors = {
   /**
-   * Derives the distillery names result from the supplied values.
-   * @return {string} Resulting text.
+   * Supplies the fixed distillery label used by this fixture.
+   * @return {string} Fixture label 'Keine Destillerie angegeben'.
    */
   distilleryNames: () => 'Keine Destillerie angegeben',
 };
@@ -232,7 +232,7 @@ test(
     };
     const field = {
       /**
-       * Updates the add event listener state for its caller.
+       * Ignores listener registration in this DOM-free test double.
        */
       addEventListener() {},
     };
@@ -259,8 +259,8 @@ test(
         querySelector: () =>
           field,
         /**
-         * Derives the query selector all result from the supplied values.
-         * @return {!Array<*>} Resulting entries in their output order.
+         * Simulates an element query with no matches.
+         * @return {Array<never>} Empty match list; the simulated root has no matching elements.
          */
         querySelectorAll: () => [],
       };
@@ -287,16 +287,16 @@ test(
            */
           bottles: id => collection.bottlings.find(b => b.id === id)?.bottles || [],
           /**
-           * Derives the cover photo result from the supplied values.
-           * @return {string} Resulting text.
+           * Supplies a fixed cover-photo path for the image rendering assertion.
+           * @return {string} Fixture photo path 'bottling-cover.jpg'.
            */
           coverPhoto: () => 'bottling-cover.jpg',
           distilleryNames: selectors.distilleryNames,
         },
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} value Value to process.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
          */
         shell(value) {html = value;},
       });
@@ -306,10 +306,10 @@ test(
       assert.match(renderedText(html), /data-bottle-id="a-1"[\s\S]*?one\.jpg/);
       assert.match(renderedText(html), /data-bottle-id="a-2"[\s\S]*?two\.jpg/);
       /**
-       * Derives the card for result from the supplied values.
+       * Finds the rendered article for one physical bottle.
        *
        * @param {*} id Identifier of the affected record.
-       * @return {string} Resulting text.
+       * @return {string|undefined} Serialized article with the requested physical-bottle ID, or undefined.
        */
       const cardFor = id => (renderedText(html).match(/<article\b[\s\S]*?<\/article>/g) || []).find(card => renderedText(card).includes(`data-bottle-id="${id}"`));
       assert.match(renderedText(cardFor('a-1')), /src="\/one\.jpg"/);
@@ -477,11 +477,11 @@ test(
       globalThis.location = {pathname: '/', search: ''};
       globalThis.history = {
         /**
-         * Updates the replace state state for its caller.
+         * Suppresses history replacement in the simulated browser.
          */
         replaceState() {},
         /**
-         * Updates the push state state for its caller.
+         * Suppresses history insertion in the simulated browser.
          */
         pushState() {},
       };
@@ -495,18 +495,18 @@ test(
       const view = createHomeView({
         state, selectors: {
           /**
-           * Derives the all bottles result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
+           * Provides an empty collection inventory.
+           * @return {Array<never>} Empty physical inventory in this fixture.
            */
           allBottles: () => [],
           /**
-           * Derives the bottles result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
+           * Provides an empty physical-bottle list.
+           * @return {Array<never>} No physical bottles for the requested bottling.
            */
           bottles: () => [],
           /**
-           * Derives the cover photo result from the supplied values.
-           * @return {*} Result computed from the supplied inputs.
+           * Simulates a missing cover photo.
+           * @return {null} No photo path.
            */
           coverPhoto: () => null,
           /**
@@ -516,9 +516,9 @@ test(
           distilleryNames: () => [],
         },
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} markup HTML markup for the selected content.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
          */
         shell: markup => {html = markup;},
       });
@@ -744,45 +744,45 @@ test(
     try {
       globalThis.document = {
         /**
-         * Derives the query selector result from the supplied values.
-         * @return {*} Result computed from the supplied inputs.
+         * Simulates an element lookup that finds nothing.
+         * @return {null} Null to represent a missing element.
          */
         querySelector: () => null,
       };
       globalThis.location = {pathname: '/', search: ''};
       globalThis.history = {
         /**
-         * Updates the replace state state for its caller.
+         * Suppresses history replacement in the simulated browser.
          */
         replaceState() {},
       };
       const view = createHomeView({
         state, selectors: {
           /**
-           * Derives the all bottles result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
+           * Provides an empty collection inventory.
+           * @return {Array<never>} Empty physical inventory in this fixture.
            */
           allBottles: () => [],
           /**
-           * Derives the bottles result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
+           * Provides an empty physical-bottle list.
+           * @return {Array<never>} No physical bottles for the requested bottling.
            */
           bottles: () => [],
           /**
-           * Derives the cover photo result from the supplied values.
-           * @return {string} Resulting text.
+           * Simulates a bottling without a cover photo.
+           * @return {string} Empty path to exercise the no-photo state.
            */
           coverPhoto: () => '',
           /**
-           * Derives the distillery names result from the supplied values.
-           * @return {string} Resulting text.
+           * Omits distillery labels for this test.
+           * @return {string} Empty label; no distillery name is supplied by this fixture.
            */
           distilleryNames: () => '',
         },
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} html HTML markup to render or inspect.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} html Page content passed by the view.
          */
         shell: html => {markup = html;},
       });

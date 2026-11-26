@@ -33,7 +33,7 @@ const readAllSitesPreference = () => {
  * @param {*} count Number of requested or available entries.
  * @param {*} one Value used by this operation.
  * @param {*} many Value used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Number followed by the singular label for one, otherwise the plural label.
  */
 const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 
@@ -47,19 +47,19 @@ const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 export const legendMarkerDiameter = count => Math.max(21, Math.round(markerDiameter(count) * 0.62));
 const LEGEND_CLUSTER_DIAMETER = 27;
 /**
- * Renders the legend for distillery-map marker types.
+ * Prepares map marker and stock-count legend.
  *
  * @param {boolean=} showAllDistilleries Show all distilleries used by this
  * operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Map marker and stock-count legend.
  */
 export function mapLegendHtml(showAllDistilleries = false) {
   /**
-   * Produces the stock example text used by the caller.
+   * Prepares legend marker demonstrating the size for a bottle count.
    *
    * @param {*} count Number of requested or available entries.
    * @param {string=} extraClass Value used by this operation.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Legend marker demonstrating the size for a bottle count.
    */
   const stockExample = (count, extraClass = '') =>
     renderTemplate('mapStockVisual', {
@@ -108,8 +108,8 @@ export function createMapView({state, shell, navigate, settings}) {
   let priorFocusId = null;
 
   /**
-   * Transforms the entries used by related sites html.
-   * @return {string} Resulting text.
+   * Prepares locations associated with the focused bottling.
+   * @return {import('../ui/render-plan.js').RenderPlan|string} Locations associated with the focused bottling (or scalar/empty text when no plan is needed).
    */
   function relatedSitesHtml() {
     if (!relatedBottling) return '';
@@ -129,8 +129,8 @@ export function createMapView({state, shell, navigate, settings}) {
   }
 
   /**
-   * Selects and transforms the sidebar html records.
-   * @return {string} Resulting text.
+   * Prepares selected distillery details with filtered and paginated bottlings.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Selected distillery details with filtered and paginated bottlings.
    */
   function sidebarHtml() {
     const {selected, totalPages, currentPage, entries} =
@@ -185,8 +185,8 @@ export function createMapView({state, shell, navigate, settings}) {
   }
 
   /**
-   * Filters records according to the missing html selection rules.
-   * @return {string} Resulting text.
+   * Prepares missing-location panel with search and result controls.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Missing-location panel with search and result controls.
    */
   function missingHtml() {
     const model = createMapMissingModel(missing, missingFilter);
@@ -199,10 +199,10 @@ export function createMapView({state, shell, navigate, settings}) {
   }
 
   /**
-   * Transforms the entries used by missing rows.
+   * Prepares rows of distilleries without coordinates, or a no-results message.
    *
    * @param {*} items Entries to process.
-   * @return {string} Resulting text.
+   * @return {import('../ui/render-plan.js').RenderPlan|string} Rows of distilleries without coordinates, or a no-results message (or scalar/empty text when no plan is needed).
    */
   function missingRows({items, more}) {
     return items.length ? composeMarkup(

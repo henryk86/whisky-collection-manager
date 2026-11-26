@@ -147,12 +147,13 @@ function profiles() {
 }
 
 /**
- * Normalizes the string text for subsequent processing.
+ * Validates and trims a required bounded text field.
  *
- * @param {*} value Value to process.
- * @param {*} title Title displayed or stored by this operation.
- * @param {number=} max Maximum accepted value.
- * @return {string} Resulting text.
+ * @param {*} value Untrusted text value.
+ * @param {string} title Field identifier used in validation errors.
+ * @param {number=} max Maximum input length before trimming.
+ * @return {string} Nonempty trimmed text.
+ * @throws {Error} HTTP 400 validation error for missing, non-string or oversized input.
  */
 function string(value, title, max = 80) {
   if (typeof value !== 'string' || !value.trim() || value.length > max) throw fail(`${title}: ungültiger Wert`, 400, "api.errors.invalidField", {field: title});
@@ -160,13 +161,14 @@ function string(value, title, max = 80) {
 }
 
 /**
- * Derives the number numeric value from its input.
+ * Validates an integer against inclusive bounds without coercing strings.
  *
- * @param {*} value Value to process.
- * @param {*} min Minimum accepted value.
- * @param {*} max Maximum accepted value.
- * @param {*} label Label shown to the user.
- * @return {*} Result computed from the supplied inputs.
+ * @param {*} value Untrusted integer candidate.
+ * @param {number} min Inclusive lower limit.
+ * @param {number} max Inclusive upper limit.
+ * @param {string} label Field identifier for validation errors.
+ * @return {number} Validated integer.
+ * @throws {Error} HTTP 400 error when the value is not an integer in range.
  */
 function number(value, min, max, label) {
   if (!Number.isInteger(value) || value < min || value > max) throw fail(`${label}: außerhalb des gültigen Bereichs`, 400, "api.errors.fieldOutOfRange", {field: label});
@@ -174,10 +176,11 @@ function number(value, min, max, label) {
 }
 
 /**
- * Validates relative path for backups.
+ * Restricts backup destinations to non-hidden relative path segments without traversal.
  *
- * @param {*} value Input value to process.
- * @return {string} Resulting text.
+ * @param {*} value Untrusted destination path.
+ * @return {string} Trimmed, validated relative path with forward slashes.
+ * @throws {Error} HTTP 400 error for invalid paths.
  */
 export function validateRelativePath(value) {
   const text = string(value, 'targetPath', 180);
@@ -192,10 +195,11 @@ export function validateRelativePath(value) {
 }
 
 /**
- * Validates profile for backups.
+ * Validates a new ZIP backup configuration and normalizes schedule and retention defaults.
  *
- * @param {*} input Input to process.
- * @return {!Object} Structured result for the caller.
+ * @param {*} input Untrusted profile request body.
+ * @return {import('../../shared/backup-profile-types.js').BackupProfileConfig} Validated configuration; no credentials or generated ID.
+ * @throws {Error} HTTP 400 error for unsupported providers, legacy write formats, invalid destination or retention and schedule fields.
  */
 export function validateProfile(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw fail('Ungültiges Backup-Profil', 400, "api.errors.invalidBackupProfile");
@@ -314,7 +318,7 @@ function assertDistinctTarget(existing, candidate, excludeId = null) {
    * Normalizes the key text for subsequent processing.
    *
    * @param {*} item Current item under consideration.
-   * @return {string} Resulting text.
+   * @return {string} Case-insensitive storage-target identity, including Rclone remote for cloud targets.
    */
   const key = item => item.provider === 'local'
     ? `local:${item.targetPath.toLowerCase()}`

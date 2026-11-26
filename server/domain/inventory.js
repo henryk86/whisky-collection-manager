@@ -7,7 +7,7 @@ import {allBottles} from './collection.js';
  * Finds an available inventory number without reusing reserved numbers.
  *
  * @param {*} db Db used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Next unused six-digit inventory number, excluding reserved numbers.
  */
 export function suggestNumber(db) {
   const used = new Set([...db.reservedInventoryNumbers, ...allBottles(db).map(b => b.inventoryNumber).filter(Boolean),]);

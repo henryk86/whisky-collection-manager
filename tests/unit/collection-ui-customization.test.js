@@ -26,7 +26,7 @@ function renderHome(establishedYear, bottlings = [], physicalBottles = [],
   try {
     const field = {
       /**
-       * Updates the add event listener state for its caller.
+       * Ignores listener registration in this DOM-free test double.
        */
       addEventListener() {},
     };
@@ -38,8 +38,8 @@ function renderHome(establishedYear, bottlings = [], physicalBottles = [],
       querySelector: () =>
         field,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -75,22 +75,22 @@ function renderHome(establishedYear, bottlings = [], physicalBottles = [],
        */
       bottles: bottleId => bottlings.find(b => b.id === bottleId)?.bottles || [],
       /**
-       * Derives the cover photo result from the supplied values.
-       * @return {string} Resulting text.
+       * Simulates a bottling without a cover photo.
+       * @return {string} Empty path to exercise the no-photo state.
        */
       coverPhoto: () => '',
       /**
-       * Derives the distillery names result from the supplied values.
-       * @return {string} Resulting text.
+       * Supplies the fixed distillery label used by this fixture.
+       * @return {string} Fixture label 'Talisker'.
        */
       distilleryNames: () => 'Talisker',
     };
     createHomeView({
       state, selectors,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} content Content to render, store or examine.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
        */
       shell: content => {html = content;},
     })();

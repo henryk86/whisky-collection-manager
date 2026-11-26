@@ -16,10 +16,10 @@ const statusKeys = {
 };
 
 /**
- * Renders warehouse finder results for warehouse finder.
+ * Prepares warehouse search results and matching-count summary.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Warehouse search results and matching-count summary.
  */
 export function renderWarehouseFinderResults({items, total, page, pages}) {
   const count =
@@ -67,10 +67,10 @@ export function renderWarehouseFinderResults({items, total, page, pages}) {
 }
 
 /**
- * Renders warehouse finder for warehouse finder.
+ * Prepares warehouse bottle search with assignment-status filters.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Warehouse bottle search with assignment-status filters.
  */
 export function renderWarehouseFinder({query, placement, results}) {
   const filters = [

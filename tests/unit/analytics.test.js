@@ -124,9 +124,9 @@ test(
     const render = createAnalyticsView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} value Value to process.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
        */
       shell: value => {
         html = value;
@@ -286,9 +286,9 @@ test('analytics: date range applies to actual days, not entire months', () => {
   createAnalyticsView({
     state,
     /**
-     * Updates the shell state for its caller.
+     * Captures the rendered page in the fixture for later assertions.
      *
-     * @param {*} output Output resource or accumulated result.
+     * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
      */
     shell: output => {html = output;},
   })();
@@ -329,9 +329,9 @@ test('analytics: last ranked distillery stays an interactive link', () => {
   createAnalyticsView({
     state,
     /**
-     * Updates the shell state for its caller.
+     * Captures the rendered page in the fixture for later assertions.
      *
-     * @param {*} value Value to process.
+     * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
      */
     shell: value => {html = value;},
   })();
@@ -428,9 +428,9 @@ test(
     createAnalyticsView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} value Value to process.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
        */
       shell: value => {html = value;},
     })();
@@ -442,9 +442,9 @@ test(
     createAnalyticsView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} value Value to process.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
        */
       shell: value => {html = value;},
     })();
@@ -455,9 +455,9 @@ test(
     createAnalyticsView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} value Value to process.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
        */
       shell: value => {html = value;},
     })();

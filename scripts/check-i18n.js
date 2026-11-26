@@ -72,7 +72,7 @@ for (const code of Object.keys(registry)) {
      * Orders the params records using the configured comparison.
      *
      * @param {*} message Message to display or use for diagnostics.
-     * @return {string} Resulting text.
+     * @return {string} Sorted comma-separated placeholder names, including plural selectors.
      */
     const params = message => [
       ...[...message.matchAll(/\{([a-zA-Z]\w*)\}/gu)].map(match => match[1]),

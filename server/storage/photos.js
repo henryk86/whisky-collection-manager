@@ -12,7 +12,7 @@ import {assert} from '../domain/errors.js';
  * @param {string} id Identifier used to select the relevant record.
  * @param {string} kind Resource kind selecting the relevant schema.
  * @param {*} ext Ext used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Relative stored-image path for the selected owner, derivative kind and extension.
  */
 export function imagePath(id, kind, ext) {
   return `images/${id}/${kind}.${ext}`;
@@ -82,7 +82,7 @@ export function validateImageData(base64) {
  * @param {*} base64 Base64 used by this operation.
  * @param {string} id Identifier used to select the relevant record.
  * @param {string} kind Resource kind selecting the relevant schema.
- * @return {string} Resulting text.
+ * @return {string} Relative path to the validated image written to disk.
  */
 export function saveImage(base64, id, kind) {
   const {bytes, ext} = validateImageData(base64);

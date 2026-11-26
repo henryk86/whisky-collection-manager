@@ -21,18 +21,18 @@ const FORM_IMPORT = 'warehouse-room-import-form';
  * @param {*} rooms Rooms used by this operation.
  * @param {*} selectedRoomId Selected room id used by this operation.
  * @param {string=} initialMode Initial mode used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Room import and export dialog with the appropriate initial tab.
  */
 export function roomTransferMarkup(rooms, selectedRoomId, initialMode =
   'export') {
   const exportAvailable = rooms.length > 0;
   const mode = exportAvailable && initialMode !== 'import' ? 'export' : 'import';
   /**
-   * Produces the tab text used by the caller.
+   * Prepares room-transfer tab with selection and panel association.
    *
    * @param {*} name Environment variable or setting name.
    * @param {*} label Label shown to the user.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Room-transfer tab with selection and panel association.
    */
   const tab = (name, label) =>
     renderTemplate('warehouseTransferTabButton', {

@@ -51,8 +51,8 @@ export function createTastingFlightController({state, selectors, shell, navigate
   const flightList = () => [...(state.collection?.tastingFlights || [])].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
 
   /**
-   * Transforms the entries used by home flights.
-   * @return {string} Resulting text.
+   * Prepares flight overview with planning and navigation actions.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Flight overview with planning and navigation actions.
    */
   function homeFlights() {
     const flights = flightList();
@@ -102,9 +102,8 @@ export function createTastingFlightController({state, selectors, shell, navigate
   }
 
   /**
-   * Builds the localized flight planning help button text for the current
-   * language.
-   * @return {string} Resulting text.
+   * Prepares accessible flight-planning help button.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Accessible flight-planning help button.
    */
   function flightPlanningHelpButton() {
     return helpIconButton({label: t('flightPlan.help.title')});
@@ -351,10 +350,10 @@ export function createTastingFlightController({state, selectors, shell, navigate
   }
 
   /**
-   * Selects and transforms the planned flight detail records.
+   * Prepares planned flight details, editable member list and available actions.
    *
    * @param {*} current Value used by this operation.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Planned flight details, editable member list and available actions.
    */
   function plannedFlightDetail(current) {
     const model = createPlannedFlightViewModel(current, state.collection, state.warehouse, selectors);
@@ -536,7 +535,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
    * Produces the flight entry label text used by the caller.
    *
    * @param {*} item Current item under consideration.
-   * @return {string} Resulting text.
+   * @return {string} Whisky name, optional tasting title and formatted date for a flight entry.
    */
   const flightEntryLabel = item => `${item.bottling?.name || ''}${item.record.title ? ` · ${item.record.title}` : ''} · ${formatDate(item.record.tastedOn || '')}`;
 
@@ -582,11 +581,11 @@ export function createTastingFlightController({state, selectors, shell, navigate
     }
     const {refs, available} = createRecordedFlightViewModel(state.collection, current);
     /**
-     * Builds the localized entry row text for the current language.
+     * Prepares flight member row with reorder and removal controls.
      *
      * @param {*} item Current item under consideration.
      * @param {*} i Position in the iteration.
-     * @return {string} Resulting text.
+     * @return {!import('../ui/render-plan.js').RenderPlan} Flight member row with reorder and removal controls.
      */
     const entryRow = (item, i) =>
       renderTemplate('tastingFlightMember', {

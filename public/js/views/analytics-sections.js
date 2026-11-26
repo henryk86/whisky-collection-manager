@@ -9,10 +9,10 @@ import {number, money, categoryLabel, countryName, safe, empty, panel, metric, m
 const renderTemplate = await loadTemplates('analytics/analytics.html');
 
 /**
- * Builds the localized inventory text for the current language.
+ * Prepares inventory analysis panels and stock breakdowns.
  *
  * @param {*} analytics Calculated analytics data for this view.
- * @return {string} Resulting text.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Inventory analysis panels and stock breakdowns (or scalar/empty text when no plan is needed).
  */
 export function inventory(analytics) {
   const {scope, inventory: inv} = analytics;
@@ -57,10 +57,10 @@ export function inventory(analytics) {
 }
 
 /**
- * Transforms the entries used by provenance.
+ * Prepares origin and distillery analysis panels.
  *
  * @param {*} analytics Calculated analytics data for this view.
- * @return {string} Resulting text.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Origin and distillery analysis panels (or scalar/empty text when no plan is needed).
  */
 export function provenance(analytics) {
   const d = analytics.provenance;
@@ -91,10 +91,10 @@ export function provenance(analytics) {
 }
 
 /**
- * Orders the profile records using the configured comparison.
+ * Prepares whisky composition and tasting profile panels.
  *
  * @param {*} analytics Calculated analytics data for this view.
- * @return {string} Resulting text.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Whisky composition and tasting profile panels (or scalar/empty text when no plan is needed).
  */
 export function profile(analytics) {
   const d = analytics.profile;
@@ -159,11 +159,11 @@ export function profile(analytics) {
 }
 
 /**
- * Selects and transforms the finance records.
+ * Prepares financial analysis grouped by currency.
  *
  * @param {*} analytics Calculated analytics data for this view.
  * @param {*} state Current application state.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Financial analysis grouped by currency.
  */
 export function finance(analytics, state) {
   const {finance: d, scope} = analytics;
@@ -243,11 +243,11 @@ export function finance(analytics, state) {
 }
 
 /**
- * Transforms the entries used by timeline.
+ * Prepares collection and consumption time-series panels.
  *
  * @param {*} analytics Calculated analytics data for this view.
  * @param {*} state Current application state.
- * @return {string} Resulting text.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Collection and consumption time-series panels (or scalar/empty text when no plan is needed).
  */
 export function timeline(analytics, state) {
   const timelineData = analytics.timeline, rating = analytics.tasting, duration = analytics.consumption;
@@ -313,18 +313,18 @@ export function timeline(analytics, state) {
 }
 
 /**
- * Transforms the entries used by quality.
+ * Prepares metadata completeness and missing-data panels.
  *
  * @param {*} analytics Calculated analytics data for this view.
- * @return {string} Resulting text.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Metadata completeness and missing-data panels (or scalar/empty text when no plan is needed).
  */
 export function quality(analytics) {
   const d = analytics.quality;
   /**
-   * Transforms the entries used by rows.
+   * Prepares table rows for the supplied overview data.
    *
    * @param {*} entries Value used by this operation.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Table rows for the supplied overview data.
    */
   const rows = entries => detailsTable(
     [
@@ -361,11 +361,11 @@ export function quality(analytics) {
 }
 
 /**
- * Produces the section card text used by the caller.
+ * Prepares overview navigation card for an analysis section.
  *
  * @param {*} page Page or view being rendered or selected.
  * @param {*} stat Value used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Overview navigation card for an analysis section.
  */
 function sectionCard(page, stat) {
   return renderTemplate('analyticsSection', {
@@ -378,11 +378,11 @@ function sectionCard(page, stat) {
 }
 
 /**
- * Transforms the entries used by overview.
+ * Prepares analytics overview with key metrics and section navigation.
  *
  * @param {*} analytics Calculated analytics data for this view.
  * @param {!Array<!Object>} pages Available analytics pages.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Analytics overview with key metrics and section navigation.
  */
 export function overview(analytics, pages) {
   const s = analytics.scope, p = analytics.provenance;

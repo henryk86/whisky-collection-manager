@@ -125,7 +125,7 @@ let warehouseIdentity = null;
 let warehouseRevision = crypto.randomUUID();
 /**
  * Produces the identity text used by the caller.
- * @return {string} Resulting text.
+ * @return {string} Warehouse file metadata fingerprint for cache invalidation.
  */
 function identity() {
   const {dev, ino, size, mtimeMs, ctimeMs} = fs.statSync(WAREHOUSE_FILE);

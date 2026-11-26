@@ -11,7 +11,7 @@ const bottling = {id: 'b1', name: 'Sample', tastings: [], distillery: 'Demo'};
  *
  * @param {*} page Page or view being rendered or selected.
  * @param {*} tastingId Value used by this operation.
- * @return {string} Resulting text.
+ * @return {import('../../public/js/ui/render-plan.js').RenderContent} Captured tasting page plan for the requested route.
  */
 const render = (page, tastingId) => {
   let html = '';
@@ -24,15 +24,15 @@ const render = (page, tastingId) => {
   const view = createTastingsView({
     state,
     /**
-     * Updates the shell state for its caller.
+     * Captures the rendered page in the fixture for later assertions.
      *
-     * @param {*} value Value to process.
+     * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
      */
     shell: value => {
       html = value;
     },
     /**
-     * Updates the navigate state for its caller.
+     * Suppresses navigation so the scenario can inspect the current view.
      */
     navigate() {},
     /**

@@ -35,14 +35,14 @@ test(
     const warehouse = {rooms, bottles: [], assignments: {}};
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () =>
         null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -50,13 +50,13 @@ test(
       const view = createWarehouseView({
         state: {warehouse, selected: 'overview'},
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} value Value to process.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
          */
         shell: value => {html = value;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},

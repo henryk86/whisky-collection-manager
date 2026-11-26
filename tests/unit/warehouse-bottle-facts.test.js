@@ -110,8 +110,8 @@ test(
         }
         : selector === '.warehouse-unassigned-tray--embedded' ? tray : null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
       /**
@@ -124,9 +124,9 @@ test(
       const view = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} markup HTML markup for the selected content.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
          */
         shell: markup => {html = markup;},
         modal: {},

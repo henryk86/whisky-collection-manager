@@ -73,16 +73,15 @@ test(
       },
       /**
        * Derives the bottling form result from the supplied values.
-       * @return {string} Resulting text.
+       * @return {string} Minimal bottling-form fixture containing the expected ID.
        */
       bottlingForm: () => '<form id="bottling-form"></form>',
       /**
-       * Produces the bottle form text used by the caller.
+       * Supplies the real physical-bottle form builder for the selection scenario.
        *
-       * @param {*} _ Unused route parameter retained for the callback
-       *     signature.
-       * @param {*} id Identifier of the affected record.
-       * @return {string} Resulting text.
+       * @param {Object=} _ Existing bottle draft or empty defaults.
+       * @param {string} id Parent bottling identifier.
+       * @return {import('../../public/js/ui/render-plan.js').RenderPlan} Physical-bottle editor plan.
        */
       bottleForm: createBottleForm({
         state, selectors: {
@@ -106,11 +105,11 @@ test(
        */
       closeModal() {},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
-       * Updates the action state for its caller.
+       * Suppresses action execution in this rendering-only scenario.
        */
       action() {},
       /**

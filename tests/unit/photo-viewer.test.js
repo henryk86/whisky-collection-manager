@@ -38,8 +38,8 @@ function thumbnail(src, alt, gallery) {
      */
     closest: key => key === '[data-photo-list]' ? gallery : null,
     /**
-     * Derives the matches result from the supplied values.
-     * @return {boolean} Whether the operation matched or succeeded.
+     * Simulates an element that does not match the selector.
+     * @return {boolean} Always false in this selector fixture.
      */
     matches: () => false,
   };
@@ -126,7 +126,7 @@ function harness({
     viewer, buttons, calls, focus, currentImage, caption, counter,
     /**
      * Reads the html property from the current state.
-     * @return {string} Resulting text.
+     * @return {import('../../public/js/ui/render-plan.js').RenderContent} Last captured photo-viewer content.
      */
     get html() {return html;},
     /**

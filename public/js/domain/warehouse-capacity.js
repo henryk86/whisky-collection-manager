@@ -44,7 +44,7 @@ export function totalCapacity(warehouse) {
  * Formats a shelf or furniture capacity for the interface.
  *
  * @param {*} summary Summary used by this operation.
- * @return {string} Resulting text.
+ * @return {string} German capacity label distinguishing fixed spaces, unlimited compartments and missing shelves.
  */
 export function capacityLabel(summary) {
   if (summary.shelves === 0) return 'Noch keine Fächer';

@@ -64,7 +64,7 @@ export function compareVersions(left, right) {
  *
  * @param {*} current Current resource data to update.
  * @param {*} part Part used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Semantic version after incrementing the selected component and resetting lower components.
  */
 export function nextVersion(current, part) {
   const [major, minor, patch] = parseVersion(current);
@@ -170,7 +170,7 @@ function syncReadme() {
  * @param {*} version Version used by this operation.
  * @param {*} note Note used by this operation.
  * @param {*} date Date value to process.
- * @return {string} Resulting text.
+ * @return {string} Markdown status document recording that checks for the new release are pending.
  */
 export function pendingTestStatus(version, note, date) {
   parseVersion(version);

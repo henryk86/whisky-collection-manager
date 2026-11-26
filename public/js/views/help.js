@@ -28,7 +28,7 @@ export const HELP_TOPICS = Object.freeze([
  * Help and Analytics share the same sidebar / mobile-selector layout.
  *
  * @param {string=} activeTopic Active topic used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Help topic navigation and localized content panels.
  */
 export function helpView(activeTopic = 'basics') {
   const {current, topics} = createHelpViewModel(HELP_TOPICS, activeTopic);

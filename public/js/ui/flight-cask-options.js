@@ -31,7 +31,7 @@ const featureField = (group, dimension, value) => `flight-cask-feature-${group}-
  * Renders optional category-scoped criteria using shared form fields.
  * All groups and dimensions come from the same domain vocabulary.
  * @param {function(string): string} t Translation lookup.
- * @return {string} Planner controls with initially hidden refinements.
+ * @return {!import('./render-plan.js').RenderPlan} Planner cask-category controls and initially hidden refinements.
  */
 export function flightCaskOptionsHtml(t) {
   const prefix = 'flightPlan.caskAge.';

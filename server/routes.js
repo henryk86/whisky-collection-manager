@@ -31,8 +31,8 @@ const routes = [
   {
     method: 'GET', path: /^\/api\/version$/,
     /**
-     * Derives the run result from the supplied values.
-     * @return {!Object} Result computed from the supplied inputs.
+     * Reports the running package version.
+     * @return {{version: string}} Installed application version.
      */
     run: () => ({version}),
   },
@@ -40,12 +40,12 @@ const routes = [
     method: 'GET',
     path: /^\/api\/auth\/session$/,
     /**
-     * Derives the run result from the supplied values.
+     * Reports the login requirement and active session without returning credentials.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof auth.sessionInfo>} Authentication status.
      */
     run: (_, _body, req) => auth.sessionInfo(req),
   },
@@ -53,13 +53,13 @@ const routes = [
     method: 'POST',
     path: /^\/api\/auth\/login$/,
     /**
-     * Derives the run result from the supplied values.
+     * Authenticates credentials and lets the service set the session cookie.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @param {*} res Response object to update.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Username and password fields.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @param {import('node:http').ServerResponse} res Response whose session cookie is set or expired.
+     * @return {ReturnType<typeof auth.login>} Authenticated session status.
      */
     run: (_, body, req, res) => auth.login(req, body, res),
   },
@@ -68,13 +68,13 @@ const routes = [
     path: /^\/api\/auth\/logout$/,
     skipBody: true,
     /**
-     * Derives the run result from the supplied values.
+     * Ends the current session and expires its cookie.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @param {*} res Response object to update.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @param {import('node:http').ServerResponse} res Response whose session cookie is set or expired.
+     * @return {ReturnType<typeof auth.logout>} Logged-out authentication status.
      */
     run: (_, _body, req, res) => auth.logout(req, res),
   },
@@ -82,13 +82,13 @@ const routes = [
     method: 'POST',
     path: /^\/api\/auth\/password$/,
     /**
-     * Derives the run result from the supplied values.
+     * Replaces the current account password and rotates its session cookie.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @param {*} res Response object to update.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Current and replacement password fields.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @param {import('node:http').ServerResponse} res Response whose session cookie is set or expired.
+     * @return {ReturnType<typeof auth.changePassword>} Updated session status.
      */
     run: (_, body, req, res) => auth.changePassword(req, body, res),
   },
@@ -96,12 +96,12 @@ const routes = [
     method: 'GET',
     path: /^\/api\/auth\/users$/,
     /**
-     * Derives the run result from the supplied values.
+     * Lists public account metadata for the authorized administrator.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof auth.listUsers>} User-management state.
      */
     run: (_, _body, req) => auth.listUsers(req),
   },
@@ -110,12 +110,12 @@ const routes = [
     path: /^\/api\/auth\/users$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates a standard account that must change its password at first login.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Username and initial password.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof auth.createUser>} New public account.
      */
     run: (_, body, req) => auth.createUser(req, body),
   },
@@ -123,12 +123,12 @@ const routes = [
     method: 'POST',
     path: /^\/api\/auth\/users\/([\w-]+)\/reset-password$/,
     /**
-     * Derives the run result from the supplied values.
+     * Sets a temporary password for another account and invalidates its sessions.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured user identifier or route value.
+     * @param {*} body Untrusted JSON: Replacement password.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof auth.resetPassword>} Updated public account.
      */
     run: ([id], body, req) => auth.resetPassword(req, id, body),
   },
@@ -136,12 +136,12 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/auth\/users\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Removes a non-admin account and invalidates its sessions.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured user identifier or route value.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof auth.removeUser>} Deletion confirmation.
      */
     run: ([id], _body, req) => auth.removeUser(req, id),
   },
@@ -149,12 +149,12 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/auth\/config$/,
     /**
-     * Derives the run result from the supplied values.
+     * Persists the administrator’s optional-login preference.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Boolean required setting.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof auth.setLoginRequired>} Updated login requirement.
      */
     run: (_, body, req) => auth.setLoginRequired(req, body),
   },
@@ -162,8 +162,8 @@ const routes = [
     method: 'GET',
     path: /^\/api\/warehouse$/,
     /**
-     * Derives the run result from the supplied values.
-     * @return {*} Result computed from the supplied inputs.
+     * Loads the current warehouse, including its projected inventory.
+     * @return {ReturnType<typeof warehouse.getWarehouse>} Current warehouse state.
      */
     run: () => warehouse.getWarehouse(),
   },
@@ -171,11 +171,11 @@ const routes = [
     method: 'POST',
     path: /^\/api\/warehouse\/rooms\/export$/,
     /**
-     * Derives the run result from the supplied values.
+     * Exports selected room layouts with optional inventory assignments.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Room IDs and assignment inclusion option.
+     * @return {ReturnType<typeof warehouse.exportRooms>} Room-transfer document.
      */
     run: (_, body) => warehouse.exportRooms(body),
   },
@@ -183,11 +183,11 @@ const routes = [
     method: 'POST',
     path: /^\/api\/warehouse\/rooms\/import\/preview$/,
     /**
-     * Derives the run result from the supplied values.
+     * Computes import conflicts and a preview without committing warehouse changes.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Room-transfer document and conflict/assignment options.
+     * @return {ReturnType<typeof warehouse.previewRoomImport>} Proposed import summary.
      */
     run: (_, body) => warehouse.previewRoomImport(body),
   },
@@ -195,11 +195,11 @@ const routes = [
     method: 'POST',
     path: /^\/api\/warehouse\/rooms\/import$/,
     /**
-     * Derives the run result from the supplied values.
+     * Applies the validated room transfer in a warehouse mutation.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Room-transfer document and conflict/assignment options.
+     * @return {ReturnType<typeof warehouse.importRooms>} Committed import summary.
      */
     run: (_, body) => warehouse.importRooms(body),
   },
@@ -208,11 +208,11 @@ const routes = [
     path: /^\/api\/warehouse\/rooms$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Adds a storage room after its dimensions and name are validated.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: New room fields.
+     * @return {ReturnType<typeof warehouse.createRoom>} Created room.
      */
     run: (_, body) => warehouse.createRoom(body),
   },
@@ -220,11 +220,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/warehouse\/rooms\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Updates the selected room while retaining layout constraints.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured room identifier or route value.
+     * @param {*} body Untrusted JSON: Room changes.
+     * @return {ReturnType<typeof warehouse.updateRoom>} Updated room.
      */
     run: ([id], body) => warehouse.updateRoom(id, body),
   },
@@ -232,12 +232,13 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/warehouse\/rooms\/([\w-]+)$/,
     /**
-     * Validates the run state and rejects invalid inputs.
+     * Deletes the selected room; the query option controls whether assigned bottles may be unassigned.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured room identifier or route value.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof warehouse.deleteRoom>} Room deletion result.
+     * @throws {import('./domain/errors.js').HttpError} HTTP 400 for an invalid unassignBottles query value.
      */
     run: ([id], _body, req) => {
       const option = new URL(req.url, 'http://localhost').searchParams.get('unassignBottles');
@@ -250,11 +251,11 @@ const routes = [
     path: /^\/api\/warehouse\/rooms\/([\w-]+)\/furniture$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates a furniture item inside the identified room.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured room identifier or route value.
+     * @param {*} body Untrusted JSON: Furniture layout fields.
+     * @return {ReturnType<typeof warehouse.createFurniture>} Created furniture item.
      */
     run: ([id], body) => warehouse.createFurniture(id, body),
   },
@@ -262,11 +263,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/warehouse\/furniture\/bulk$/,
     /**
-     * Derives the run result from the supplied values.
+     * Applies selected bulk furniture changes together.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Selected furniture IDs and update fields.
+     * @return {ReturnType<typeof warehouse.bulkUpdateFurniture>} Bulk mutation result.
      */
     run: (_, body) => warehouse.bulkUpdateFurniture(body),
   },
@@ -274,11 +275,11 @@ const routes = [
     method: 'POST',
     path: /^\/api\/warehouse\/furniture\/bulk\/delete$/,
     /**
-     * Derives the run result from the supplied values.
+     * Deletes the selected furniture in a bulk mutation.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Selected furniture IDs and deletion options.
+     * @return {ReturnType<typeof warehouse.bulkDeleteFurniture>} Bulk deletion result.
      */
     run: (_, body) => warehouse.bulkDeleteFurniture(body),
   },
@@ -286,11 +287,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Updates the selected furniture layout and configuration.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {*} body Untrusted JSON: Furniture changes.
+     * @return {ReturnType<typeof warehouse.updateFurniture>} Updated furniture item.
      */
     run: ([id], body) => warehouse.updateFurniture(id, body),
   },
@@ -298,10 +299,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Deletes the selected furniture subject to assignment constraints.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured furniture identifier or route value.
+     * @return {ReturnType<typeof warehouse.deleteFurniture>} Furniture deletion result.
      */
     run: ([id]) => warehouse.deleteFurniture(id),
   },
@@ -310,11 +311,11 @@ const routes = [
     path: /^\/api\/warehouse\/furniture\/([\w-]+)\/photos$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Stores a photo for the selected furniture item.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {*} body Untrusted JSON: Encoded image data.
+     * @return {ReturnType<typeof warehouse.addFurniturePhoto>} Added furniture photo.
      */
     run: ([id], body) => warehouse.addFurniturePhoto(id, body),
   },
@@ -322,11 +323,11 @@ const routes = [
     method: 'PUT',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)\/photos\/order$/,
     /**
-     * Derives the run result from the supplied values.
+     * Persists the requested order of existing furniture photos.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {*} body Untrusted JSON: Ordered photo IDs.
+     * @return {ReturnType<typeof warehouse.reorderFurniturePhotos>} Updated photo order.
      */
     run: ([id], body) => warehouse.reorderFurniturePhotos(id, body),
   },
@@ -334,10 +335,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/warehouse\/furniture\/([\w-]+)\/photos\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Removes a specified photo from its owning furniture item.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string, string]} items Captured furniture and photo identifiers or route values, in that order.
+     * @return {ReturnType<typeof warehouse.deleteFurniturePhoto>} Furniture photo deletion result.
      */
     run: ([id, photoId]) => warehouse.deleteFurniturePhoto(id, photoId),
   },
@@ -346,11 +347,11 @@ const routes = [
     path: /^\/api\/warehouse\/furniture\/([\w-]+)\/copy$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Copies the selected furniture into the requested storage location.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {*} body Untrusted JSON: Copy destination and options.
+     * @return {ReturnType<typeof warehouse.copyFurniture>} Copied furniture item.
      */
     run: ([id], body) => warehouse.copyFurniture(id, body),
   },
@@ -359,11 +360,11 @@ const routes = [
     path: /^\/api\/warehouse\/furniture\/([\w-]+)\/shelves$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates a compartment in the selected furniture item.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured furniture identifier or route value.
+     * @param {*} body Untrusted JSON: Shelf configuration.
+     * @return {ReturnType<typeof warehouse.createShelf>} Created shelf.
      */
     run: ([id], body) => warehouse.createShelf(id, body),
   },
@@ -371,11 +372,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/warehouse\/shelves\/([\w-]+)\/move$/,
     /**
-     * Derives the run result from the supplied values.
+     * Moves a shelf according to the requested target and ordering.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured shelf identifier or route value.
+     * @param {*} body Untrusted JSON: Target compartment position.
+     * @return {ReturnType<typeof warehouse.moveShelf>} Shelf movement result.
      */
     run: ([id], body) => warehouse.moveShelf(id, body),
   },
@@ -383,11 +384,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/warehouse\/shelves\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Updates a shelf’s name, capacity or front and height settings.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured shelf identifier or route value.
+     * @param {*} body Untrusted JSON: Shelf changes.
+     * @return {ReturnType<typeof warehouse.updateShelf>} Updated shelf.
      */
     run: ([id], body) => warehouse.updateShelf(id, body),
   },
@@ -395,10 +396,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/warehouse\/shelves\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Removes the selected shelf subject to storage constraints.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured shelf identifier or route value.
+     * @return {ReturnType<typeof warehouse.deleteShelf>} Shelf deletion result.
      */
     run: ([id]) => warehouse.deleteShelf(id),
   },
@@ -407,11 +408,11 @@ const routes = [
     path: /^\/api\/warehouse\/shelves\/([\w-]+)\/copy$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Copies the selected shelf to the requested furniture or position.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured shelf identifier or route value.
+     * @param {*} body Untrusted JSON: Copy destination and options.
+     * @return {ReturnType<typeof warehouse.copyShelf>} Copied shelf.
      */
     run: ([id], body) => warehouse.copyShelf(id, body),
   },
@@ -419,11 +420,11 @@ const routes = [
     method: 'POST',
     path: /^\/api\/warehouse\/bottles\/bulk$/,
     /**
-     * Derives the run result from the supplied values.
+     * Applies a batch of physical bottle location assignments.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Physical bottle IDs and target assignments.
+     * @return {ReturnType<typeof warehouse.assignBottles>} Assignment mutation result.
      */
     run: (_, body) => warehouse.assignBottles(body),
   },
@@ -431,11 +432,11 @@ const routes = [
     method: 'PUT',
     path: /^\/api\/warehouse\/bottles\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Assigns or unassigns the selected physical bottle.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {*} body Untrusted JSON: Requested storage location.
+     * @return {ReturnType<typeof warehouse.assignBottle>} Updated bottle assignment.
      */
     run: ([id], body) => warehouse.assignBottle(id, body),
   },
@@ -443,11 +444,11 @@ const routes = [
     method: 'POST',
     path: /^\/api\/map\/find-distillery$/,
     /**
-     * Derives the run result from the supplied values.
+     * Requests geocoding candidates for the supplied distillery metadata.
      *
-     * @param {*} _args Value used by this operation.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _args Unused route captures.
+     * @param {*} body Untrusted JSON: Distillery search fields.
+     * @return {ReturnType<typeof findDistilleryLocations>} Location search results.
      */
     run: (_args, body) => findDistilleryLocations(body),
   },
@@ -455,11 +456,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/settings$/,
     /**
-     * Derives the run result from the supplied values.
+     * Persists collection-wide settings independently of physical bottle records.
      *
-     * @param {*} _args Value used by this operation.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _args Unused route captures.
+     * @param {*} body Untrusted JSON: Settings changes.
+     * @return {ReturnType<typeof settings.updateSettings>} Updated collection settings.
      */
     run: (_args, body) => settings.updateSettings(body),
   },
@@ -467,11 +468,11 @@ const routes = [
     method: 'PUT',
     path: /^\/api\/settings\/saved-views$/,
     /**
-     * Derives the run result from the supplied values.
+     * Replaces the saved collection view configurations.
      *
-     * @param {*} _args Value used by this operation.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _args Unused route captures.
+     * @param {*} body Untrusted JSON: Saved-view configurations.
+     * @return {ReturnType<typeof settings.updateSavedViews>} Updated saved views.
      */
     run: (_args, body) => settings.updateSavedViews(body),
   },
@@ -479,12 +480,12 @@ const routes = [
     method: 'POST',
     path: /^\/api\/backups\/password$/,
     /**
-     * Derives the run result from the supplied values.
+     * Changes the configured ZIP archive password through the authorized backup service.
      *
-     * @param {*} _args Value used by this operation.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {string[]} _args Unused route captures.
+     * @param {*} body Untrusted JSON: New ZIP password.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof backups.setZipPassword>} Password update status without the secret.
      */
     run: (_args, body, req) => backups.setZipPassword(req, body),
   },
@@ -492,12 +493,12 @@ const routes = [
     method: 'GET',
     path: /^\/api\/backups$/,
     /**
-     * Derives the run result from the supplied values.
+     * Loads backup profiles, job state and available targets for the administrator.
      *
-     * @param {*} _args Value used by this operation.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {string[]} _args Unused route captures.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof backups.getDashboard>} Backup dashboard.
      */
     run: (_args, _body, req) => backups.getDashboard(req),
   },
@@ -507,12 +508,12 @@ const routes = [
     binaryUpload: true,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Stages an uploaded ZIP archive from the raw HTTP request for recovery.
      *
-     * @param {*} _args Value used by this operation.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _args Unused route captures.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof recovery.receiveZip>} Prepared archive status.
      */
     run: (_args, _body, req) => recovery.receiveZip(req),
   },
@@ -520,12 +521,12 @@ const routes = [
     method: 'POST',
     path: /^\/api\/backups\/import-zip\/([\w-]+)\/unlock$/,
     /**
-     * Derives the run result from the supplied values.
+     * Unlocks a staged archive using the supplied password.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string]} items Captured prepared archive identifier or route value.
+     * @param {*} body Untrusted JSON: Archive password.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof recovery.unlockPreparedZip>} Prepared archive status after validation.
      */
     run: ([id], body, req) => recovery.unlockPreparedZip(req, id, body),
   },
@@ -533,12 +534,12 @@ const routes = [
     method: 'GET',
     path: /^\/api\/backups\/import-zip\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Loads the preview of a prepared recovery archive.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string]} items Captured prepared archive identifier or route value.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof recovery.previewZip>} Recovery preview.
      */
     run: ([id], _body, req) => recovery.previewZip(req, id),
   },
@@ -547,12 +548,12 @@ const routes = [
     path: /^\/api\/backups\/import-zip\/([\w-]+)\/download$/,
     downloadFile: true,
     /**
-     * Derives the run result from the supplied values.
+     * Returns a prepared ZIP archive as a download.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string]} items Captured prepared archive identifier or route value.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof recovery.downloadPreparedZip>} Archive download descriptor.
      */
     run: ([id], _body, req) => recovery.downloadPreparedZip(req, id),
   },
@@ -560,12 +561,12 @@ const routes = [
     method: 'POST',
     path: /^\/api\/backups\/import-zip\/([\w-]+)\/apply$/,
     /**
-     * Derives the run result from the supplied values.
+     * Applies the selected prepared archive using the requested recovery options.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured prepared archive identifier or route value.
+     * @param {*} body Untrusted JSON: Restore options and confirmation.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof recovery.applyZip>} Recovery result.
      */
     run: ([id], body, req) => recovery.applyZip(req, id, body),
   },
@@ -574,12 +575,12 @@ const routes = [
     path: /^\/api\/backups$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates a new ZIP backup profile through the authorized backup service.
      *
-     * @param {*} _args Value used by this operation.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {string[]} _args Unused route captures.
+     * @param {*} body Untrusted JSON: Backup profile fields.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof backups.createProfile>} Created profile.
      */
     run: (_args, body, req) => backups.createProfile(req, body),
   },
@@ -587,12 +588,12 @@ const routes = [
     method: 'PUT',
     path: /^\/api\/backups\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Updates the selected backup profile.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string]} items Captured backup profile identifier or route value.
+     * @param {*} body Untrusted JSON: Backup profile fields.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof backups.updateProfile>} Updated profile.
      */
     run: ([id], body, req) => backups.updateProfile(req, id, body),
   },
@@ -600,12 +601,12 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/backups\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Deletes the selected backup profile through the authorized service.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string]} items Captured backup profile identifier or route value.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof backups.deleteProfile>} Profile deletion result.
      */
     run: ([id], _body, req) => backups.deleteProfile(req, id),
   },
@@ -614,12 +615,12 @@ const routes = [
     path: new RegExp('^\\/api\\/backups\\/([\\w-]+)\\/(run|check' + '|test|snapshots|restore|prepare)$'),
     status: 202,
     /**
-     * Derives the run result from the supplied values.
+     * Queues the requested worker operation for the selected backup profile.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string, string]} items Captured backup profile and job type identifiers or route values, in that order.
+     * @param {*} body Untrusted JSON: Operation-specific arguments.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof backups.queueJob>} Queued job status.
      */
     run: ([id, type], body, req) => backups.queueJob(req, id, type, body),
   },
@@ -628,12 +629,12 @@ const routes = [
     path: /^\/api\/backups\/([\w-]+)\/files\/(whisky-backup-[\w-]+\.zip)$/,
     downloadFile: true,
     /**
-     * Derives the run result from the supplied values.
+     * Resolves a local ZIP download belonging to the selected profile.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string, string]} items Captured backup profile and archive filename identifiers or route values, in that order.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof backups.downloadLocalZip>} Local archive download descriptor.
      */
     run: ([id, filename], _body, req) =>
       backups.downloadLocalZip(req, id, filename),
@@ -642,12 +643,12 @@ const routes = [
     method: 'POST',
     path: /^\/internal\/backup\/snapshot\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Creates the consistent collection snapshot for an authenticated backup worker.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string]} items Captured snapshot job identifier or route value.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof backups.createSourceSnapshot>} Snapshot descriptor.
      */
     run: ([id], _body, req) => backups.createSourceSnapshot(req, id),
   },
@@ -657,11 +658,11 @@ const routes = [
     path: /^\/api\/import-image\/stage$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Stages an imported image before attaching it to a physical bottle.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Encoded imported image.
+     * @return {ReturnType<typeof stagedImages.stageImage>} Pending-image token and staging status.
      */
     run: (_, body) => stagedImages.stageImage(body),
   },
@@ -670,10 +671,10 @@ const routes = [
     path: /^\/api\/import-image\/stage\/([\w-]+)$/,
     inlineImage: true,
     /**
-     * Derives the run result from the supplied values.
+     * Returns the temporary image represented by the staging token.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string]} items Captured staged image token identifier or route value.
+     * @return {ReturnType<typeof stagedImages.previewImage>} Staged image response.
      */
     run: ([token]) => stagedImages.previewImage(token),
   },
@@ -682,11 +683,11 @@ const routes = [
     path: /^\/api\/bottles\/([\w-]+)\/photos\/from-stage$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Attaches the staged image to the selected physical bottle.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {*} body Untrusted JSON: Staging token.
+     * @return {ReturnType<typeof stagedImages.attachImageToBottle>} Created photo and attachment status.
      */
     run: ([id], body) => stagedImages.attachImageToBottle(id, body),
   },
@@ -694,8 +695,8 @@ const routes = [
     method: 'GET',
     path: /^\/api\/collection$/,
     /**
-     * Derives the run result from the supplied values.
-     * @return {*} Result computed from the supplied inputs.
+     * Loads the collection with its nested physical inventory.
+     * @return {ReturnType<typeof collection.getCollection>} Current collection.
      */
     run: () => collection.getCollection(),
   },
@@ -703,8 +704,8 @@ const routes = [
     method: 'GET',
     path: /^\/api\/suggest-number$/,
     /**
-     * Derives the run result from the supplied values.
-     * @return {*} Result computed from the supplied inputs.
+     * Suggests the next available inventory number without creating a bottle.
+     * @return {ReturnType<typeof collection.getNextInventoryNumber>} Inventory-number suggestion.
      */
     run: () => collection.getNextInventoryNumber(),
   },
@@ -713,11 +714,11 @@ const routes = [
     path: /^\/api\/bottlings$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates a new release record independent of physical bottle ownership.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Bottling fields.
+     * @return {ReturnType<typeof bottlings.createBottling>} Created bottling.
      */
     run: (_, body) => bottlings.createBottling(body),
   },
@@ -725,11 +726,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/bottlings\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Updates metadata of the identified release.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured bottling identifier or route value.
+     * @param {*} body Untrusted JSON: Bottling changes.
+     * @return {ReturnType<typeof bottlings.updateBottling>} Updated bottling.
      */
     run: ([id], body) => bottlings.updateBottling(id, body),
   },
@@ -737,10 +738,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/bottlings\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Deletes the identified release through the collection service.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured bottling identifier or route value.
+     * @return {ReturnType<typeof bottlings.deleteBottling>} Bottling deletion result.
      */
     run: ([id]) => bottlings.deleteBottling(id),
   },
@@ -748,8 +749,8 @@ const routes = [
     method: 'GET',
     path: /^\/api\/tasting-flights$/,
     /**
-     * Derives the run result from the supplied values.
-     * @return {!Array<*>} Resulting entries in their output order.
+     * Lists stored tasting sessions, including planned flights.
+     * @return {ReturnType<typeof tastingFlights.list>} Tasting flights.
      */
     run: () => tastingFlights.list(),
   },
@@ -758,11 +759,11 @@ const routes = [
     path: /^\/api\/tasting-flights$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates a tasting session, optionally with a validated plan of physical bottles.
      *
-     * @param {*} _args Value used by this operation.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _args Unused route captures.
+     * @param {*} body Untrusted JSON: Flight metadata and optional plan.
+     * @return {ReturnType<typeof tastingFlights.create>} Created flight.
      */
     run: (_args, body) => tastingFlights.create(body),
   },
@@ -770,10 +771,10 @@ const routes = [
     method: 'GET',
     path: /^\/api\/tasting-flights\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Looks up the identified tasting session.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string]} items Captured flight identifier or route value.
+     * @return {ReturnType<typeof tastingFlights.get>} Requested flight.
      */
     run: ([id]) => tastingFlights.get(id),
   },
@@ -781,11 +782,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/tasting-flights\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Updates the identified session metadata, lifecycle or planned members.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured flight identifier or route value.
+     * @param {*} body Untrusted JSON: Flight changes.
+     * @return {ReturnType<typeof tastingFlights.update>} Updated flight.
      */
     run: ([id], body) => tastingFlights.update(id, body),
   },
@@ -793,10 +794,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/tasting-flights\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Removes the session grouping without duplicating or deleting individual tasting notes.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured flight identifier or route value.
+     * @return {ReturnType<typeof tastingFlights.remove>} Flight deletion result.
      */
     run: ([id]) => tastingFlights.remove(id),
   },
@@ -804,11 +805,11 @@ const routes = [
     method: 'PUT',
     path: /^\/api\/tasting-flights\/([\w-]+)\/tastings$/,
     /**
-     * Derives the run result from the supplied values.
+     * Replaces the ordered tasting references of the selected flight.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured flight identifier or route value.
+     * @param {*} body Untrusted JSON: Ordered tasting IDs.
+     * @return {ReturnType<typeof tastingFlights.setTastings>} Updated flight membership.
      */
     run: ([id], body) => tastingFlights.setTastings(id, body),
   },
@@ -817,11 +818,11 @@ const routes = [
     path: /^\/api\/tasting-flights\/([\w-]+)\/tastings$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates a new tasting and associates it with the selected flight.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured flight identifier or route value.
+     * @param {*} body Untrusted JSON: Tasting data and subject selection.
+     * @return {ReturnType<typeof tastingFlights.createTasting>} Created tasting and flight update.
      */
     run: ([id], body) => tastingFlights.createTasting(id, body),
   },
@@ -829,8 +830,8 @@ const routes = [
     method: 'GET',
     path: /^\/api\/external-tastings$/,
     /**
-     * Derives the run result from the supplied values.
-     * @return {!Array<*>} Resulting entries in their output order.
+     * Lists tastings of whiskies not owned as inventory.
+     * @return {ReturnType<typeof standaloneTastings.list>} Standalone tastings.
      */
     run: () => standaloneTastings.list(),
   },
@@ -838,10 +839,10 @@ const routes = [
     method: 'GET',
     path: /^\/api\/external-tastings\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Loads the standalone tasting with its embedded whisky reference.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string]} items Captured standalone tasting identifier or route value.
+     * @return {ReturnType<typeof standaloneTastings.get>} Requested standalone tasting.
      */
     run: ([id]) => standaloneTastings.get(id),
   },
@@ -850,11 +851,11 @@ const routes = [
     path: /^\/api\/external-tastings$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates an independent tasting of a whisky outside the inventory.
      *
-     * @param {*} _a Value used by this operation.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _a Unused route captures.
+     * @param {*} body Untrusted JSON: Tasting and embedded whisky fields.
+     * @return {ReturnType<typeof standaloneTastings.create>} Created standalone tasting.
      */
     run: (_a, body) => standaloneTastings.create(body),
   },
@@ -862,11 +863,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/external-tastings\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Updates an external tasting and its embedded whisky metadata.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured standalone tasting identifier or route value.
+     * @param {*} body Untrusted JSON: Tasting or subject changes.
+     * @return {ReturnType<typeof standaloneTastings.update>} Updated standalone tasting.
      */
     run: ([id], body) => standaloneTastings.update(id, body),
   },
@@ -874,10 +875,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/external-tastings\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Removes the selected standalone tasting.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured standalone tasting identifier or route value.
+     * @return {ReturnType<typeof standaloneTastings.remove>} Standalone tasting deletion result.
      */
     run: ([id]) => standaloneTastings.remove(id),
   },
@@ -885,11 +886,11 @@ const routes = [
     method: 'POST',
     path: /^\/api\/external-tastings\/([\w-]+)\/assign$/,
     /**
-     * Derives the run result from the supplied values.
+     * Moves the standalone tasting to the selected owned bottling.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured standalone tasting identifier or route value.
+     * @param {*} body Untrusted JSON: Target bottling identifier.
+     * @return {ReturnType<typeof standaloneTastings.assignToBottling>} Assignment result.
      */
     run: ([id], body) => standaloneTastings.assignToBottling(id, body),
   },
@@ -897,10 +898,10 @@ const routes = [
     method: 'GET',
     path: /^\/api\/bottlings\/([\w-]+)\/tastings$/,
     /**
-     * Derives the run result from the supplied values.
+     * Lists recorded tastings of the selected owned release.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Array<*>} Resulting entries in their output order.
+     * @param {[string]} items Captured bottling identifier or route value.
+     * @return {ReturnType<typeof tastings.listTastings>} Owned tastings for the bottling.
      */
     run: ([id]) => tastings.listTastings(id),
   },
@@ -908,10 +909,10 @@ const routes = [
     method: 'GET',
     path: /^\/api\/bottlings\/([\w-]+)\/tastings\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Loads an individual tasting from its owning bottling.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string, string]} items Captured bottling and tasting identifiers or route values, in that order.
+     * @return {ReturnType<typeof tastings.getTasting>} Requested tasting.
      */
     run: ([id, tastingId]) => tastings.getTasting(id, tastingId),
   },
@@ -920,11 +921,11 @@ const routes = [
     path: /^\/api\/bottlings\/([\w-]+)\/tastings$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates an independent dated tasting on the selected release.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured bottling identifier or route value.
+     * @param {*} body Untrusted JSON: Tasting fields.
+     * @return {ReturnType<typeof tastings.createTasting>} Created tasting.
      */
     run: ([id], body) => tastings.createTasting(id, body),
   },
@@ -932,11 +933,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/bottlings\/([\w-]+)\/tastings\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Updates the specified tasting without changing its owning release.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string, string]} items Captured bottling and tasting identifiers or route values, in that order.
+     * @param {*} body Untrusted JSON: Tasting changes.
+     * @return {ReturnType<typeof tastings.updateTasting>} Updated tasting.
      */
     run: ([id, tastingId], body) => tastings.updateTasting(id, tastingId, body),
   },
@@ -944,10 +945,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/bottlings\/([\w-]+)\/tastings\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Removes the specified owned tasting and its flight references.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string, string]} items Captured bottling and tasting identifiers or route values, in that order.
+     * @return {ReturnType<typeof tastings.deleteTasting>} Tasting deletion result.
      */
     run: ([id, tastingId]) => tastings.deleteTasting(id, tastingId),
   },
@@ -956,11 +957,11 @@ const routes = [
     path: /^\/api\/bottles$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates physical inventory associated with a release.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Bottle data and owning bottling identifier.
+     * @return {ReturnType<typeof bottles.createBottle>} Created physical bottle.
      */
     run: (_, body) => bottles.createBottle(body),
   },
@@ -968,11 +969,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/bottles\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Updates the selected physical bottle’s inventory metadata.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {*} body Untrusted JSON: Bottle changes.
+     * @return {ReturnType<typeof bottles.updateBottle>} Updated physical bottle.
      */
     run: ([id], body) => bottles.updateBottle(id, body),
   },
@@ -980,10 +981,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Removes the selected physical bottle and associated inventory resources.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured bottle identifier or route value.
+     * @return {ReturnType<typeof bottles.deleteBottle>} Bottle deletion result.
      */
     run: ([id]) => bottles.deleteBottle(id),
   },
@@ -992,11 +993,11 @@ const routes = [
     path: /^\/api\/bottles\/([\w-]+)\/photos$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Stores an original image for the selected physical bottle.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {*} body Untrusted JSON: Encoded image data.
+     * @return {ReturnType<typeof bottles.addPhoto>} Created photo.
      */
     run: ([id], body) => bottles.addPhoto(id, body),
   },
@@ -1004,11 +1005,11 @@ const routes = [
     method: 'PUT',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/order$/,
     /**
-     * Derives the run result from the supplied values.
+     * Persists the requested order of the physical bottle’s photos.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {*} body Untrusted JSON: Ordered photo IDs.
+     * @return {ReturnType<typeof bottles.reorderPhotos>} Updated photo order.
      */
     run: ([id], body) => bottles.reorderPhotos(id, body),
   },
@@ -1016,11 +1017,11 @@ const routes = [
     method: 'PUT',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/cutout$/,
     /**
-     * Derives the run result from the supplied values.
+     * Stores a transparent cutout derivative without replacing the original image.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @param {*} body Untrusted JSON: Cutout image data and options.
+     * @return {ReturnType<typeof bottles.savePhotoCutout>} Updated photo derivative state.
      */
     run: ([id, photoId], body) => bottles.savePhotoCutout(id, photoId, body),
   },
@@ -1028,11 +1029,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/cutout$/,
     /**
-     * Derives the run result from the supplied values.
+     * Changes whether the transparent cutout is the active image source.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @param {*} body Untrusted JSON: Cutout selection state.
+     * @return {ReturnType<typeof bottles.selectPhotoCutout>} Updated photo selection.
      */
     run: ([id, photoId], body) => bottles.selectPhotoCutout(id, photoId, body),
   },
@@ -1040,10 +1041,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/cutout$/,
     /**
-     * Derives the run result from the supplied values.
+     * Removes the generated cutout while retaining the original image.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @return {ReturnType<typeof bottles.removePhotoCutout>} Updated photo state.
      */
     run: ([id, photoId]) => bottles.removePhotoCutout(id, photoId),
   },
@@ -1051,11 +1052,11 @@ const routes = [
     method: 'PUT',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/adjustments$/,
     /**
-     * Derives the run result from the supplied values.
+     * Stores edited image data and slider settings for the chosen source.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @param {*} body Untrusted JSON: Adjusted image data and settings.
+     * @return {ReturnType<typeof bottles.savePhotoAdjustments>} Updated adjustment state.
      */
     run: ([id, photoId], body) =>
       bottles.savePhotoAdjustments(id, photoId, body),
@@ -1064,10 +1065,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)\/adjustments$/,
     /**
-     * Derives the run result from the supplied values.
+     * Removes saved photo adjustments while retaining the base image.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @return {ReturnType<typeof bottles.removePhotoAdjustments>} Updated photo state.
      */
     run: ([id, photoId]) => bottles.removePhotoAdjustments(id, photoId),
   },
@@ -1075,10 +1076,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)\/photos\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Deletes the selected photo and its generated derivatives.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string, string]} items Captured bottle and photo identifiers or route values, in that order.
+     * @return {ReturnType<typeof bottles.removePhoto>} Photo deletion result.
      */
     run: ([id, photoId]) => bottles.removePhoto(id, photoId),
   },
@@ -1087,11 +1088,11 @@ const routes = [
     path: /^\/api\/bottles\/([\w-]+)\/files$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Stores a supporting document for a physical bottle.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured bottle identifier or route value.
+     * @param {*} body Untrusted JSON: Document name and encoded bytes.
+     * @return {ReturnType<typeof bottles.addFile>} Created document metadata.
      */
     run: ([id], body) => bottles.addFile(id, body),
   },
@@ -1100,10 +1101,10 @@ const routes = [
     path: /^\/api\/bottles\/([\w-]+)\/files\/([\w-]+)\/preview$/,
     inlinePdf: true,
     /**
-     * Derives the run result from the supplied values.
+     * Resolves a stored PDF for inline preview.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string, string]} items Captured bottle and attachment identifiers or route values, in that order.
+     * @return {ReturnType<typeof bottles.previewPdf>} PDF response descriptor.
      */
     run: ([id, fileId]) => bottles.previewPdf(id, fileId),
   },
@@ -1112,10 +1113,10 @@ const routes = [
     path: /^\/api\/bottles\/([\w-]+)\/files\/([\w-]+)$/,
     download: true,
     /**
-     * Derives the run result from the supplied values.
+     * Resolves the selected supporting document for download.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {[string, string]} items Captured bottle and attachment identifiers or route values, in that order.
+     * @return {ReturnType<typeof bottles.downloadFile>} Document download descriptor.
      */
     run: ([id, fileId]) => bottles.downloadFile(id, fileId),
   },
@@ -1123,10 +1124,10 @@ const routes = [
     method: 'DELETE',
     path: /^\/api\/bottles\/([\w-]+)\/files\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Removes the selected supporting document from inventory.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string, string]} items Captured bottle and attachment identifiers or route values, in that order.
+     * @return {ReturnType<typeof bottles.removeFile>} Attachment deletion result.
      */
     run: ([id, fileId]) => bottles.removeFile(id, fileId),
   },
@@ -1135,11 +1136,11 @@ const routes = [
     path: /^\/api\/distilleries$/,
     status: 201,
     /**
-     * Derives the run result from the supplied values.
+     * Creates a distillery reference that can be linked to releases.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Distillery metadata.
+     * @return {ReturnType<typeof distilleries.createDistillery>} Created distillery.
      */
     run: (_, body) => distilleries.createDistillery(body),
   },
@@ -1147,11 +1148,11 @@ const routes = [
     method: 'PATCH',
     path: /^\/api\/distilleries\/([\w-]+)$/,
     /**
-     * Derives the run result from the supplied values.
+     * Updates the metadata of the selected distillery reference.
      *
-     * @param {!Array<*>} items Entries to process.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {[string]} items Captured distillery identifier or route value.
+     * @param {*} body Untrusted JSON: Distillery changes.
+     * @return {ReturnType<typeof distilleries.updateDistillery>} Updated distillery.
      */
     run: ([id], body) => distilleries.updateDistillery(id, body),
   },
@@ -1159,11 +1160,11 @@ const routes = [
     method: 'POST',
     path: /^\/api\/import\/json$/,
     /**
-     * Derives the run result from the supplied values.
+     * Imports and validates collection data through the collection service.
      *
-     * @param {*} _ Unused route parameter retained for the callback signature.
-     * @param {*} body Body content to validate or process.
-     * @return {!Promise<*>} Promise for the asynchronous operation.
+     * @param {string[]} _ Unused route captures.
+     * @param {*} body Untrusted JSON: Collection import document.
+     * @return {ReturnType<typeof collection.importCollection>} Collection import result.
      */
     run: (_, body) => collection.importCollection(body),
   },
@@ -1172,8 +1173,8 @@ const routes = [
     path: /^\/api\/export\/json$/,
     download: true,
     /**
-     * Derives the run result from the supplied values.
-     * @return {*} Result computed from the supplied inputs.
+     * Returns the stored collection JSON as an attachment.
+     * @return {ReturnType<typeof exports.exportJson>} JSON download descriptor.
      */
     run: () => exports.exportJson(),
   },
@@ -1182,8 +1183,8 @@ const routes = [
     path: /^\/api\/export\/csv$/,
     download: true,
     /**
-     * Derives the run result from the supplied values.
-     * @return {*} Result computed from the supplied inputs.
+     * Exports physical inventory and release metadata as CSV.
+     * @return {ReturnType<typeof exports.exportCsv>} CSV download descriptor.
      */
     run: () => exports.exportCsv(),
   },
@@ -1192,12 +1193,12 @@ const routes = [
     path: /^\/api\/export\/zip$/,
     downloadFile: true,
     /**
-     * Derives the run result from the supplied values.
+     * Builds an authorized encrypted ZIP backup for manual download.
      *
-     * @param {*} _args Value used by this operation.
-     * @param {*} _body Value used by this operation.
-     * @param {*} req Incoming request to authorize.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {string[]} _args Unused route captures.
+     * @param {*} _body Unused parsed request body.
+     * @param {import('node:http').IncomingMessage} req Incoming request used for authorization or request metadata.
+     * @return {ReturnType<typeof exports.exportZip>} ZIP download descriptor.
      */
     run: (_args, _body, req) => exports.exportZip(req),
   },

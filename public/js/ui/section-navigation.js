@@ -10,7 +10,7 @@ const renderTemplate = await loadTemplates('components/section-navigation.html')
  *
  * @param {!Object} options Optional configuration for the operation.
  * @param {*} content Content used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('./render-plan.js').RenderPlan} Section workspace with desktop navigation and a mobile selector.
  */
 export function sectionWorkspace(
   {

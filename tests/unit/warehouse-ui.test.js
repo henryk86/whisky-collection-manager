@@ -78,13 +78,13 @@ test(
     const view = createWarehouseView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} output Output resource or accumulated result.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
        */
       shell: output => {html = output;},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate: () => {},
       modal: {},
@@ -98,8 +98,8 @@ test(
     try {
       globalThis.document = {
         /**
-         * Derives the query selector result from the supplied values.
-         * @return {*} Result computed from the supplied inputs.
+         * Simulates an element lookup that finds nothing.
+         * @return {null} Null to represent a missing element.
          */
         querySelector: () => null,
       }; view.render();
@@ -129,13 +129,13 @@ test(
     const view = createWarehouseView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} output Output resource or accumulated result.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
        */
       shell: output => {html = output;},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate: () => {},
       modal: {},
@@ -154,13 +154,13 @@ test(
     const previousDocument = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () => null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
       /**
@@ -241,13 +241,13 @@ test(
     const view = createWarehouseView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} output Output resource or accumulated result.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
        */
       shell: output => {html = output;},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate: () => {},
       modal: {
@@ -269,14 +269,14 @@ test(
     const savedDocument = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () =>
         null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -377,11 +377,11 @@ test(
     const view = createWarehouseView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Discards page content in this scenario; no real DOM is mounted.
        */
       shell: () => {},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate: () => {},
       modal: {
@@ -467,21 +467,21 @@ test(
     const view = createWarehouseView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} output Output resource or accumulated result.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
        */
       shell: output => {html = output;},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate: () => {},
       modal: {
         /**
-         * Renders modal in the current view.
+         * Captures the dialog body without mounting the modal overlay.
          *
-         * @param {*} _title Value used by this operation.
-         * @param {*} content Content to render, store or examine.
+         * @param {string} _title Dialog title ignored by this fixture.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Dialog content captured for assertions.
          */
         showModal: (_title, content) => {dialog = content;},
       },
@@ -494,14 +494,14 @@ test(
     const oldDocument = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () =>
         null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -560,13 +560,13 @@ test(
     const savedDocument = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () => null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
       /**
@@ -579,13 +579,13 @@ test(
       createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} content Content to render, store or examine.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
          */
         shell: content => {html = content;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},
@@ -628,14 +628,14 @@ test(
     const savedDocument = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () =>
         null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -643,13 +643,13 @@ test(
       const view = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} output Output resource or accumulated result.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
          */
         shell: output => {html = output;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},
@@ -707,13 +707,13 @@ test(
     const savedDocument = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () => null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
       /**
@@ -726,21 +726,21 @@ test(
       const view = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} output Output resource or accumulated result.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
          */
         shell: output => {html = output;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {
           /**
-           * Renders modal in the current view.
+           * Captures the dialog body without mounting the modal overlay.
            *
-           * @param {*} _title Value used by this operation.
-           * @param {*} content Content to render, store or examine.
+           * @param {string} _title Dialog title ignored by this fixture.
+           * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Dialog content captured for assertions.
            */
           showModal: (_title, content) => {manager = content;},
         },
@@ -799,14 +799,14 @@ test(
     let html = ''; const previous = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () =>
         null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -814,13 +814,13 @@ test(
       createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} value Value to process.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
          */
         shell: value => {html = value;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},
@@ -888,14 +888,14 @@ test(
     let html = ''; const previous = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () =>
         null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -903,19 +903,19 @@ test(
       createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Discards page content in this scenario; no real DOM is mounted.
          */
         shell: () => {},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {
           /**
-           * Renders modal in the current view.
+           * Captures the dialog body without mounting the modal overlay.
            *
-           * @param {*} _title Value used by this operation.
-           * @param {*} value Value to process.
+           * @param {string} _title Dialog title ignored by this fixture.
+           * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Dialog content captured for assertions.
            */
           showModal: (_title, value) => {html = value;},
         },
@@ -973,13 +973,13 @@ test(
     const original = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () => null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
       /**
@@ -992,13 +992,13 @@ test(
       const view = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} value Value to process.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
          */
         shell: value => {html = value;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},
@@ -1078,14 +1078,14 @@ test(
     let html = ''; const previous = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () =>
         null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -1093,13 +1093,13 @@ test(
       createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} markup HTML markup for the selected content.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
          */
         shell: markup => {html = markup;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},
@@ -1152,14 +1152,14 @@ test(
     let html = '', manager = '', wide = false; const previous = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () =>
         null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -1167,13 +1167,13 @@ test(
       const view = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} markup HTML markup for the selected content.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
          */
         shell: markup => {html = markup;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {
@@ -1292,8 +1292,8 @@ test(
         return selector === '.warehouse-wall-scroll' ? viewport : null;
       },
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -1301,9 +1301,9 @@ test(
       const view = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} html HTML markup to render or inspect.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} html Page content passed by the view.
          */
         shell: html => {page = html;},
         modal: {
@@ -1318,7 +1318,7 @@ test(
           },
         },
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         /**
@@ -1384,11 +1384,11 @@ test(
     const view = createWarehouseView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Discards page content in this scenario; no real DOM is mounted.
        */
       shell: () => {},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate: () => {},
       modal: {
@@ -1484,13 +1484,13 @@ test(
     const original = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () => null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
       /**
@@ -1503,13 +1503,13 @@ test(
       const view = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} value Value to process.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
          */
         shell: value => {html = value;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},
@@ -1527,19 +1527,19 @@ test(
       const formView = createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Discards page content in this scenario; no real DOM is mounted.
          */
         shell: () => {},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {
           /**
-           * Renders modal in the current view.
+           * Captures the dialog body without mounting the modal overlay.
            *
-           * @param {*} _title Value used by this operation.
-           * @param {*} value Value to process.
+           * @param {string} _title Dialog title ignored by this fixture.
+           * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Dialog content captured for assertions.
            */
           showModal: (_title, value) => {form = value;},
         },

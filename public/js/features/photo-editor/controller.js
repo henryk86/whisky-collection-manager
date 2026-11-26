@@ -64,7 +64,7 @@ export function createPhotoEditor({state, showModal, closeModal, action}) {
 
   /**
    * Produces the endpoint text used by the caller.
-   * @return {string} Resulting text.
+   * @return {string} Relative API URL for adjustments to the selected bottle photo.
    */
   const endpoint = () =>
     `/api/bottles/${encodeURIComponent(session.selection.bottleId)}/photos/${encodeURIComponent(session.selection.photoId)}/adjustments`;

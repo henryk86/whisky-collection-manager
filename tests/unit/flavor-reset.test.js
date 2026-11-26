@@ -25,8 +25,8 @@ test(
     };
     const container = {
       /**
-       * Derives the matches result from the supplied values.
-       * @return {boolean} Whether the operation matched or succeeded.
+       * Simulates an element that does not match the selector.
+       * @return {boolean} Always false in this selector fixture.
        */
       matches: () => false,
       /**
@@ -127,8 +127,8 @@ test(
     }));
     const container = {
       /**
-       * Derives the matches result from the supplied values.
-       * @return {boolean} Whether the operation matched or succeeded.
+       * Simulates an element that does not match the selector.
+       * @return {boolean} Always false in this selector fixture.
        */
       matches: () => false,
       /**

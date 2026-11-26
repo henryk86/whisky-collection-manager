@@ -118,54 +118,52 @@ export const ANALYSIS_PAGES = Object.freeze([
 ]);
 
 /**
- * Creates analytics view for analytics.
+ * Creates the analytics page renderer using the latest filters and collection state.
  *
- * @param {!Object} options Optional configuration for the operation.
- * @return {!Object} Structured result for the caller.
+ * @param {{state: Object, shell: function(import('../ui/render-plan.js').RenderContent): void}} options Current application state and page mounting callback.
+ * @return {function(): void} Renders and mounts the selected analytics section.
  */
 export function createAnalyticsView({state, shell}) {
   return (
     /**
-     * Renders the selected analytics page using the current state and filters.
-     *
-     * @return {string} HTML for the active analytics view.
+     * Computes the selected analytics ViewModel and mounts its page RenderPlan through the shell.
      */
     function renderAnalytics() {
       const {current, data, options} = createAnalyticsViewModel(state, ANALYSIS_PAGES);
       const contents = {
         /**
-         * Derives the overview result from the supplied values.
-         * @return {string} Resulting text.
+         * Prepares analytics overview for the current filters.
+         * @return {!import('../ui/render-plan.js').RenderPlan} Analytics overview for the current filters.
          */
         overview: () => overview(data, ANALYSIS_PAGES),
         /**
-         * Derives the inventory result from the supplied values.
-         * @return {string} Resulting text.
+         * Prepares inventory analysis for the current filters.
+         * @return {import('../ui/render-plan.js').RenderPlan|string} Inventory analysis for the current filters (or scalar/empty text when no plan is needed).
          */
         inventory: () => inventory(data),
         /**
-         * Derives the origins result from the supplied values.
-         * @return {string} Resulting text.
+         * Prepares origin and distillery analysis for the current filters.
+         * @return {import('../ui/render-plan.js').RenderPlan|string} Origin and distillery analysis for the current filters (or scalar/empty text when no plan is needed).
          */
         origins: () => provenance(data),
         /**
-         * Derives the profile result from the supplied values.
-         * @return {string} Resulting text.
+         * Prepares whisky and tasting profile analysis for the current filters.
+         * @return {import('../ui/render-plan.js').RenderPlan|string} Whisky and tasting profile analysis for the current filters (or scalar/empty text when no plan is needed).
          */
         profile: () => profile(data),
         /**
-         * Derives the finance result from the supplied values.
-         * @return {string} Resulting text.
+         * Prepares financial analysis for the current filters.
+         * @return {!import('../ui/render-plan.js').RenderPlan} Financial analysis for the current filters.
          */
         finance: () => finance(data, state),
         /**
-         * Derives the timeline result from the supplied values.
-         * @return {string} Resulting text.
+         * Prepares timeline analysis for the current filters.
+         * @return {import('../ui/render-plan.js').RenderPlan|string} Timeline analysis for the current filters (or scalar/empty text when no plan is needed).
          */
         timeline: () => timeline(data, state),
         /**
-         * Derives the quality result from the supplied values.
-         * @return {string} Resulting text.
+         * Prepares data-quality analysis for the current filters.
+         * @return {import('../ui/render-plan.js').RenderPlan|string} Data-quality analysis for the current filters (or scalar/empty text when no plan is needed).
          */
         quality: () => quality(data),
       };

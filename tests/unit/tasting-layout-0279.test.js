@@ -19,14 +19,14 @@ test(
     createTastingsView({
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} markup HTML markup for the selected content.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: markup => html = markup,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**

@@ -17,11 +17,11 @@ test(
     try {
       const placeholder = {
         /**
-         * Updates the add event listener state for its caller.
+         * Ignores listener registration in this DOM-free test double.
          */
         addEventListener() {},
         /**
-         * Updates the focus state for its caller.
+         * Suppresses focus changes in the simulated DOM.
          */
         focus() {},
       };
@@ -33,15 +33,15 @@ test(
         querySelector: () =>
           placeholder,
         /**
-         * Derives the query selector all result from the supplied values.
-         * @return {!Array<*>} Resulting entries in their output order.
+         * Simulates an element query with no matches.
+         * @return {Array<never>} Empty match list; the simulated root has no matching elements.
          */
         querySelectorAll: () => [],
       };
       globalThis.location = {pathname: '/', search: ''};
       globalThis.history = {
         /**
-         * Updates the replace state state for its caller.
+         * Suppresses history replacement in the simulated browser.
          */
         replaceState() {},
       };
@@ -52,32 +52,32 @@ test(
       };
       const selectors = {
         /**
-         * Derives the all bottles result from the supplied values.
-         * @return {!Array<*>} Resulting entries in their output order.
+         * Provides an empty collection inventory.
+         * @return {Array<never>} Empty physical inventory in this fixture.
          */
         allBottles: () => [],
         /**
-         * Derives the bottles result from the supplied values.
-         * @return {!Array<*>} Resulting entries in their output order.
+         * Provides an empty physical-bottle list.
+         * @return {Array<never>} No physical bottles for the requested bottling.
          */
         bottles: () => [],
         /**
-         * Derives the cover photo result from the supplied values.
-         * @return {string} Resulting text.
+         * Simulates a bottling without a cover photo.
+         * @return {string} Empty path to exercise the no-photo state.
          */
         coverPhoto: () => '',
         /**
-         * Derives the distillery names result from the supplied values.
-         * @return {string} Resulting text.
+         * Omits distillery labels for this test.
+         * @return {string} Empty label; no distillery name is supplied by this fixture.
          */
         distilleryNames: () => '',
       };
       createHomeView({
         state, selectors,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} markup HTML markup for the selected content.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
          */
         shell: markup => {html = markup;},
       })();
@@ -103,9 +103,9 @@ test(
     createAnalyticsView({
       state,
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} markup HTML markup for the selected content.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
        */
       shell: markup => {html = markup;},
     })();

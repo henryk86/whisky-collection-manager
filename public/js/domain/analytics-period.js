@@ -2,7 +2,7 @@
  * Read and validate a calendar date without timezone conversions.
  *
  * @param {*} value Input value to process.
- * @return {string} Resulting text.
+ * @return {string} Valid YYYY-MM-DD date from 1600 through 2300, or empty text for an invalid date.
  */
 export function readAnalyticsDate(value) {
   if (typeof value !== 'string' || !/^(\d{4})-(\d{2})-(\d{2})$/.test(value)) return '';

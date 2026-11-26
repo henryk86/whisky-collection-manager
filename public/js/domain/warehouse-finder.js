@@ -7,7 +7,7 @@ export const WAREHOUSE_FINDER_PAGE_SIZE = 24;
  * Normalizes the normalize text for subsequent processing.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {string} Normalized, case-insensitive trimmed search key.
  */
 const normalize = value => String(value ?? '').normalize('NFKC').toLocaleLowerCase().trim();
 

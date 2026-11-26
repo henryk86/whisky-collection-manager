@@ -54,10 +54,10 @@ const scheduleText = p => {
 };
 
 /**
- * Builds the localized manual text for the current language.
+ * Prepares manual backup and restore controls.
  *
  * @param {*} unlocked Value used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Manual backup and restore controls.
  */
 const manual = unlocked =>
   renderTemplate('backupStep', {
@@ -65,10 +65,10 @@ const manual = unlocked =>
   });
 
 /**
- * Renders backup section for backups.
+ * Prepares backup dashboard section with profiles, jobs and storage information.
  *
  * @param {!Object} state Current application state.
- * @return {string} Resulting text.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Backup dashboard section with profiles, jobs and storage information.
  */
 export function renderBackupSection(state) {
   const dash = state.backupDashboard;
@@ -177,7 +177,7 @@ export function renderBackupSection(state) {
  *
  * @param {!Array<!Object>} options Value and label pairs.
  * @param {*} current The selected value.
- * @return {string} Rendered option elements.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Select options with the current value selected (or scalar/empty text when no plan is needed).
  */
 function renderOptions(options, current) {
   return composeMarkup(options.map(({value, label}) => renderTemplate(
@@ -193,10 +193,10 @@ function renderOptions(options, current) {
 /**
  * Renders the prepared backup profile form.
  *
- * @param {!Object=} profile Existing backup profile or new-profile defaults.
+ * @param {import('../../../shared/backup-profile-types.js').BackupProfileDraft=} profile Existing backup profile or new-profile defaults.
  * @param {!Array<string>=} remotes Available Rclone connection names.
- * @param {!Array<!Object>=} targets Configured local storage targets.
- * @return {string} Backup profile form markup.
+ * @param {import('../../../shared/backup-profile-types.js').BackupTarget[]=} targets Configured local storage targets.
+ * @return {!import('../ui/render-plan.js').RenderPlan} Backup profile editor with storage, schedule and retention controls.
  */
 export function profileForm(profile = {}, remotes = [], targets = []) {
   const model = createProfileViewModel(profile, remotes, targets);

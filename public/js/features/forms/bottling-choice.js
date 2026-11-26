@@ -35,7 +35,7 @@ export function matchingBottlings(collection, value = '') {
  *
  * @param {!Object} collection Collection data being processed.
  * @param {string=} search Search used by this operation.
- * @return {string} Resulting text.
+ * @return {import('../../ui/render-plan.js').RenderPlan|string} Filtered bottling options with a placeholder reflecting whether matches exist (or scalar/empty text when no plan is needed).
  */
 export function bottlingChoiceOptions(collection, search = '') {
   const matches = matchingBottlings(collection, search);
@@ -54,10 +54,10 @@ export function bottlingChoiceOptions(collection, search = '') {
 }
 
 /**
- * Renders the dialog for selecting an existing bottling.
+ * Prepares existing-bottling selection dialog.
  *
  * @param {!Object} collection Collection data being processed.
- * @return {string} Resulting text.
+ * @return {import('../../ui/render-plan.js').RenderPlan|string} Existing-bottling selection dialog (or scalar/empty text when no plan is needed).
  */
 export function bottlingChoiceDialog(collection) {
   const count = (collection.bottlings || []).length;

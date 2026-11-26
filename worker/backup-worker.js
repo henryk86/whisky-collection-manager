@@ -67,7 +67,7 @@ export function localClock(now = new Date()) {
  *
  * @param {*} profile Profile data used for the comparison.
  * @param {!Date=} now Current time used by the operation.
- * @return {?string} Resulting text.
+ * @return {?string} Local date or date-and-hour slot identifier when due, or null.
  */
 export function dueSlot(profile, now = new Date()) {
   if (!profile.enabled || profile.format !== 'zip') return null; // No more automatic Restic backups
@@ -112,7 +112,7 @@ function writeJson(name, value) {
  * Normalizes relative for consistent processing.
  *
  * @param {*} raw Value used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Validated relative backup path without hidden or parent segments.
  */
 function cleanRelative(raw) {
   if (typeof raw !== 'string' || !SAFE_PATH.test(raw) || raw.startsWith('/') || raw.endsWith('/') || raw.split('/').some(p => !p || p.startsWith('.') || p === '..')) {
@@ -259,7 +259,7 @@ function formatOf(profile) {
  * Converts date information for the archive name operation.
  *
  * @param {*} job Value used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Timestamped ZIP filename with a short job ID suffix.
  */
 function archiveName(job) {
   const timestamp = new Date().toISOString().slice(0, 23).replace(/[:.]/g, '-');
@@ -306,7 +306,7 @@ async function zipFilesFor(profile, repo) {
  * Calculates the week bucket numeric value.
  *
  * @param {*} time Value used by this operation.
- * @return {string} Resulting text.
+ * @return {string} ISO-week year and week-number key based on UTC.
  */
 function weekBucket(time) {
   const d = new Date(time);

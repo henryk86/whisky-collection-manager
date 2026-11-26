@@ -48,8 +48,8 @@ function fakeForm(id) {
       return selector.includes('submit') ? [button] : [];
     },
     /**
-     * Derives the query selector result from the supplied values.
-     * @return {?*} Result or null when no value is available.
+     * Simulates an element lookup that finds nothing.
+     * @return {null} Null to represent a missing element.
      */
     querySelector() {return null;},
   };
@@ -71,12 +71,12 @@ function editors() {
     },
     /**
      * Derives the bottling form result from the supplied values.
-     * @return {string} Resulting text.
+     * @return {string} Empty editor placeholder; form rendering is not under test.
      */
     bottlingForm: () => '',
     /**
      * Derives the bottle form result from the supplied values.
-     * @return {string} Resulting text.
+     * @return {string} Empty editor placeholder; form rendering is not under test.
      */
     bottleForm: () => '',
     /**
@@ -88,7 +88,7 @@ function editors() {
      */
     closeModal: () => {},
     /**
-     * Updates the navigate state for its caller.
+     * Suppresses navigation so the scenario can inspect the current view.
      */
     navigate: () => {},
     /**
@@ -108,8 +108,8 @@ for (const id of ['bottling-form', 'bottle-form']) {
       const documentBefore = globalThis.document;
       globalThis.document = {
         /**
-         * Derives the query selector result from the supplied values.
-         * @return {*} Result computed from the supplied inputs.
+         * Simulates an element lookup that finds nothing.
+         * @return {null} Null to represent a missing element.
          */
         querySelector: () => null,
         /**
@@ -118,7 +118,7 @@ for (const id of ['bottling-form', 'bottle-form']) {
          */
         createElement: () => ({
           /**
-           * Updates the remove state for its caller.
+           * Ignores removal in the simulated DOM.
            */
           remove() {},
         }),
@@ -161,7 +161,7 @@ for (const id of ['bottling-form', 'bottle-form']) {
         const event = {
           target: form,
           /**
-           * Updates the prevent default state for its caller.
+           * Accepts cancellation of the simulated event without a browser default action.
            */
           preventDefault() {},
         };

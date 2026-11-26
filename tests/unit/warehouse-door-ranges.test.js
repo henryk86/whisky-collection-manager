@@ -65,14 +65,14 @@ test(
     let html = '', form = ''; const previous = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () =>
         null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -85,23 +85,23 @@ test(
           warehouseFurnitureId: 'f',
         },
         /**
-         * Derives the shell result from the supplied values.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} value Value to process.
-         * @return {*} Result computed from the supplied inputs.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} value Page content passed by the view.
+         * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
          */
         shell: value => html = value,
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {
           /**
-           * Renders modal in the current view.
+           * Captures the dialog body without mounting the modal overlay.
            *
-           * @param {*} _title Value used by this operation.
-           * @param {*} body Body content to validate or process.
-           * @return {*} Result computed from the supplied inputs.
+           * @param {string} _title Dialog title ignored by this fixture.
+           * @param {import('../../public/js/ui/render-plan.js').RenderContent} body Dialog content captured for assertions.
+           * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured dialog content.
            */
           showModal: (_title, body) => form = body,
         },

@@ -36,7 +36,7 @@ function themeVariables(dark) {
  *
  * @param {string} name Variable to resolve.
  * @param {!Map<string, string>} values Active theme definitions.
- * @param {!Set<string>} visited Variables encountered in the chain.
+ * @param {!Set<string>=} visited Variables encountered in the chain.
  * @return {string} Final value after resolving any direct aliases.
  */
 function resolvedValue(name, values, visited = new Set()) {

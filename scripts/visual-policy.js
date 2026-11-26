@@ -6,9 +6,10 @@
 
 /**
  * Resolves the requested visual comparison policy.
- * @param {!Array<string>} args Command-line arguments.
- * @param {!Object<string, string|undefined>} env Environment variables.
+ * @param {!Array<string>=} args Command-line arguments.
+ * @param {!Object<string, string|undefined>=} env Environment variables.
  * @return {'diagnostic'|'strict'} Effective pixel policy.
+ * @throws {Error} For an unsupported configured policy.
  */
 export function pixelMode(args = [], env = {}) {
   const requested = args.includes('--strict-pixels') ? 'strict' : (env.WCM_VISUAL_PIXEL_MODE || 'diagnostic');

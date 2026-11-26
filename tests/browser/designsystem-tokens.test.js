@@ -21,7 +21,7 @@ test(
              * Normalizes the token text for subsequent processing.
              *
              * @param {*} name Environment variable or setting name.
-             * @return {string} Resulting text.
+             * @return {string} Trimmed computed CSS custom-property value.
              */
             const token = name => root.getPropertyValue(name).trim();
             const main = document.querySelector('main');

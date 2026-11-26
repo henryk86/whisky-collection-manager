@@ -11,10 +11,10 @@ const resetIcon = renderTemplate('resetIconSvg');
 const pipetteIcon = renderTemplate('pipetteIconSvg');
 
 /**
- * Builds the localized slider html text for the current language.
+ * Prepares localized adjustment slider with the supplied numeric bounds and increment.
  *
  * @param {!Object} options Options controlling the operation.
- * @return {string} Resulting text.
+ * @return {!import('../../ui/render-plan.js').RenderPlan} Localized adjustment slider with the supplied numeric bounds and increment.
  */
 const sliderHtml = ({key, min, max, step}) =>
   renderTemplate('photoEditorSlider', {
@@ -91,7 +91,7 @@ export function renderPhotoEditor(photo) {
  * Derives the form value result from the supplied values.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {string} German-formatted numeric field value with at most two fraction digits.
  */
 const formValue = value => Number(value).toLocaleString('de-DE', {maximumFractionDigits: 2});
 

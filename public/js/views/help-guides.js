@@ -23,10 +23,10 @@ export const HELP_GUIDES = Object.freeze({
   ],
 });
 /**
- * Builds the localized help sections for the current screen.
+ * Prepares technical guides for the selected help topic.
  *
  * @param {*} topic Topic used by this operation.
- * @return {string} Resulting text.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Technical guides for the selected help topic (or scalar/empty text when no plan is needed).
  */
 export function helpGuides(topic) {
   const guides = HELP_GUIDES[topic] || [];

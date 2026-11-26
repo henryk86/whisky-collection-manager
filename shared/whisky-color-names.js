@@ -117,7 +117,7 @@ function namingDistance(lab, chroma, reference) {
  * changed.
  *
  * @param {*} hex Hex used by this operation.
- * @return {?string} Resulting text.
+ * @return {?string} Translation key of the closest named whisky color, or null for disallowed colors.
  */
 export function whiskyColorNameKey(hex) {
   if (!isAllowedWhiskyHex(hex)) return null;

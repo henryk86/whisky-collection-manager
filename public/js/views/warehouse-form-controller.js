@@ -16,18 +16,18 @@ const renderTemplate = await loadTemplates('warehouse/warehouse.html');
  */
 export function createWarehouseFormController({w, currentRoom, selectedFurniture, selectedBottleIds, modal}) {
   /**
-   * Builds the localized door range row text for the current language.
+   * Prepares door compartment-range controls.
    *
    * @param {!Object=} range Value used by this operation.
    * @param {number=} count Number of requested or available entries.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Door compartment-range controls.
    */
   function doorRangeRow(range = {}, count = 0) {
     /**
-     * Builds the localized opts text for the current language.
+     * Prepares numbered compartment choices with the chosen value selected.
      *
      * @param {*} chosen Value used by this operation.
-     * @return {string} Resulting text.
+     * @return {import('../ui/render-plan.js').RenderPlan|string} Numbered compartment choices with the chosen value selected (or scalar/empty text when no plan is needed).
      */
     const opts = (chosen) => composeMarkup(Array.from(
       {length: count},
@@ -137,20 +137,20 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
       title = t("warehouse.bulk.editTitle", {count: ids.length});
       endpoint = '/api/warehouse/furniture/bulk'; method = 'PATCH';
       /**
-       * Produces the bulk field text used by the caller.
+       * Prepares bulk-edit field wrapper.
        *
        * @param {*} control Value used by this operation.
-       * @return {string} Resulting text.
+       * @return {!import('../ui/render-plan.js').RenderPlan} Bulk-edit field wrapper.
        */
       const bulkField = (control) => renderTemplate('warehouseBulkField', {control: control, });
 
       /**
-       * Builds the localized optional number text for the current language.
+       * Prepares optional numeric bulk-edit input with the supplied constraints.
        *
        * @param {*} key Key used to select or group values.
        * @param {*} label Label shown to the user.
        * @param {*} constraints Value used by this operation.
-       * @return {string} Resulting text.
+       * @return {!import('../ui/render-plan.js').RenderPlan} Optional numeric bulk-edit input with the supplied constraints.
        */
       const optionalNumber = (key, label, constraints) =>
         renderTemplate('formField', {

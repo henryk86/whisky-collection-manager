@@ -34,7 +34,7 @@ let cachedIdentity = null;
 let revision = crypto.randomUUID();
 /**
  * Produces the identity text used by the caller.
- * @return {string} Resulting text.
+ * @return {string} Collection file metadata fingerprint for cache invalidation.
  */
 const identity = () => {
   const {dev, ino, size, mtimeMs, ctimeMs} = fs.statSync(DATA_FILE);

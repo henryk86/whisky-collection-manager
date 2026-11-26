@@ -23,7 +23,7 @@ const FOLDERS = ['data', 'images', 'documents'];
  * Validates the supplied password state and rejects invalid inputs.
  *
  * @param {*} req Incoming request to authorize.
- * @return {string} Resulting text.
+ * @return {string} URI-decoded ZIP password header, or empty text when absent.
  */
 function suppliedPassword(req) {
   try {return decodeURIComponent(req.headers['x-backup-zip-password'] || '');}

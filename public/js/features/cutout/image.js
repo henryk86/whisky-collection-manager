@@ -55,7 +55,7 @@ export function cutoutExportSizes(cropHeight) {
  *
  * @param {*} image Image used by this operation.
  * @param {*} rawMask Raw mask used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Transparent PNG data URL of the composited and cropped image.
  */
 export function composeCutout(image, rawMask) {
   const geometry = analyzeBottleMask(rawMask, MODEL_SIZE, MODEL_SIZE, image.naturalWidth, image.naturalHeight);

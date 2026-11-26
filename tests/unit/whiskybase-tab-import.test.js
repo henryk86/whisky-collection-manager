@@ -43,8 +43,8 @@ function mockImport({openEditor}) {
   };
   globalThis.document = {
     /**
-     * Derives the query selector result from the supplied values.
-     * @return {*} Result computed from the supplied inputs.
+     * Simulates an element lookup that finds nothing.
+     * @return {null} Null to represent a missing element.
      */
     querySelector: () => null,
     /**
@@ -53,7 +53,7 @@ function mockImport({openEditor}) {
      */
     createElement: () => ({
       /**
-       * Updates the remove state for its caller.
+       * Ignores removal in the simulated DOM.
        */
       remove() {}, className: '', textContent: '',
     }),

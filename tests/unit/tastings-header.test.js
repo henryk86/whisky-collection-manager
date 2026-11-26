@@ -11,7 +11,7 @@ import {createSelectors} from '../../public/js/domain/selectors.js';
  * Derives the header for result from the supplied values.
  *
  * @param {*} page Page or view being rendered or selected.
- * @return {string} Resulting text.
+ * @return {string|undefined} Serialized site header for the requested tasting page, if found.
  */
 function headerFor(page) {
   const root = {innerHTML: ''};
@@ -67,14 +67,14 @@ test('tasting landing page uses the shared analytics page heading only', () => {
     mountContent: captureContent, mountAppend: captureAppend,
     state,
     /**
-     * Derives the shell result from the supplied values.
+     * Captures the rendered page in the fixture for later assertions.
      *
-     * @param {*} content Content to render, store or examine.
-     * @return {*} Result computed from the supplied inputs.
+     * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
+     * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
      */
     shell: content => html = content,
     /**
-     * Updates the navigate state for its caller.
+     * Suppresses navigation so the scenario can inspect the current view.
      */
     navigate() {},
     /**
@@ -128,14 +128,14 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} content Content to render, store or examine.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: content => html = content,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -210,14 +210,14 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} content Content to render, store or examine.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: content => html = content,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -276,14 +276,14 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} content Content to render, store or examine.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: content => html = content,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -330,14 +330,14 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} s Source value to transform.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} s Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: s => html = s,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -418,14 +418,14 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} s Source value to transform.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} s Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: s => html = s,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -487,14 +487,14 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} s Source value to transform.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} s Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: s => html = s,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -539,11 +539,11 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Updates the shell state for its caller.
+       * Discards page content in this scenario; no real DOM is mounted.
        */
       shell() {},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -651,14 +651,14 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} content Content to render, store or examine.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: content => html = content,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -666,10 +666,10 @@ test(
        */
       refresh() {},
       /**
-       * Renders modal in the current view.
+       * Captures the dialog body without mounting the modal overlay.
        *
-       * @param {*} _title Value used by this operation.
-       * @param {*} content Content to render, store or examine.
+       * @param {string} _title Dialog title ignored by this fixture.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Dialog content captured for assertions.
        */
       showModal(_title, content) {dialog = content;},
       /**
@@ -721,14 +721,14 @@ test(
       state,
       selectors: createSelectors(state),
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} markup HTML markup for the selected content.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: markup => html = markup,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -797,14 +797,14 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} markup HTML markup for the selected content.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: markup => html = markup,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -866,14 +866,14 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} markup HTML markup for the selected content.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: markup => html = markup,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -917,42 +917,42 @@ test(
     try {
       globalThis.document = {
         /**
-         * Derives the query selector all result from the supplied values.
-         * @return {!Array<*>} Resulting entries in their output order.
+         * Simulates an element query with no matches.
+         * @return {Array<never>} Empty match list; the simulated root has no matching elements.
          */
         querySelectorAll: () => [],
       };
       createDetailView({
         state: {collection, selected: 'b1'}, selectors: {
           /**
-           * Derives the bottles result from the supplied values.
-           * @return {!Array<*>} Resulting entries in their output order.
+           * Provides an empty physical-bottle list.
+           * @return {Array<never>} No physical bottles for the requested bottling.
            */
           bottles: () => [],
           /**
-           * Derives the cover photo result from the supplied values.
-           * @return {*} Result computed from the supplied inputs.
+           * Simulates a missing cover photo.
+           * @return {null} No photo path.
            */
           coverPhoto: () => null,
           /**
-           * Derives the distillery names result from the supplied values.
-           * @return {string} Resulting text.
+           * Omits distillery labels for this test.
+           * @return {string} Empty label; no distillery name is supplied by this fixture.
            */
           distilleryNames: () => '',
         },
         /**
-         * Derives the shell result from the supplied values.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} s Source value to transform.
-         * @return {*} Result computed from the supplied inputs.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} s Page content passed by the view.
+         * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
          */
         shell: s => detailHtml = s,
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate() {},
         /**
-         * Updates the action state for its caller.
+         * Suppresses action execution in this rendering-only scenario.
          */
         action() {},
       })();
@@ -965,14 +965,14 @@ test(
       mountContent: captureContent, mountAppend: captureAppend,
       state: {page: 'tastings', selected: 'b1', collection},
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} s Source value to transform.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} s Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: s => tastingHtml = s,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**

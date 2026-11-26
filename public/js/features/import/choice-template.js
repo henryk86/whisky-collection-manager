@@ -10,7 +10,7 @@ const renderTemplate = await loadTemplates('import/choice-template.html');
  * same grid row.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {string} Resulting text.
+ * @return {!import('../../ui/render-plan.js').RenderPlan} Import checkbox with its incoming value and existing-value comparison.
  */
 export function importChoice({
   field,

@@ -240,3 +240,67 @@ test('JavaScript style: separates consecutive arrow-function exports', () => {
   const source = 'export const first = () => 1;\nexport const second = () => 2;\n';
   assert.match(separateFunctions('sample.js', source), /=> 1;\n\nexport const second/);
 });
+
+
+test('JavaScript style: concise summaries are not subject to a minimum length', () => {
+  const source = `/** Clears cache. */
+export function clear() {cache.clear();}`;
+  assert.deepEqual(undocumentedExports('cache.js', source), []);
+  assert.deepEqual(jsdocViolations('cache.js', source), []);
+});
+
+test('JavaScript style: default values require an optional parameter contract', () => {
+  const source = `/**
+ * Counts attempts.
+ * @param {number} limit Maximum attempts.
+ * @return {number} Attempt limit.
+ */
+function count(limit = 3) { return limit; }`;
+  assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('defaulted @param limit must be optional')));
+  assert.deepEqual(jsdocViolations('sample.js', source.replace('{number} limit', '{number=} limit')), []);
+});
+
+test('JavaScript style: generic functions still need complete parameter contracts', () => {
+  const source = `/**
+ * Returns a selected record.
+ * @template T
+ * @return {T} First record.
+ */
+function first(records) { return records[0]; }`;
+  assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('undocumented parameter records')));
+});
+
+test('JavaScript style: rejects repeated parameter tags', () => {
+  const source = `/**
+ * Reads the selected label.
+ * @param {Object} options Label options.
+ * @param {string} options.label Display label.
+ * @param {string} options.label Duplicate display label.
+ * @return {string} Selected label.
+ */
+function label(options) {return options.label;}`;
+  assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('duplicate @param options.label')));
+});
+
+test('JavaScript style: rejects a known return-description placeholder', () => {
+  const source = `/**
+ * Reads the selected label.
+ * @return {string} Resulting text.
+ */
+function label() {return 'label';}`;
+  assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('known placeholder')));
+});
+
+test('JavaScript style: a template factory return cannot be documented as a string', () => {
+  const source = `import {loadTemplates as load} from './ui/templates.js';
+const render = await load('components/example.html');
+/**
+ * Builds an example control.
+ * @return {string} Example control.
+ */
+export function example() {return render('example');}`;
+  assert.ok(jsdocViolations('sample.js', source).some(issue => issue.includes('contradicts a direct template RenderPlan return')));
+  assert.deepEqual(jsdocViolations('sample.js', source.replace('@return {string}', '@return {RenderPlan}')), []);
+  const shadowed = source.replace('function example() {return render', 'function example() {const render = String; return render');
+  assert.deepEqual(jsdocViolations('sample.js', shadowed), []);
+});

@@ -90,7 +90,7 @@ export function parseGitLog(output) {
  * Builds release notes from the approved release plan.
  *
  * @param {*} plan Plan used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Markdown release notes grouped from the planned commit range.
  */
 export function notesForPlan(plan) {
   const rows = [

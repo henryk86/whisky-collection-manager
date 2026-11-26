@@ -78,13 +78,13 @@ const selectors = {
    */
   bottles: () => collection.bottlings[0].bottles,
   /**
-   * Derives the cover photo result from the supplied values.
-   * @return {*} Result computed from the supplied inputs.
+   * Simulates a missing cover photo.
+   * @return {null} No photo path.
    */
   coverPhoto: () => null,
   /**
-   * Derives the distillery names result from the supplied values.
-   * @return {string} Resulting text.
+   * Supplies the fixed distillery label used by this fixture.
+   * @return {string} Fixture label 'Ardbeg'.
    */
   distilleryNames: () => 'Ardbeg',
 };
@@ -99,7 +99,7 @@ test(
     };
     const field = {
       /**
-       * Updates the add event listener state for its caller.
+       * Ignores listener registration in this DOM-free test double.
        */
       addEventListener() {},
     };
@@ -114,8 +114,8 @@ test(
          */
         querySelector: () => field,
         /**
-         * Derives the query selector all result from the supplied values.
-         * @return {!Array<*>} Resulting entries in their output order.
+         * Simulates an element query with no matches.
+         * @return {Array<never>} Empty match list; the simulated root has no matching elements.
          */
         querySelectorAll: () => [],
         /**
@@ -126,7 +126,7 @@ test(
       };
       globalThis.history = {
         /**
-         * Updates the replace state state for its caller.
+         * Suppresses history replacement in the simulated browser.
          */
         replaceState() {},
       };
@@ -149,9 +149,9 @@ test(
       createHomeView({
         state, selectors,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} html HTML markup to render or inspect.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} html Page content passed by the view.
          */
         shell: html => {home = html;},
       })();
@@ -160,9 +160,9 @@ test(
       createHomeView({
         state, selectors,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} html HTML markup to render or inspect.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} html Page content passed by the view.
          */
         shell: html => {home = html;},
       })();
@@ -204,7 +204,7 @@ test(
          */
         shell: html => {warehouse = html;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},
@@ -222,11 +222,11 @@ test(
       createWarehouseView({
         state: warehouseState,
         /**
-         * Updates the shell state for its caller.
+         * Discards page content in this scenario; no real DOM is mounted.
          */
         shell: () => {},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {

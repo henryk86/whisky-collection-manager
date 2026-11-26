@@ -19,15 +19,15 @@ function delegatedEvents() {
      */
     addEventListener: (name, fn) => listeners.set(name, fn),
     /**
-     * Derives the query selector all result from the supplied values.
-     * @return {!Array<*>} Resulting entries in their output order.
+     * Simulates an element query with no matches.
+     * @return {Array<never>} Empty match list; the simulated root has no matching elements.
      */
     querySelectorAll: () => [],
   };
   const previousDocument = globalThis.document;
   globalThis.document = {
     /**
-     * Updates the add event listener state for its caller.
+     * Ignores listener registration in this DOM-free test double.
      */
     addEventListener: () => {},
   };
@@ -39,11 +39,11 @@ function delegatedEvents() {
        */
       render: () => {},
       /**
-       * Updates the action state for its caller.
+       * Suppresses action execution in this rendering-only scenario.
        */
       action: () => {},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate: () => {},
       editors: {},

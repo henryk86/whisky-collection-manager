@@ -32,11 +32,11 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   const tr = key => t(`auth.${key}`);
 
   /**
-   * Produces the password toggle text used by the caller.
+   * Prepares password visibility toggle associated with the target input.
    *
    * @param {*} id Identifier of the affected record.
    * @param {boolean=} hidden Value used by this operation.
-   * @return {string} Resulting text.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Password visibility toggle associated with the target input.
    */
   const passwordToggle = (id, hidden = true) =>
     renderTemplate('authTogglePassword', {
@@ -49,12 +49,12 @@ export function createAuthController({root, state, render, refresh, applyTheme,
     });
 
   /**
-   * Produces the field text used by the caller.
+   * Prepares labeled authentication input, including a visibility toggle for passwords.
    *
    * @param {*} id Identifier of the affected record.
    * @param {*} label Label shown to the user.
    * @param {!Object=} options Options controlling the operation.
-   * @return {string} Resulting text.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Labeled authentication input, including a visibility toggle for passwords.
    */
   const field = (
     id,
@@ -87,17 +87,17 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   };
 
   /**
-   * Builds the localized brand text for the current language.
-   * @return {string} Resulting text.
+   * Prepares application branding for the authentication screen.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Application branding for the authentication screen.
    */
   const brand = () => renderTemplate('authBrand');
 
   /**
-   * Produces the panel text used by the caller.
+   * Prepares authentication page containing the supplied form and title.
    *
    * @param {*} title Title displayed or stored by this operation.
    * @param {*} body Body content to validate or process.
-   * @return {string} Resulting text.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Authentication page containing the supplied form and title.
    */
   const panel = (title, body) =>
     renderTemplate('authPage', {
@@ -107,16 +107,16 @@ export function createAuthController({root, state, render, refresh, applyTheme,
     });
 
   /**
-   * Derives the error text result from the supplied values.
-   * @return {string} Resulting text.
+   * Prepares initially hidden authentication error region.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Initially hidden authentication error region.
    */
   const errorText = () => renderTemplate('authError');
 
   /**
-   * Produces the error markup text used by the caller.
+   * Prepares authentication error message with its status icon.
    *
    * @param {*} text Text to process.
-   * @return {string} Resulting text.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Authentication error message with its status icon.
    */
   const errorMarkup = text => renderTemplate('authErrorIcon', {text: text, });
 
@@ -274,8 +274,8 @@ export function createAuthController({root, state, render, refresh, applyTheme,
   }
 
   /**
-   * Transforms the entries used by users section.
-   * @return {string} Resulting text.
+   * Prepares user administration panel with account actions.
+   * @return {import('../../ui/render-plan.js').RenderPlan|string} User administration panel with account actions (or scalar/empty text when no plan is needed).
    */
   function usersSection() {
     if (!state.auth?.canManageUsers) return '';

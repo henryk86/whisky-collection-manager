@@ -13,10 +13,16 @@ export const ADJUSTMENT_LIMITS = Object.freeze({
   sharpen: [0, 100],
 });
 /**
- * Validates adjustment values for photo adjustments.
+ * Complete normalized editing state; exposure is in stops, other adjustments
+ * use the signed slider range (sharpen is non-negative).
+ * @typedef {Record<keyof typeof ADJUSTMENT_LIMITS, number>} PhotoAdjustments
+ */
+/**
+ * Validates the adjustment object against the supported slider limits.
  *
- * @param {*} value Input value to process.
- * @return {!Object} Structured result for the caller.
+ * @param {*} value Untrusted adjustment object; omitted fields default to zero.
+ * @return {PhotoAdjustments} Complete finite, range-checked adjustment values.
+ * @throws {RangeError} For a non-object, an unknown key or an out-of-range field.
  */
 export function validateAdjustmentValues(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value) ||

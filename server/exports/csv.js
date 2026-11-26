@@ -3,14 +3,14 @@
  * programs.
  *
  * @param {!Array<*>} rows Rows being processed.
- * @return {string} Resulting text.
+ * @return {string} BOM-prefixed semicolon-delimited CSV with CRLF row endings.
  */
 export function csv(rows) {
   /**
    * Tests input text against the safe cell pattern.
    *
    * @param {*} value Value to process.
-   * @return {string} Resulting text.
+   * @return {string} Quoted and escaped CSV cell with formula-like text neutralized.
    */
   const safeCell = value => {
     // A spreadsheet must not execute user-provided strings as formulas.

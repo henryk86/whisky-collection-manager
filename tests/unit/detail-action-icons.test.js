@@ -24,14 +24,14 @@ function button(html, action) {
  * Validates the detail markup state and rejects invalid inputs.
  *
  * @param {!Object=} options Options controlling the operation.
- * @return {string} Resulting text.
+ * @return {import('../../public/js/ui/render-plan.js').RenderContent} Captured detail view plan used to inspect action icons.
  */
 function detailMarkup({photos = [], warehouse = null} = {}) {
   const originalDocument = globalThis.document;
   globalThis.document = {
     /**
-     * Derives the query selector all result from the supplied values.
-     * @return {!Array<*>} Resulting entries in their output order.
+     * Simulates an element query with no matches.
+     * @return {Array<never>} Empty match list; the simulated root has no matching elements.
      */
     querySelectorAll: () => [],
   };
@@ -58,20 +58,20 @@ function detailMarkup({photos = [], warehouse = null} = {}) {
           photos, files: [{id: 'file-a', name: 'Beleg.pdf', size: 1234}],
         }],
         /**
-         * Derives the cover photo result from the supplied values.
-         * @return {string} Resulting text.
+         * Simulates a bottling without a cover photo.
+         * @return {string} Empty path to exercise the no-photo state.
          */
         coverPhoto: () => '',
         /**
-         * Derives the distillery names result from the supplied values.
-         * @return {string} Resulting text.
+         * Omits distillery labels for this test.
+         * @return {string} Empty label; no distillery name is supplied by this fixture.
          */
         distilleryNames: () => '',
       },
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} markup HTML markup for the selected content.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} markup Page content passed by the view.
        */
       shell: markup => {html = markup;},
       /**
@@ -101,8 +101,8 @@ test(
       state: {collection: {bottlings: [owner]}},
       selectors: {
         /**
-         * Derives the distillery names result from the supplied values.
-         * @return {string} Resulting text.
+         * Omits distillery labels for this test.
+         * @return {string} Empty label; no distillery name is supplied by this fixture.
          */
         distilleryNames: () => '',
       },

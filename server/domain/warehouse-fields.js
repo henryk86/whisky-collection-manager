@@ -11,7 +11,7 @@ const types = new Set(FURNITURE_TYPES);
  * Validates a nonempty furniture or room name.
  *
  * @param {*} value Input value to process.
- * @return {string} Resulting text.
+ * @return {string} Trimmed nonempty name with at most 100 characters.
  */
 export function name(value) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > 100) throw fail('Name muss zwischen 1 und 100 Zeichen enthalten', 400, "api.errors.nameMustContainBetween1And100Characters");

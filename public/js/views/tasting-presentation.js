@@ -26,7 +26,7 @@ export function createTastingPresentation({state, selectors}) {
    *
    * @param {*} bottling Bottling record being inspected or updated.
    * @param {boolean=} owned Value used by this operation.
-   * @return {string} Resulting text.
+   * @return {string} Available distillery, age and other release metadata joined for display.
    */
   const distilleryMeta = (bottling, owned = true) => [
     (bottling?.distilleryIds || []).map(id => state.collection?.distilleries?.find(d => d.id === id)?.name).filter(Boolean).join(', ') || bottling?.distillery || '',
@@ -41,21 +41,21 @@ export function createTastingPresentation({state, selectors}) {
   ].filter(Boolean).join(' · ');
 
   /**
-   * Derives the back link result from the supplied values.
+   * Prepares back navigation control with a localized label.
    *
    * @param {*} action Operation or action callback to invoke.
    * @param {*} label Label shown to the user.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Back navigation control with a localized label.
    */
   const backLink = (action, label) => backNavigation(action, t(label));
 
   /**
-   * Derives the page title result from the supplied values.
+   * Prepares tasting page heading with optional introduction and eyebrow.
    *
    * @param {*} title Title displayed or stored by this operation.
    * @param {*} intro Value used by this operation.
    * @param {*=} eyebrow Value used by this operation.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Tasting page heading with optional introduction and eyebrow.
    */
   const pageTitle = (title, intro, eyebrow = t('tastings.childEyebrow')) =>
     pageHeader({title, intro, eyebrow, className: 'analytics-page-heading'});
@@ -63,12 +63,12 @@ export function createTastingPresentation({state, selectors}) {
   // page.
 
   /**
-   * Builds the localized bottling info text for the current language.
+   * Prepares owned or external bottling summary with photo when available.
    *
    * @param {*} bottling Bottling record being inspected or updated.
    * @param {boolean=} external Value used by this operation.
    * @param {boolean=} draft Value used by this operation.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Owned or external bottling summary with photo when available.
    */
   const bottlingInfo = (bottling, external = false, draft = false) => {
     const photo = external ? '' : (selectors?.coverPhoto?.(bottling.id) || '');
@@ -127,10 +127,10 @@ export function createTastingPresentation({state, selectors}) {
   const associatedFlight = record => record?.id ? flightForTasting(state.collection, record.id) : null;
 
   /**
-   * Produces the flight hint text used by the caller.
+   * Prepares navigation hint identifying the tasting's flight and member position.
    *
    * @param {*} record Record to validate or persist.
-   * @return {string} Resulting text.
+   * @return {import('../ui/render-plan.js').RenderPlan|string} Navigation hint identifying the tasting's flight and member position (or scalar/empty text when no plan is needed).
    */
   const flightHint = record => {
     const flight = associatedFlight(record);
@@ -147,23 +147,23 @@ export function createTastingPresentation({state, selectors}) {
    * Builds the localized tasting rating text for the current language.
    *
    * @param {*} record Record to validate or persist.
-   * @return {string} Resulting text.
+   * @return {string} Localized unrated label or escaped rating followed by the 100-point scale.
    */
   const tastingRating = record => record.rating == null ? escapeHtml(t('tasting.unrated')) : `${escapeHtml(String(record.rating))} / 100`;
 
   /**
-   * Normalizes the blank text for subsequent processing.
+   * Prepares displayed scalar value or muted missing-value indicator.
    *
    * @param {*} value Value to process.
-   * @return {string} Resulting text.
+   * @return {import('../ui/render-plan.js').RenderPlan|string} Displayed scalar value or muted missing-value indicator (or scalar/empty text when no plan is needed).
    */
   const blank = value => value == null || String(value).trim() === '' ? renderTemplate('muted3') : escapeHtml(String(value));
 
   /**
-   * Calculates the static rating numeric value.
+   * Prepares read-only rating glasses and score display.
    *
    * @param {*} record Record to validate or persist.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Read-only rating glasses and score display.
    */
   const staticRating = record =>
     renderTemplate('tastingReadonlyRating', {
@@ -178,10 +178,10 @@ export function createTastingPresentation({state, selectors}) {
     });
 
   /**
-   * Transforms the entries used by tasting read only.
+   * Prepares read-only tasting metadata, notes, color and flavor details.
    *
    * @param {*} value Value to process.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Read-only tasting metadata, notes, color and flavor details.
    */
   const tastingReadOnly = value =>
     renderTemplate('flavorDetailPanel', {
@@ -238,10 +238,10 @@ export function createTastingPresentation({state, selectors}) {
     });
 
   /**
-   * Calculates the tasting list glasses numeric value.
+   * Prepares compact rating glasses for a valid tasting score.
    *
    * @param {*} record Record to validate or persist.
-   * @return {string} Resulting text.
+   * @return {import('../ui/render-plan.js').RenderPlan|string} Compact rating glasses for a valid tasting score (or scalar/empty text when no plan is needed).
    */
   const tastingListGlasses = record => {
     if (record.rating == null || !Number.isFinite(Number(record.rating))) return '';
@@ -260,10 +260,10 @@ export function createTastingPresentation({state, selectors}) {
   };
 
   /**
-   * Builds the localized tasting row text for the current language.
+   * Prepares tasting list row with its navigation action and summary.
    *
    * @param {!Object} options Options controlling the operation.
-   * @return {string} Resulting text.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Tasting list row with its navigation action and summary.
    */
   const tastingRow = ({record, b, external = false, home = false}) =>
     renderTemplate('warehouseBottleRow', {
@@ -289,10 +289,10 @@ export function createTastingPresentation({state, selectors}) {
 }
 
 /**
- * Transforms the entries used by external fields.
+ * Prepares fields for an external whisky's release metadata.
  *
  * @param {!Object=} info Value used by this operation.
- * @return {string} Resulting text.
+ * @return {import('../ui/render-plan.js').RenderPlan|string} Fields for an external whisky's release metadata (or scalar/empty text when no plan is needed).
  */
 export function externalFields(info = {}) {
   const fields = [

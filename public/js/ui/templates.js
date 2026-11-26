@@ -1,6 +1,7 @@
 /** @fileoverview Shared loader and renderer for external HTML fragments. */
 import {RenderPlan} from './render-plan.js';
 
+/** @type {Map<string, Promise<import('./render-plan.js').TemplateRenderer>>} */
 const cache = new Map();
 
 /**
@@ -8,6 +9,7 @@ const cache = new Map();
  *
  * @param {string} source Contents of an HTML template file.
  * @return {!Map<string, string>} Fragments indexed by their unique names.
+ * @throws {Error} If fragments are missing, duplicated or surrounded by unexpected markup.
  */
 export function parseTemplates(source) {
   source = source.replace(/\r\n?/g, '\n');
@@ -28,7 +30,7 @@ export function parseTemplates(source) {
 /**
  * Creates a renderer producing immutable template data, not HTML strings.
  * @param {!Map<string, string>} fragments Named template sources.
- * @return {function(string, Object=): !RenderPlan} Template plan factory.
+ * @return {import('./render-plan.js').TemplateRenderer} Factory that throws if a fragment name is unknown.
  */
 export function createPlanRenderer(fragments) {
   return (name, values = {}) => {
@@ -41,7 +43,7 @@ export function createPlanRenderer(fragments) {
  * Reads an HTML resource via HTTP in the browser or from disk in Node tests.
  *
  * @param {!URL} url Resolved external template location.
- * @return {!Promise<string>} File contents.
+ * @return {!Promise<string>} UTF-8 file contents; rejects on a failed read or HTTP request.
  */
 async function readTemplateFile(url) {
   if (url.protocol === 'file:') {
@@ -70,7 +72,7 @@ export function resolveTemplateURL(name) {
  * Loads each template resource once and returns its synchronous renderer.
  *
  * @param {string} name Path below public/templates.
- * @return {!Promise<Function>} Renderer for the loaded fragments.
+ * @return {!Promise<import('./render-plan.js').TemplateRenderer>} Cached factory; rejects if resolution, loading or parsing fails.
  */
 export async function loadTemplates(name) {
   const url = resolveTemplateURL(name);

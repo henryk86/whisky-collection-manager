@@ -1,9 +1,7 @@
 /**
  * Shared headings, back navigation and help actions.
- * Rendered HTML stays here; layout and visual states live in
- * styles/headers.css.
- * Text/identifiers are escaped. Slots are trusted application-rendered HTML
- * only.
+ * Returns render plans; layout and visual states live in styles/headers.css.
+ * Action slots accept composed application content, never dynamic HTML.
  */
 import {escapeHtml} from './dom.js';
 import {arrowLeftIcon, helpCircleIcon} from './action-icons.js';
@@ -15,9 +13,9 @@ const renderTemplate = await loadTemplates('components/headers.html');
 /**
  * Renders a shared action container, leaving event delegation untouched.
  *
- * @param {string} content Trusted application-generated button markup.
+ * @param {import('./render-plan.js').RenderContent} content Composed button content.
  * @param {{className: string}=} options2 Optional additional CSS class.
- * @return {string} HTML, or an empty string when no actions are supplied.
+ * @return {import('./render-plan.js').RenderPlan|string} Action container, or empty text when no actions are supplied.
  */
 export function headerActions(content, {className = ''} = {}) {
   if (!content) return '';
@@ -31,7 +29,7 @@ export function headerActions(content, {className = ''} = {}) {
  * Renders an escaped heading and optional trusted action markup.
  *
  * @param {!Object} options Heading text, level and presentation settings.
- * @return {string} Heading HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Heading with optional punctuation and action.
  * @throws {RangeError} If the heading level is unsupported.
  */
 export function headingTitle({
@@ -59,7 +57,7 @@ export function headingTitle({
  * Renders a section heading with an optional description and actions.
  *
  * @param {!Object=} options Heading and layout configuration.
- * @return {string} Section heading HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Section heading, optional description and action area.
  * @throws {RangeError} If the layout or heading level is unsupported.
  */
 export function sectionHeader({
@@ -104,7 +102,7 @@ export function sectionHeader({
  *
  * @param {!Object=} options Page heading and optional application-owned
  * markup.
- * @return {string} Accessible page-header HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Accessible page header, with punctuation controlled by the period option.
  */
 export function pageHeader({
   title,
@@ -132,11 +130,11 @@ export function pageHeader({
  * Renders the shared back button with a single accessible arrow.
  *
  * @param {string} action Delegated data-act identifier.
- * @param {string} label Escaped translated label; old arrow glyphs are
+ * @param {string} label Translated label; old arrow glyphs are
  * removed.
  * @param {string=} region Optional data-region attribute.
  * @param {string=} variant Inline or page-action placement.
- * @return {string} Accessible navigation HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Back button in the requested placement.
  * @throws {RangeError} If the navigation variant is unsupported.
  */
 export function backNavigation(action, label, region = '', variant = 'inline') {
@@ -163,7 +161,7 @@ export function backNavigation(action, label, region = '', variant = 'inline') {
  * Renders an accessible help button without changing heading height.
  *
  * @param {!Object=} options Help action configuration.
- * @return {string} Help-button HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Accessible help button with the requested disabled state.
  */
 export function helpIconButton({label, action = 'flight-plan-help',
   disabled = false} = {}) {

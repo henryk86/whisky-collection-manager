@@ -95,7 +95,7 @@ function tastingForm() {
       plan = markup;
     },
     /**
-     * Updates the navigate state for its caller.
+     * Suppresses navigation so the scenario can inspect the current view.
      */
     navigate() {},
     /**

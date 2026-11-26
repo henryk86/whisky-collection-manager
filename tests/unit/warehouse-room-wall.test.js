@@ -105,14 +105,14 @@ test(
     const oldDocument = globalThis.document;
     globalThis.document = {
       /**
-       * Derives the query selector result from the supplied values.
-       * @return {*} Result computed from the supplied inputs.
+       * Simulates an element lookup that finds nothing.
+       * @return {null} Null to represent a missing element.
        */
       querySelector: () =>
         null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -120,13 +120,13 @@ test(
       createWarehouseView({
         state,
         /**
-         * Updates the shell state for its caller.
+         * Captures the rendered page in the fixture for later assertions.
          *
-         * @param {*} output Output resource or accumulated result.
+         * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
          */
         shell: output => {html = output;},
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},
@@ -615,8 +615,8 @@ test(
        */
       querySelector: selector => selector === '.warehouse-wall-scroll' ? viewport : null,
       /**
-       * Derives the query selector all result from the supplied values.
-       * @return {!Array<*>} Resulting entries in their output order.
+       * Simulates an element query with no matches.
+       * @return {Array<never>} Empty match list; the simulated root has no matching elements.
        */
       querySelectorAll: () => [],
     };
@@ -634,7 +634,7 @@ test(
           };
         },
         /**
-         * Updates the navigate state for its caller.
+         * Suppresses navigation so the scenario can inspect the current view.
          */
         navigate: () => {},
         modal: {},

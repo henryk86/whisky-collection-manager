@@ -153,13 +153,13 @@ test(
     const view = createTastingsView({
       state: {collection, page: 'tastings-home', selected: null},
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} rendered Value used by this operation.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} rendered Page content passed by the view.
        */
       shell: rendered => {html = rendered;},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -180,8 +180,8 @@ test(
       },
       selectors: {
         /**
-         * Derives the cover photo result from the supplied values.
-         * @return {*} Result computed from the supplied inputs.
+         * Simulates a missing cover photo.
+         * @return {null} No photo path.
          */
         coverPhoto: () => null,
       },

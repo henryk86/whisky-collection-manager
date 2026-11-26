@@ -8,14 +8,14 @@ import {createDetailView} from '../../public/js/views/detail.js';
  *
  * @param {*} distilleryIds Distillery ids used by this operation.
  * @param {*} bottler Bottler used by this operation.
- * @return {string} Resulting text.
+ * @return {import('../../public/js/ui/render-plan.js').RenderContent} Captured detail view plan used to inspect the heading.
  */
 function renderDetail(distilleryIds, bottler) {
   const originalDocument = globalThis.document;
   globalThis.document = {
     /**
-     * Derives the query selector all result from the supplied values.
-     * @return {!Array<*>} Resulting entries in their output order.
+     * Simulates an element query with no matches.
+     * @return {Array<never>} Empty match list; the simulated root has no matching elements.
      */
     querySelectorAll: () => [],
   };
@@ -30,25 +30,25 @@ function renderDetail(distilleryIds, bottler) {
       state: {selected: 'b1', collection: {bottlings: [bottling]}},
       selectors: {
         /**
-         * Derives the bottles result from the supplied values.
-         * @return {!Array<*>} Resulting entries in their output order.
+         * Provides an empty physical-bottle list.
+         * @return {Array<never>} No physical bottles for the requested bottling.
          */
         bottles: () => [],
         /**
-         * Derives the cover photo result from the supplied values.
-         * @return {string} Resulting text.
+         * Simulates a bottling without a cover photo.
+         * @return {string} Empty path to exercise the no-photo state.
          */
         coverPhoto: () => '',
         /**
-         * Derives the distillery names result from the supplied values.
-         * @return {string} Resulting text.
+         * Supplies the fixed distillery label used by this fixture.
+         * @return {string} Fixture label 'Laphroaig'.
          */
         distilleryNames: () => 'Laphroaig',
       },
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} output Output resource or accumulated result.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} output Page content passed by the view.
        */
       shell: output => {html = output;},
       /**

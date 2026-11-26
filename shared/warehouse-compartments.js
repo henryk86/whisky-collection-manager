@@ -13,11 +13,55 @@ export const FURNITURE_TYPES = Object.freeze([
   'sonstiges',
 ]);
 export const SHELF_FRONTS = Object.freeze(['open', 'door', 'glass', 'drawer']);
+
+/** @typedef {'open'|'door'|'glass'|'drawer'} ShelfFront */
+/** @typedef {'regal'|'vitrine'|'schrank'|'kommode'|'kiste'|'haengeregal'|'sonstiges'} FurnitureType */
+/**
+ * Stored shelf, ordered bottom-to-top within its furniture item.
+ * @typedef {Object} WarehouseShelf
+ * @property {string} id Shelf identifier.
+ * @property {string} name Display name.
+ * @property {number} capacity Maximum number of physical bottles; zero disables storage.
+ * @property {?number} [heightCm] Explicit compartment height in centimetres; null or absent means automatic.
+ * @property {?ShelfFront} [front] Explicit front or inherited furniture default.
+ * @property {?number} [doorLeaves] One or two leaves; null means default.
+ * @property {?boolean} [glassFrame] Explicit framed-glass preference.
+ */
+/**
+ * A single door covering consecutive shelf numbers.
+ * @typedef {Object} DoorRange
+ * @property {number} from First shelf, numbered from 1 at the bottom.
+ * @property {number} to Last shelf, inclusive.
+ * @property {'door'|'glass'} front Opaque or transparent door.
+ * @property {?number} [doorLeaves] Explicit leaf count.
+ * @property {?boolean} [glassFrame] Explicit frame configuration.
+ */
+/**
+ * Fields consumed by the shared vertical geometry helpers. Horizontal layout
+ * fields are independent of the shelf allocation algorithm.
+ * @typedef {Object} ShelfLayout
+ * @property {FurnitureType|string} type Furniture category.
+ * @property {WarehouseShelf[]} shelves Compartments in bottom-to-top order.
+ * @property {number} [itemHeight] Furniture height in metres.
+ * @property {number} [elevation] Height of the base above the floor in metres.
+ * @property {DoorRange[]} [doorRanges] Shared door spans.
+ */
+/**
+ * Derived compartment geometry in absolute room coordinates.
+ * @typedef {Object} ShelfLevel
+ * @property {WarehouseShelf} shelf Original shelf record (not copied).
+ * @property {number} index Zero-based index, from the bottom.
+ * @property {number} bottom Lower edge in metres above the room floor.
+ * @property {number} top Upper edge in metres above the room floor.
+ * @property {number} height Compartment height in metres.
+ * @property {number} heightCm Compartment height in centimetres.
+ * @property {ShelfFront} front Shelf-level front, independent of shared doors.
+ */
 /**
  * Selects the default front-edge arrangement of a shelf.
  *
- * @param {*} type Type used by this operation.
- * @return {*} Structured result assembled from the input data.
+ * @param {FurnitureType|string} type Furniture category; unknown categories use an open shelf.
+ * @return {ShelfFront} Default opaque, glazed, drawer or open front.
  */
 export function defaultShelfFront(type) {
   return {schrank: 'door', vitrine: 'glass', kommode: 'drawer', kiste: 'door'}[type] ?? 'open';
@@ -26,9 +70,9 @@ export function defaultShelfFront(type) {
 /**
  * Resolves the shelf front in light of inherited furniture settings.
  *
- * @param {*} shelf Shelf used by this operation.
- * @param {*} furnitureType Furniture type used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * @param {WarehouseShelf|null|undefined} shelf Shelf whose optional override is read.
+ * @param {FurnitureType|string} furnitureType Category used for the fallback.
+ * @return {ShelfFront} Explicit front or the category default.
  */
 export function effectiveShelfFront(shelf, furnitureType) {
   return shelf?.front == null ? defaultShelfFront(furnitureType) : shelf.front;
@@ -37,9 +81,9 @@ export function effectiveShelfFront(shelf, furnitureType) {
 /**
  * Door ranges cover consecutive shelves, numbered from bottom (1) to top.
  *
- * @param {*} item Warehouse item or record being evaluated.
- * @param {number} index Zero-based index of the item.
- * @return {*} Result computed from the supplied inputs.
+ * @param {ShelfLayout} item Furniture containing shared doors.
+ * @param {number} index Zero-based shelf index.
+ * @return {?DoorRange} First encompassing door span, or null.
  */
 export function doorRangeForIndex(item, index) {
   return (item.doorRanges || []).find(range => index + 1 >= range.from && index + 1 <= range.to) || null;
@@ -48,9 +92,9 @@ export function doorRangeForIndex(item, index) {
 /**
  * Determines the shelf-front shape displayed by the UI.
  *
- * @param {*} item Warehouse item or record being evaluated.
- * @param {number} index Zero-based index of the item.
- * @return {*} Value returned by the delegated operation.
+ * @param {ShelfLayout} item Furniture containing shelves and optional shared doors.
+ * @param {number} index Zero-based shelf index.
+ * @return {ShelfFront} Shared door front if covered; otherwise the effective shelf front.
  */
 export function visibleShelfFront(item, index) {
   return doorRangeForIndex(item, index)?.front ?? effectiveShelfFront(item.shelves[index], item.type);
@@ -59,8 +103,8 @@ export function visibleShelfFront(item, index) {
 /**
  * Computes the visible height of furniture and its shelves.
  *
- * @param {*} item Warehouse item or record being evaluated.
- * @return {number} Calculated numeric result.
+ * @param {ShelfLayout} item Furniture, possibly without an explicit height.
+ * @return {number} Height in metres; defaults to 0.4 for wall shelves and 1.8 otherwise.
  */
 export function furnitureHeight(item) {
   return Number(item.itemHeight ?? (item.type === 'haengeregal' ? 0.4 : 1.8));
@@ -69,8 +113,8 @@ export function furnitureHeight(item) {
 /**
  * Totals explicitly configured shelf heights in centimetres.
  *
- * @param {*} shelves Shelves used by this operation.
- * @return {*} Combined value obtained from the entries.
+ * @param {WarehouseShelf[]} shelves Compartments, including automatic-height shelves.
+ * @return {number} Sum of explicitly assigned centimetres.
  */
 export function totalExplicitHeightCm(shelves) {
   return shelves.reduce((sum, shelf) => sum + (shelf.heightCm == null ? 0 : Number(shelf.heightCm)), 0);
@@ -82,8 +126,8 @@ export function totalExplicitHeightCm(shelves) {
  * remainder is deliberately left as clearance at the top, not added to a fixed
  * bay.
  *
- * @param {*} item Warehouse item or record being evaluated.
- * @return {*} Array of values selected for the caller.
+ * @param {ShelfLayout} item Furniture geometry and bottom-to-top compartments.
+ * @return {ShelfLevel[]} Absolute levels; unspecified heights share remaining space equally.
  */
 export function shelfLevels(item) {
   const shelves = item.shelves || [];

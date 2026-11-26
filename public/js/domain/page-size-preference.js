@@ -4,10 +4,10 @@ import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS} from './pagination.js';
 export const PAGE_SIZE_STORAGE_KEY = 'whisky-page-size';
 
 /**
- * Derives the supported page size result from the supplied values.
+ * Accepts only a canonical numeric value from the supported page sizes.
  *
- * @param {*} value Value to process.
- * @return {number} Calculated numeric value.
+ * @param {*} value Stored preference or numeric input.
+ * @return {?number} Supported page size, or null for obsolete or invalid input.
  */
 function supportedPageSize(value) {
   const number = Number(value);

@@ -473,7 +473,7 @@ export const moveShelf = (id, input) => changeWarehouse(data => {
  *
  * @param {*} source Source used by this operation.
  * @param {*} siblings Siblings used by this operation.
- * @return {string} Resulting text.
+ * @return {string} First noncolliding copy name, keeping the 100-character name limit.
  */
 function copiedName(source, siblings) {
   const names = new Set(siblings.map(item => item.name));

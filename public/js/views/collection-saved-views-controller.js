@@ -225,8 +225,8 @@ export function createSavedViewsController({state, columnSelection, refresh, hom
   }
 
   /**
-   * Transforms the entries used by saved views menu html.
-   * @return {string} Resulting text.
+   * Prepares saved collection views and actions reflecting the current selection and changes.
+   * @return {!import('../ui/render-plan.js').RenderPlan} Saved collection views and actions reflecting the current selection and changes.
    */
   function savedViewsMenuHtml() {
     const current = savedViews().find(item => item.id === state.activeSavedViewId);

@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 /**
  * Returns a timestamp suitable for collection audit fields.
  *
- * @return {string} Resulting text.
+ * @return {string} Current UTC instant formatted as an ISO timestamp.
  */
 export const now = () => new Date().toISOString();
 

@@ -9,6 +9,17 @@ import {promisify} from 'node:util';
 import {DATA_DIR} from '../storage/paths.js';
 import {fail} from '../domain/errors.js';
 
+/** @typedef {import('node:http').IncomingMessage} AuthRequest */
+/** @typedef {import('node:http').ServerResponse} AuthResponse */
+/**
+ * Safe account metadata sent to clients; no password hash or salt.
+ * @typedef {{id: string, username: string, role: 'admin'|'user', mustChangePassword: boolean}} PublicUser
+ */
+/** @typedef {{salt: string, passwordHash: string}} PasswordCredential */
+/** @typedef {PublicUser & PasswordCredential} StoredUser */
+/** @typedef {{schemaVersion: 1, loginRequired: boolean, users: StoredUser[]}} AuthStore */
+/** @typedef {{required: boolean, user: PublicUser|null, canManageUsers: boolean}} SessionInfo */
+
 const scrypt = promisify(crypto.scrypt);
 const FILE = path.join(DATA_DIR, 'user.json');
 const SCRYPT_OPTIONS = {N: 131072, r: 8, p: 1, maxmem: 256 * 1024 * 1024};
@@ -21,17 +32,18 @@ let current = null;
 let fileIdentity = null;
 let queue = Promise.resolve();
 /**
- * Derives the auth error result from the supplied values.
+ * Creates a localized HTTP authentication error without exposing secret values.
  *
- * @param {*} key Key used to select or group values.
- * @param {*} status Status value determining the next action.
- * @return {*} Result computed from the supplied inputs.
+ * @param {string} key Stable authentication error key.
+ * @param {number} status HTTP status code.
+ * @return {import('../domain/errors.js').HttpError} Error object to be thrown by the caller.
  */
 const authError = (key, status) => fail(key, status, `api.errors.${key}`);
 
 /**
- * Produces the identity text used by the caller.
- * @return {string} Resulting text.
+ * Reads the authentication file metadata used to detect replacement or edits.
+ *
+ * @return {string} Device, inode, size and modification/change time fingerprint.
  */
 const identity = () => {
   const stat = fs.statSync(FILE);
@@ -39,10 +51,11 @@ const identity = () => {
 };
 
 /**
- * Validates store against its constraints.
+ * Validates authentication records and requires at least one administrator; rejects duplicate IDs and usernames.
  *
- * @param {*} value Value to process.
- * @return {*} Entries transformed for the consuming code.
+ * @param {*} value Untrusted parsed user.json data.
+ * @return {AuthStore} Validated store, preserving its existing object identity.
+ * @throws {Error} If schema, credentials or uniqueness constraints are invalid.
  */
 function validateStore(value) {
   if (!value || value.schemaVersion !== 1 || typeof value.loginRequired !== 'boolean' || !Array.isArray(value.users) || !value.users.some(u => u.role === 'admin') ||
@@ -57,8 +70,10 @@ function validateStore(value) {
 }
 
 /**
- * Reads store data from the local filesystem.
- * @return {*} Parsed JSON value.
+ * Reads and caches user.json; a file replacement or manual edit invalidates every active session.
+ *
+ * @return {AuthStore} Validated current account store.
+ * @throws {Error} If the file is missing or invalid; authentication does not silently fall back to anonymous access.
  */
 function store() {
   if (!fs.existsSync(FILE)) throw Error('user.json fehlt; Anmeldung wird aus Sicherheitsgruenden nicht deaktiviert.');
@@ -74,9 +89,10 @@ function store() {
 }
 
 /**
- * Writes save data to the local filesystem.
+ * Validates and atomically replaces user.json with owner-only permissions; refreshes the in-process cache.
  *
- * @param {*} value Value to process.
+ * @param {AuthStore} value New account store.
+ * @throws {Error} If validation or a filesystem operation fails.
  */
 function save(value) {
   validateStore(value);
@@ -90,10 +106,11 @@ function save(value) {
 }
 
 /**
- * Derives the serialize result from the supplied values.
+ * Queues account mutations; a rejected mutation does not block later mutations.
  *
- * @param {*} task Task to execute or examine.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @template T
+ * @param {function(): (T|Promise<T>)} task Mutation to run after the preceding queued operation.
+ * @return {Promise<T>} Settles with the mutation result or its original rejection.
  */
 function serialize(task) {
   const job = queue.then(task);
@@ -102,9 +119,10 @@ function serialize(task) {
 }
 
 /**
- * Tests input text against the password check pattern.
+ * Rejects passwords shorter than 12 characters, over 256 UTF-8 bytes, or containing control characters.
  *
- * @param {*} password Password or secret supplied by the caller.
+ * @param {*} password Untrusted password candidate.
+ * @throws {import('../domain/errors.js').HttpError} If the password does not meet the stored-account policy.
  */
 function passwordCheck(password) {
   if (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password, 'utf8') > 256 ||
@@ -112,20 +130,21 @@ function passwordCheck(password) {
 }
 
 /**
- * Tests input text against the username check pattern.
+ * Accepts only lowercase account names of 3–32 ASCII letters, digits, dots, underscores or hyphens.
  *
- * @param {*} username Value used by this operation.
+ * @param {*} username Untrusted normalized username.
+ * @throws {import('../domain/errors.js').HttpError} If the username does not meet the account policy.
  */
 function usernameCheck(username) {
   if (typeof username !== 'string' || !/^[a-z0-9._-]{3,32}$/.test(username)) throw authError('invalidUsername', 400);
 }
 
 /**
- * Coordinates asynchronous work for hash password.
+ * Derives a scrypt credential without retaining the plaintext password.
  *
- * @param {*} password Password or secret supplied by the caller.
- * @param {*=} salt Value used by this operation.
- * @return {!Promise<*>} Promise for the asynchronous operation.
+ * @param {*} password Password candidate validated before hashing.
+ * @param {string=} salt Hex-encoded salt; defaults to 16 random bytes.
+ * @return {Promise<PasswordCredential>} Salt and 64-byte hex-encoded hash, or rejects if validation or hashing fails.
  */
 async function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
   passwordCheck(password);
@@ -136,11 +155,12 @@ async function hashPassword(password, salt = crypto.randomBytes(16).toString('he
 }
 
 /**
- * Derives the hash password sync result from the supplied values.
+ * Derives the initial-account scrypt credential synchronously at startup.
  *
- * @param {*} password Password or secret supplied by the caller.
- * @param {*=} salt Value used by this operation.
- * @return {!Object} Structured result assembled from the input data.
+ * @param {*} password Password candidate validated before hashing.
+ * @param {string=} salt Hex-encoded salt; defaults to 16 random bytes.
+ * @return {PasswordCredential} Salt and 64-byte hex-encoded hash.
+ * @throws {Error} If password validation or hashing fails.
  */
 function hashPasswordSync(password, salt = crypto.randomBytes(16).toString('hex')) {
   passwordCheck(password);
@@ -151,10 +171,10 @@ function hashPasswordSync(password, salt = crypto.randomBytes(16).toString('hex'
 }
 
 /**
- * Normalizes the session token text for subsequent processing.
+ * Reads the authentication cookie without decoding or validating other cookies.
  *
- * @param {*} request Value used by this operation.
- * @return {string} Resulting text.
+ * @param {AuthRequest} request Request carrying the Cookie header.
+ * @return {string} Session token or empty text if absent.
  */
 function sessionToken(request) {
   const cookies = String(request.headers.cookie || '').split(';');
@@ -163,12 +183,12 @@ function sessionToken(request) {
 }
 
 /**
- * Produces the cookie headers text used by the caller.
+ * Builds a host-scoped HttpOnly, SameSite=Strict session cookie; adds Secure on TLS.
  *
- * @param {*} request Value used by this operation.
- * @param {string=} token Token submitted for validation.
- * @param {number=} maxAge Value used by this operation.
- * @return {string} Resulting text.
+ * @param {AuthRequest} request Request used to determine TLS state.
+ * @param {string=} token Token to set; empty by default.
+ * @param {number=} maxAge Cookie lifetime in seconds; zero expires the cookie.
+ * @return {string} Set-Cookie header value.
  */
 function cookieHeaders(request, token = '', maxAge = 0) {
   // TLS is provided by the app even when behind its optional TLS reverse proxy.
@@ -177,7 +197,7 @@ function cookieHeaders(request, token = '', maxAge = 0) {
 }
 
 /**
- * Updates the prune state for its caller.
+ * Removes expired and idle sessions and rate-limit entries older than five minutes.
  */
 function prune() {
   const now = Date.now();
@@ -186,7 +206,9 @@ function prune() {
 }
 
 /**
- * Initializes the authentication state and any initial admin account.
+ * Creates the account store once if absent and logs the initial admin password only on successful creation; then clears sessions and validates the store.
+ *
+ * @throws {Error} If the store cannot be initialized or validated.
  */
 export function initializeAuth() {
   fs.mkdirSync(DATA_DIR, {recursive: true});
@@ -212,10 +234,10 @@ export function initializeAuth() {
 }
 
 /**
- * Resolves the authenticated user from an active session.
+ * Resolves an active session and updates its last-seen timestamp; stale sessions are removed.
  *
- * @param {!Object} req Incoming HTTP request.
- * @return {*} Computed value, or null when the input has no match.
+ * @param {AuthRequest} req Request carrying the session cookie.
+ * @return {StoredUser|null} Authenticated stored account, or null for an invalid or expired session.
  */
 export function sessionUser(req) {
   const token = sessionToken(req);
@@ -230,10 +252,10 @@ export function sessionUser(req) {
 }
 
 /**
- * Returns the safe public representation of a user record.
+ * Projects account metadata without including the password salt or hash.
  *
- * @param {*} user User record being authenticated or modified.
- * @return {*} Result computed from the supplied inputs.
+ * @param {StoredUser|null|undefined} user Stored account or no matching user.
+ * @return {PublicUser|null|undefined} Safe public account, preserving null or undefined input.
  */
 export function publicUser(user) {
   return user && {
@@ -245,10 +267,10 @@ export function publicUser(user) {
 }
 
 /**
- * Returns the current session's authentication details.
+ * Reports whether login is required, which account is active and whether it can manage users.
  *
- * @param {!Object} req Incoming HTTP request.
- * @return {!Object} Structured result for the caller.
+ * @param {AuthRequest} req Request carrying the session cookie.
+ * @return {SessionInfo} Authentication state for the client.
  */
 export function sessionInfo(req) {
   const data = store();
@@ -261,12 +283,13 @@ export function sessionInfo(req) {
 }
 
 /**
- * Enforces the user precondition.
+ * Requires a valid session and enforces password-change and administrator restrictions.
  *
- * @param {*} req Incoming request to authorize.
- * @param {boolean=} admin Value used by this operation.
- * @param {boolean=} allowChange Value used by this operation.
- * @return {*} Result computed from the supplied inputs.
+ * @param {AuthRequest} req Request carrying the session cookie.
+ * @param {boolean=} admin Require administrator privileges.
+ * @param {boolean=} allowChange Allow a session that still requires a password change.
+ * @return {StoredUser} Authenticated account satisfying the requested restrictions.
+ * @throws {import('../domain/errors.js').HttpError} HTTP 401 for no session or 403 for an unmet access restriction.
  */
 function requireUser(req, admin = false, allowChange = false) {
   const user = sessionUser(req);
@@ -277,10 +300,11 @@ function requireUser(req, admin = false, allowChange = false) {
 }
 
 /**
- * Enforces the authentication and permission rules for a request.
+ * Enforces optional login for API and image requests while allowing the explicit public authentication routes and separately authorized worker routes.
  *
- * @param {!Object} req Incoming HTTP request.
- * @param {string} url URL of the requested resource.
+ * @param {AuthRequest} req Request whose method and session are inspected.
+ * @param {URL} url Parsed request URL.
+ * @throws {import('../domain/errors.js').HttpError} If the route requires a session or administrator permission not held by the requester.
  */
 export function authorizeRequest(req, url) {
   const pathname = url.pathname;
@@ -301,12 +325,12 @@ export function authorizeRequest(req, url) {
 }
 
 /**
- * Authenticates supplied credentials and creates a user session.
+ * Checks credentials with per-account/IP rate limits, creates a bounded in-memory session, and sets the session cookie.
  *
- * @param {!Object} req Incoming HTTP request.
- * @param {*} body Request or response body.
- * @param {!Object} response Outgoing response.
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @param {AuthRequest} req Request used for the client address and cookie security.
+ * @param {*} body Untrusted username and password fields.
+ * @param {AuthResponse} response Response on which Set-Cookie is written.
+ * @return {Promise<SessionInfo>} New authenticated session state; rejects with an authentication or rate-limit error.
  */
 export async function login(req, body, response) {
   const username = typeof body?.username === 'string' ? body.username.toLowerCase().trim() : '';
@@ -356,10 +380,10 @@ const hashDummy = {
   salt: '00000000000000000000000000000000', passwordHash: '0'.repeat(128),
 };
 /**
- * Derives the session info with user result from the supplied values.
+ * Builds authentication status for an already verified account.
  *
- * @param {*} user Value used by this operation.
- * @return {!Object} Structured result assembled from the input data.
+ * @param {StoredUser} user Account whose session has just been established or updated.
+ * @return {SessionInfo} Login setting, public account and administrator capability.
  */
 function sessionInfoWithUser(user) {
   return {
@@ -370,11 +394,11 @@ function sessionInfoWithUser(user) {
 }
 
 /**
- * Ends the current user session and removes its cookie.
+ * Invalidates the current in-memory session and expires the client cookie.
  *
- * @param {!Object} req Incoming HTTP request.
- * @param {!Object} response Outgoing response.
- * @return {!Object} Structured result for the caller.
+ * @param {AuthRequest} req Request carrying the current session cookie.
+ * @param {AuthResponse} response Response on which the expired cookie is written.
+ * @return {SessionInfo} Logged-out state with no account or management permission.
  */
 export function logout(req, response) {
   sessions.delete(sessionToken(req));
@@ -383,21 +407,21 @@ export function logout(req, response) {
 }
 
 /**
- * Updates the invalidate user state for its caller.
+ * Revokes all in-memory sessions associated with one account.
  *
- * @param {*} id Identifier of the affected record.
+ * @param {string} id Stable user identifier.
  */
 function invalidateUser(id) {
   for (const [token, session] of sessions) if (session.id === id) sessions.delete(token);
 }
 
 /**
- * Updates a user's password after validating the request.
+ * Validates the current password, saves a distinct replacement, revokes old sessions and rotates the cookie after a successful write.
  *
- * @param {!Object} req Incoming HTTP request.
- * @param {*} body Request or response body.
- * @param {!Object} response Outgoing response.
- * @return {!Promise<void>} Promise fulfilled when the operation completes.
+ * @param {AuthRequest} req Authenticated request; a first-login session is allowed.
+ * @param {*} body Untrusted currentPassword and newPassword fields.
+ * @param {AuthResponse} response Response receiving the rotated session cookie.
+ * @return {Promise<SessionInfo>} Updated authenticated state, or rejection if validation or persistence fails.
  */
 export async function changePassword(req, body, response) {
   return serialize(async () => {
@@ -421,10 +445,11 @@ export async function changePassword(req, body, response) {
 }
 
 /**
- * Lists user accounts visible to an authorized administrator.
+ * Lists safe public account metadata and the login requirement for an administrator.
  *
- * @param {!Object} req Incoming HTTP request.
- * @return {!Object} Structured result for the caller.
+ * @param {AuthRequest} req Request requiring administrator permission.
+ * @return {{required: boolean, users: PublicUser[]}} Account management state.
+ * @throws {import('../domain/errors.js').HttpError} If administrator access is denied.
  */
 export function listUsers(req) {
   requireUser(req, true);
@@ -434,11 +459,11 @@ export function listUsers(req) {
 }
 
 /**
- * Creates user for auth.
+ * Creates a non-admin account with a unique username and mandatory first-login password change; persists it before returning.
  *
- * @param {!Object} req Incoming HTTP request.
- * @param {*} body Request or response body.
- * @return {!Promise<void>} Promise fulfilled when the operation completes.
+ * @param {AuthRequest} req Administrator request.
+ * @param {*} body Untrusted username and initial password.
+ * @return {Promise<PublicUser>} Created account without credentials, or rejection on authorization, validation, account limit or write failure.
  */
 export async function createUser(req, body) {
   return serialize(async () => {
@@ -463,12 +488,12 @@ export async function createUser(req, body) {
 }
 
 /**
- * Clears password for auth.
+ * Sets another account’s temporary password, requires a password change and invalidates all of its sessions.
  *
- * @param {!Object} req Incoming HTTP request.
- * @param {string} id Identifier used to select the relevant record.
- * @param {*} body Request or response body.
- * @return {!Promise<void>} Promise fulfilled when the operation completes.
+ * @param {AuthRequest} req Administrator request.
+ * @param {string} id Target account identifier, not the requesting administrator.
+ * @param {*} body Untrusted replacement password field.
+ * @return {Promise<PublicUser>} Updated public account, or rejection when the reset is not permitted or cannot be saved.
  */
 export async function resetPassword(req, id, body) {
   return serialize(async () => {
@@ -485,11 +510,11 @@ export async function resetPassword(req, id, body) {
 }
 
 /**
- * Clears user for auth.
+ * Deletes a non-administrator account and revokes its sessions; prevents removing the current administrator.
  *
- * @param {!Object} req Incoming HTTP request.
- * @param {string} id Identifier used to select the relevant record.
- * @return {!Promise<void>} Promise fulfilled when the operation completes.
+ * @param {AuthRequest} req Administrator request.
+ * @param {string} id Target account identifier.
+ * @return {Promise<{success: true}>} Confirmation after persisting the deletion, or rejection if denied or not found.
  */
 export function removeUser(req, id) {
   return serialize(() => {
@@ -506,11 +531,11 @@ export function removeUser(req, id) {
 }
 
 /**
- * Changes the optional-login requirement in server settings.
+ * Persists the administrator’s optional-login setting independently of collection data.
  *
- * @param {!Object} req Incoming HTTP request.
- * @param {*} body Request or response body.
- * @return {!Promise<void>} Promise fulfilled when the operation completes.
+ * @param {AuthRequest} req Administrator request.
+ * @param {*} body Untrusted object containing the boolean required field.
+ * @return {Promise<{required: boolean}>} Persisted login requirement, or rejection on authorization, validation or write failure.
  */
 export function setLoginRequired(req, body) {
   return serialize(() => {
@@ -524,10 +549,9 @@ export function setLoginRequired(req, body) {
 }
 
 /**
- * Operator-only recovery (execute locally on the server, never exposed over
- * HTTP).
+ * Generates a new temporary admin password for local operator recovery, persists its hash and revokes the admin’s sessions. Never expose this function through HTTP.
  *
- * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
+ * @return {Promise<{username: string, password: string}>} Administrator name and newly generated plaintext password for the local operator.
  */
 export async function resetAdminPassword() {
   const data = structuredClone(store());

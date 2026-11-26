@@ -97,7 +97,7 @@ export function parseRoute(search) {
  * @param {*} page Page used by this operation.
  * @param {*} selected Selected used by this operation.
  * @param {!Object=} filters Filters restricting the input records.
- * @return {string} Resulting text.
+ * @return {string} Relative application URL, including valid selection and filter query parameters.
  */
 export function routeUrl(page, selected, filters = {}) {
   if (['detail', 'tasting', 'tastings'].includes(page)) {

@@ -26,10 +26,16 @@ export const FLAVOR_AXES = Object.freeze([
 ]);
 
 /**
- * Normalizes flavor profile for flavor profile.
+ * Sensory ratings are integers from 0 to 10; the two newly added axes may
+ * be null when an older tasting did not assess them.
+ * @typedef {{woody: number, smoky: number|null, cereal: number, peaty: number, fruity: number, floral: number, medicinal: number|null, winey: number, feinty: number, sulphury: number}} FlavorProfile
+ */
+/**
+ * Normalizes persisted sensory ratings to the current ten-axis representation.
  *
- * @param {*} value Input value to process.
- * @return {?Object} Computed value, or null when the input has no match.
+ * @param {*} value Untrusted profile or null; eight legacy axes and the former fiery axis are supported.
+ * @return {?FlavorProfile} Ten validated ratings or null for an absent profile.
+ * @throws {Error} If the shape or any rating is invalid.
  */
 export function normalizeFlavorProfile(value) {
   if (value === null) return null;

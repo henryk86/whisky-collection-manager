@@ -16,15 +16,15 @@ const example = {
  * Derives the detail html result from the supplied values.
  *
  * @param {!Array<*>=} tastings Value used by this operation.
- * @return {string} Resulting text.
+ * @return {import('../../public/js/ui/render-plan.js').RenderContent} Captured tasting detail plan used to inspect the layout.
  */
 function detailHtml(tastings = []) {
   let html = '';
   const oldDocument = globalThis.document;
   globalThis.document = {
     /**
-     * Derives the query selector all result from the supplied values.
-     * @return {!Array<*>} Resulting entries in their output order.
+     * Simulates an element query with no matches.
+     * @return {Array<never>} Empty match list; the simulated root has no matching elements.
      */
     querySelectorAll: () => [],
   };
@@ -38,13 +38,13 @@ function detailHtml(tastings = []) {
       state,
       selectors: {
         /**
-         * Derives the bottles result from the supplied values.
-         * @return {!Array<*>} Resulting entries in their output order.
+         * Provides an empty physical-bottle list.
+         * @return {Array<never>} No physical bottles for the requested bottling.
          */
         bottles: () => [],
         /**
-         * Derives the cover photo result from the supplied values.
-         * @return {string} Resulting text.
+         * Simulates a bottling without a cover photo.
+         * @return {string} Empty path to exercise the no-photo state.
          */
         coverPhoto: () =>
           '',
@@ -55,13 +55,13 @@ function detailHtml(tastings = []) {
         distilleryNames: () => [],
       },
       /**
-       * Updates the shell state for its caller.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} content Content to render, store or examine.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
        */
       shell: content => {html = content;},
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -151,14 +151,14 @@ test(
     createTastingsView({
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} content Content to render, store or examine.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: content => html = content,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -199,8 +199,8 @@ test(
     };
     const selectors = {
       /**
-       * Derives the cover photo result from the supplied values.
-       * @return {string} Resulting text.
+       * Supplies a fixed cover-photo path for the image rendering assertion.
+       * @return {string} Fixture photo path '/photos/cover.png'.
        */
       coverPhoto: () => '/photos/cover.png',
     };
@@ -208,14 +208,14 @@ test(
       state,
       selectors,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} content Content to render, store or examine.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: content => html = content,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**
@@ -253,14 +253,14 @@ test(
     createTastingsView({
       state,
       /**
-       * Derives the shell result from the supplied values.
+       * Captures the rendered page in the fixture for later assertions.
        *
-       * @param {*} content Content to render, store or examine.
-       * @return {*} Result computed from the supplied inputs.
+       * @param {import('../../public/js/ui/render-plan.js').RenderContent} content Page content passed by the view.
+       * @return {import('../../public/js/ui/render-plan.js').RenderContent} The captured page content.
        */
       shell: content => html = content,
       /**
-       * Updates the navigate state for its caller.
+       * Suppresses navigation so the scenario can inspect the current view.
        */
       navigate() {},
       /**

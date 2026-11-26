@@ -9,10 +9,10 @@ const renderTemplate = await loadTemplates('dialogs/modal-layout.html');
 
 
 /**
- * Builds an accessible dialog around trusted application-rendered HTML.
+ * Builds an accessible dialog around prepared render content.
  *
  * @param {!Object} options Modal content, title and layout.
- * @return {string} Dialog overlay and content HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Accessible dialog overlay, heading and body.
  * @throws {RangeError} If the modal variant is unsupported.
  */
 export function modalFrame({title, content, wide = false, variant = '',
@@ -52,9 +52,9 @@ export function modalFrame({title, content, wide = false, variant = '',
 /**
  * Places trusted action buttons inside the owning form footer.
  *
- * @param {string} actions Trusted application-generated button markup.
- * @param {{className: string}=} options2 Additional footer CSS class.
- * @return {string} Footer HTML without changing submit behavior.
+ * @param {import('./render-plan.js').RenderContent} actions Prepared button controls.
+ * @param {{className?: string}=} options2 Additional footer CSS class.
+ * @return {!import('./render-plan.js').RenderPlan} Dialog footer containing the supplied controls without changing submit behavior.
  */
 export function modalFooter(actions, {className = ''} = {}) {
   return renderTemplate('actions', {
@@ -67,7 +67,7 @@ export function modalFooter(actions, {className = ''} = {}) {
  * Renders a cancel/confirm footer with a destructive action style.
  *
  * @param {!Object} options Translated labels and delegated confirm action.
- * @return {string} Trusted footer HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Cancel and destructive confirmation controls.
  */
 export function destructiveFooter({cancelLabel, acceptLabel, acceptAction,
   className = ''}) {

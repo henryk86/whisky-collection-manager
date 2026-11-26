@@ -68,7 +68,7 @@ test(
         ({
           matches: false,
           /**
-           * Updates the add event listener state for its caller.
+           * Ignores listener registration in this DOM-free test double.
            */
           addEventListener() {},
         }),
@@ -78,7 +78,7 @@ test(
          * Retrieves item from the available state.
          *
          * @param {string} key Key used to select or group values.
-         * @return {string} Resulting text.
+         * @return {?string} Stored fixture preference, or null when absent.
          */
         getItem: key => saved.get(key) ?? null,
         /**

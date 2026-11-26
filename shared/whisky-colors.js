@@ -59,15 +59,15 @@ export function isAllowedWhiskyHex(hex) {
  * @param {*} h Value used by this operation.
  * @param {*} s Source value to transform.
  * @param {*} l Value used by this operation.
- * @return {string} Resulting text.
+ * @return {string} RGB color encoded as a six-digit hexadecimal color string.
  */
 function hslToHex(h, s, l) {
   const a = s * Math.min(l, 1 - l);
   /**
-   * Calculates the channel numeric value.
+   * Converts one HSL-derived channel to a padded RGB hex pair.
    *
    * @param {*} n Count or input number to evaluate.
-   * @return {string} Resulting text.
+   * @return {string} Two-digit hexadecimal value of the requested RGB channel.
    */
   const channel = n => {
     const k = (n + h / 30) % 12;
@@ -82,7 +82,7 @@ function hslToHex(h, s, l) {
  *
  * @param {number} x Horizontal coordinate in the current coordinate system.
  * @param {number} y Vertical coordinate in the current coordinate system.
- * @return {string} Resulting text.
+ * @return {string} Hex color selected by the normalized coordinates of the warm-color picker.
  */
 export function whiskyPickerHex(x, y) {
   const h = (340 + 78 * clamp(x)) % 360;
@@ -108,7 +108,7 @@ export function whiskyPickerPosition(hex) {
  * Saved data: existing fixed colour keys or a validated custom:#rrggbb value.
  *
  * @param {*} value Input value to process.
- * @return {?string} Resulting text.
+ * @return {?string} Accepted fixed color key or normalized custom hex color; null for missing color.
  */
 export function normalizeWhiskyColor(value) {
   if (value == null || value === '') return null;

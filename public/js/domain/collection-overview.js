@@ -135,10 +135,10 @@ function comparePresent(left, right, descending = false) {
 }
 
 /**
- * Converts the input into number.
+ * Converts a populated collection field to a finite sortable number.
  *
- * @param {*} value Value to process.
- * @return {number} Calculated numeric value.
+ * @param {*} value Candidate field value; blank or nullish means unknown.
+ * @return {?number} Finite numeric value, or null when missing or invalid.
  */
 function asNumber(value) {
   if (value === null || value === undefined || value === '') return null;

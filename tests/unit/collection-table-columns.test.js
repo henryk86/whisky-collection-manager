@@ -102,13 +102,13 @@ const selectors = {
    */
   bottles: id => collection.bottlings.find(item => item.id === id).bottles,
   /**
-   * Derives the cover photo result from the supplied values.
-   * @return {*} Result computed from the supplied inputs.
+   * Simulates a missing cover photo.
+   * @return {null} No photo path.
    */
   coverPhoto: () => null,
   /**
-   * Derives the distillery names result from the supplied values.
-   * @return {string} Resulting text.
+   * Omits distillery labels for this test.
+   * @return {string} Empty label; no distillery name is supplied by this fixture.
    */
   distilleryNames: () => '',
 };
@@ -219,11 +219,11 @@ test(
       globalThis.location = {pathname: '/', search: ''};
       globalThis.history = {
         /**
-         * Updates the replace state state for its caller.
+         * Suppresses history replacement in the simulated browser.
          */
         replaceState() {},
         /**
-         * Updates the push state state for its caller.
+         * Suppresses history insertion in the simulated browser.
          */
         pushState() {},
       };
@@ -238,8 +238,8 @@ test(
          */
         querySelector: selector => selector === '.collection-table-columns' ? currentPicker : null,
         /**
-         * Derives the query selector all result from the supplied values.
-         * @return {!Array<*>} Resulting entries in their output order.
+         * Simulates an element query with no matches.
+         * @return {Array<never>} Empty match list; the simulated root has no matching elements.
          */
         querySelectorAll: () => [],
       };

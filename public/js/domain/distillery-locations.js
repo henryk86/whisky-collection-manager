@@ -463,7 +463,7 @@ Yoker|55.892|-4.38
  * Normalizes distillery name for distillery locations.
  *
  * @param {string} name Name of the item.
- * @return {string} Resulting text.
+ * @return {string} Normalized ASCII lookup name without leading article or trailing distillery suffix.
  */
 export const normalizeDistilleryName = name => String(name || '').normalize('NFKD').toLocaleLowerCase('en').replace(/[’']/g, '').replace(/[^a-z0-9]+/g, ' ')
   .trim().replace(/^the /, '').replace(/ distillery$/, '');

@@ -20,12 +20,12 @@ const renderTemplate = await loadTemplates('forms/bottle.html');
 export function createBottleForm({state, selectors}) {
   const {distilleryNames} = selectors;
   /**
-   * Selects and transforms the bottle form records.
+   * Prepares bottle editor for an existing parent bottling, with inventory, purchase and photo controls.
    *
    * @param {!Object=} bottle Physical bottle record under consideration.
    * @param {*} bottlingId Value used by this operation.
    * @param {!Object=} options3 Opening context and reference photo option.
-   * @return {string} Resulting text.
+   * @return {!import('../../ui/render-plan.js').RenderPlan} Bottle editor for an existing parent bottling, with inventory, purchase and photo controls.
    */
   function bottleForm(bottle = {}, bottlingId,
     {fromOverview = false, importPhoto = false} = {}) {

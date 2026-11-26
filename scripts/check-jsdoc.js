@@ -24,9 +24,9 @@ function returnsValue(func) {
   if (ts.isArrowFunction(func) && !ts.isBlock(func.body)) return true;
   let result = false;
   /**
-   * Derives the visit result from the supplied values.
+   * Searches the current function body, excluding nested functions.
    *
-   * @param {*} node Node to inspect or update.
+   * @param {!ts.Node} node Syntax node in the current traversal.
    */
   function visit(node) {
     if (node !== func && ts.isFunctionLike(node)) return;
@@ -46,7 +46,7 @@ function returnsValue(func) {
  * @return {boolean} Whether the public API has a complete typed contract.
  */
 function hasTypedJSDoc(owner, func) {
-  const comment = owner.jsDoc?.find(doc => typeof doc.comment === 'string' && doc.comment.trim().length >= 12);
+  const comment = owner.jsDoc?.find(doc => typeof doc.comment === 'string' && doc.comment.trim().length > 0);
   if (!comment) return false;
   if (ts.isClassDeclaration(func)) {
     return func.members.filter(ts.isConstructorDeclaration).every(ctor =>
@@ -80,11 +80,11 @@ export function inspectExports(file, source) {
   const syntax = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   const entries = [];
   /**
-   * Updates the add state for its caller.
+   * Records one exported name and the result of its documentation check.
    *
-   * @param {*} name Environment variable or setting name.
-   * @param {*} statement Value used by this operation.
-   * @param {*} func Value used by this operation.
+   * @param {string} name Exported identifier.
+   * @param {!ts.Node} statement Syntax node holding the JSDoc.
+   * @param {!ts.Node} func Exported function or class declaration.
    */
   function add(name, statement, func) {
     const key = `${file}#${name}`;

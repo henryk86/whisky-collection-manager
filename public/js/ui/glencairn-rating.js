@@ -12,7 +12,7 @@ const renderTemplate = await loadTemplates('components/glencairn-rating.html');
  * manual entry.
  *
  * @param {*} rating Rating used by this operation.
- * @return {string} Resulting text.
+ * @return {!import('./render-plan.js').RenderPlan} Five-glass rating control and precise numeric score input.
  */
 export function glencairnRating(rating) {
   const safe = rating == null ? null : Math.max(0, Math.min(100, Number(rating)));

@@ -5,7 +5,7 @@ import {hasBottlingDetail} from './bottling-details.js';
  * map.
  *
  * @param {!Object} bottling Bottling record being processed.
- * @return {string} Resulting text.
+ * @return {string} Available age, strength and release dates joined with middle dots.
  */
 export function mapBottlingFacts(bottling) {
   const facts = [];

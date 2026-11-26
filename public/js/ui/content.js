@@ -6,27 +6,28 @@ const renderTemplate = await loadTemplates('components/content.html');
 
 
 /**
- * Derives the safe result from the supplied values.
+ * Encodes a scalar for the renderer's legacy escaped-text binding.
  *
- * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @param {*} value Value to convert to text; nullish values become empty.
+ * @return {string} Encoded scalar text.
  */
 const safe = value => escapeHtml(String(value ?? ''));
 
 /**
- * Filters records according to the classes selection rules.
+ * Combines optional class names without introducing empty class tokens.
  *
- * @param {!Array<*>} items Entries to process.
- * @return {string} Resulting text.
+ * @param {...(string|boolean|null|undefined)} items Class names or falsy placeholders.
+ * @return {string} Space-separated CSS class names.
  */
 const classes = (...items) => items.filter(Boolean).join(' ');
 
 /**
- * Enforces the variant precondition.
+ * Rejects unsupported semantic tags and design-system variants.
  *
- * @param {*} value Value to process.
- * @param {*} allowed Value used by this operation.
- * @param {*} kind Value used by this operation.
+ * @param {string|number} value Requested variant, tag or column count.
+ * @param {Array<string|number>} allowed Supported values.
+ * @param {string} kind Name of the configuration field in the error.
+ * @throws {RangeError} If the requested value is not supported.
  */
 const assertVariant = (value, allowed, kind) => {
   if (!allowed.includes(value)) throw new RangeError(`Invalid ${kind} variant`);
@@ -36,7 +37,7 @@ const assertVariant = (value, allowed, kind) => {
  * Renders a shared visual surface with its requested semantic tag.
  *
  * @param {!Object=} options Trusted panel content and styling.
- * @return {string} Panel markup.
+ * @return {!import('./render-plan.js').RenderPlan} Semantic panel in the requested surface variant.
  * @throws {RangeError} If tag or style variant is unsupported.
  */
 export function panel({content = '', variant = 'standard', tag = 'div',
@@ -57,7 +58,7 @@ export function panel({content = '', variant = 'standard', tag = 'div',
  * Renders a labeled detail value with an appropriate semantic element.
  *
  * @param {!Object=} options Detail field data and formatting.
- * @return {string} Detail-field markup.
+ * @return {!import('./render-plan.js').RenderPlan} Labeled value with semantic definition or detail elements.
  * @throws {RangeError} If the field variant is unsupported.
  */
 export function detailField({
@@ -97,9 +98,9 @@ export function detailField({
 /**
  * Groups detail fields in a responsive two- or three-column grid.
  *
- * @param {string} content Trusted application-generated field HTML.
+ * @param {import('./render-plan.js').RenderContent} content Prepared detail-field content.
  * @param {!Object=} options2 Grid layout and semantic wrapper.
- * @return {string} Grid wrapper HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Responsive grid containing the supplied detail fields.
  * @throws {RangeError} If the columns or wrapper tag are unsupported.
  */
 export function detailGrid(content, {columns = 3, tag = 'div', className =
@@ -119,7 +120,7 @@ export function detailGrid(content, {columns = 3, tag = 'div', className =
  * Renders a missing-data explanation without inventing values.
  *
  * @param {!Object=} options Message, trusted actions and style.
- * @return {string} Empty-state markup.
+ * @return {!import('./render-plan.js').RenderPlan} Missing-data message in the requested visual variant.
  * @throws {RangeError} If the variant is unsupported.
  */
 export function emptyState({
@@ -150,7 +151,7 @@ export function emptyState({
  * Renders an accessible visual separator without view-specific borders.
  *
  * @param {!Object=} options Separator orientation and CSS class.
- * @return {string} HTML separator.
+ * @return {!import('./render-plan.js').RenderPlan} Horizontal or vertical visual separator.
  * @throws {RangeError} If the orientation is unsupported.
  */
 export function divider({orientation = 'horizontal', className = ''} = {}) {
@@ -161,11 +162,11 @@ export function divider({orientation = 'horizontal', className = ''} = {}) {
 }
 
 /**
- * Groups trusted action markup while preserving delegated events.
+ * Groups composed action controls while preserving delegated events.
  *
- * @param {string} content Trusted application-generated action HTML.
+ * @param {import('./render-plan.js').RenderContent} content Prepared action controls.
  * @param {!Object=} options2 Toolbar style and extra class.
- * @return {string} Toolbar HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Action toolbar containing the supplied controls.
  * @throws {RangeError} If the toolbar variant is unsupported.
  */
 export function actionToolbar(content, {className = '', variant = 'inline'} =
@@ -180,20 +181,20 @@ export function actionToolbar(content, {className = '', variant = 'inline'} =
 }
 
 /**
- * Wraps trusted document-entry markup in a list item.
+ * Wraps prepared document-entry content in a list item.
  *
- * @param {string} content Trusted application-generated document HTML.
- * @return {string} List-item HTML.
+ * @param {import('./render-plan.js').RenderContent} content Prepared document entry.
+ * @return {!import('./render-plan.js').RenderPlan} List item containing the supplied document entry.
  */
 export function documentItem(content) {
   return renderTemplate('li', {content: content, });
 }
 
 /**
- * Renders the document list from trusted list-item HTML.
+ * Groups prepared document list items without string concatenation.
  *
- * @param {!Array<string>} items Complete, application-generated list items.
- * @return {string} Document-list HTML.
+ * @param {import('./render-plan.js').PlanPart[]} items Prepared list-item plans.
+ * @return {!import('./render-plan.js').RenderPlan} Document list containing the supplied list items.
  */
 export function documentList(items) {
   return renderTemplate('documentList', {items: composeMarkup(items), });

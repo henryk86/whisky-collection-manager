@@ -12,7 +12,7 @@ const image = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
  *
  * @param {*} bytes Value used by this operation.
  * @param {*} mime Value used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Data URL containing the supplied MIME type and base64 bytes.
  */
 const dataUrl = (bytes, mime) => `data:${mime};base64,${bytes.toString('base64')}`;
 

@@ -25,7 +25,7 @@ test(
           {
             html,
             /**
-             * Updates the add event listener state for its caller.
+             * Ignores listener registration in this DOM-free test double.
              */
             addEventListener() {},
           } : null;

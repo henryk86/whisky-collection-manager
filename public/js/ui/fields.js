@@ -4,13 +4,26 @@ import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('components/fields.html');
 
+/**
+ * Shared input accessibility and presentation options. The field builders
+ * link description and validation messages using IDs derived from the name.
+ * @typedef {Object} FieldOptions
+ * @property {boolean} [required] Native required constraint.
+ * @property {boolean} [disabled] Native disabled state.
+ * @property {string} [description] Accessible hint text.
+ * @property {string} [error] Validation message; sets aria-invalid.
+ * @property {boolean} [full] Use the full-width field layout.
+ * @property {string} [type] Native input type for textInput.
+ * @property {string|number} [step] Native numeric input increment.
+ * @property {string} [placeholder] Optional text input placeholder.
+ */
+
 
 /**
- * Existing field APIs are kept. Labels, names and values are escaped;
- * description/error nodes use stable ids for accessible control associations.
+ * Encodes a field value for a legacy scalar template binding.
  *
- * @param {*} value Input value to process.
- * @return {string} Resulting text.
+ * @param {*} value Initial field value; nullish values become empty text.
+ * @return {string} Encoded scalar value.
  */
 const e = value => escapeHtml(String(value ?? ''));
 
@@ -18,7 +31,7 @@ const e = value => escapeHtml(String(value ?? ''));
  * Builds accessible input attributes with stable hint and error references.
  *
  * @param {string} name Form field name, escaped before interpolation.
- * @param {!Object=} options Validation state and hint/error text.
+ * @param {FieldOptions=} options Validation state and hint/error text.
  * @return {!Object} Accessible control attributes.
  */
 function props(name, options = {}) {
@@ -36,8 +49,8 @@ function props(name, options = {}) {
  * Renders optional hint and error elements referenced by the input.
  *
  * @param {string} name Field name used for unique element identifiers.
- * @param {!Object=} options Description and optional validation error.
- * @return {string} Escaped inline help markup.
+ * @param {FieldOptions=} options Description and optional validation error.
+ * @return {import('./render-plan.js').RenderPlan|string} Help and error content, or empty text if neither is set.
  */
 function help(name, options = {}) {
   return composeMarkup(options.description ?
@@ -56,9 +69,9 @@ function help(name, options = {}) {
  *
  * @param {string} label User-facing field label.
  * @param {string} name Field name used by the associated help elements.
- * @param {string} control Trusted application-generated input markup.
- * @param {!Object=} options Layout and message settings.
- * @return {string} Complete labeled form-field HTML.
+ * @param {!import('./render-plan.js').RenderPlan} control Prepared input control.
+ * @param {FieldOptions=} options Layout and message settings.
+ * @return {!import('./render-plan.js').RenderPlan} Labeled field with optional accessible messages.
  */
 function wrapper(label, name, control, options = {}) {
   return renderTemplate('formField', {
@@ -72,11 +85,11 @@ function wrapper(label, name, control, options = {}) {
 /**
  * Renders a labeled text input with accessible hints and errors.
  *
- * @param {string} label HTML-escaped control label.
+ * @param {string} label User-facing control label.
  * @param {string} name Form input name.
- * @param {string=} value Initial input value.
- * @param {!Object=} options Validation, type, hint and layout settings.
- * @return {string} Labeled input HTML.
+ * @param {string|number|null=} value Initial input value; nullish values render empty.
+ * @param {FieldOptions=} options Validation, type, hint and layout settings.
+ * @return {!import('./render-plan.js').RenderPlan} Labeled input control.
  */
 export const textInput = (label, name, value = '', options = {}) => wrapper(
   label,
@@ -94,13 +107,13 @@ export const textInput = (label, name, value = '', options = {}) => wrapper(
 /**
  * Renders a labeled select with escaped option values and captions.
  *
- * @param {string} label HTML-escaped control label.
+ * @param {string} label User-facing control label.
  * @param {string} name Form input name.
  * @param {!Array<!Array<(string|number)>>} options Value/caption option
  * pairs.
- * @param {string=} value Initially selected option value.
- * @param {!Object=} config Validation, hint and layout settings.
- * @return {string} Labeled select HTML.
+ * @param {string|number|null=} value Initially selected value, compared as text.
+ * @param {FieldOptions=} config Validation, hint and layout settings.
+ * @return {!import('./render-plan.js').RenderPlan} Labeled select control.
  */
 export const selectInput =
   (label, name, options, value = '', config = {}) => wrapper(
@@ -121,11 +134,11 @@ export const selectInput =
 /**
  * Renders a multiline input with linked hints and error text.
  *
- * @param {string} label HTML-escaped control label.
+ * @param {string} label User-facing control label.
  * @param {string} name Form field name.
  * @param {string=} value Initial textarea text.
- * @param {!Object=} options Validation and layout settings.
- * @return {string} Labeled textarea HTML.
+ * @param {FieldOptions=} options Validation and layout settings.
+ * @return {!import('./render-plan.js').RenderPlan} Labeled textarea control.
  */
 export const areaInput = (label, name, value = '', options = {}) => wrapper(
   label,
@@ -140,11 +153,11 @@ export const areaInput = (label, name, value = '', options = {}) => wrapper(
 /**
  * Renders a checkbox with accessible description and error state.
  *
- * @param {string} label HTML-escaped control label.
+ * @param {string} label User-facing control label.
  * @param {string} name Form input name.
  * @param {boolean=} checked Initial checkbox state.
  * @param {!Object=} options Validation, hint and layout settings.
- * @return {string} Labeled checkbox HTML.
+ * @return {!import('./render-plan.js').RenderPlan} Labeled checkbox control.
  */
 export const checkboxInput = (label, name, checked = false, options = {}) =>
   renderTemplate('formField2', {

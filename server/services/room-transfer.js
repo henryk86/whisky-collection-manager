@@ -44,7 +44,7 @@ const pick = (source, keys) => Object.fromEntries(keys.filter(key => Object.hasO
  * Normalizes the key text for subsequent processing.
  *
  * @param {*} value Value to process.
- * @return {string} Resulting text.
+ * @return {string} Trimmed, lowercase German matching key for a transferred name.
  */
 const key = value => String(value || '').trim().toLocaleLowerCase('de');
 

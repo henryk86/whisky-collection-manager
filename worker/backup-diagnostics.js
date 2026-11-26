@@ -4,7 +4,7 @@
  * sending a bounded single-line entry to the container's stderr log.
  *
  * @param {*} raw Raw used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Redacted single-line command diagnostic limited to 700 characters, or a generic fallback.
  */
 export function sanitizeBackupDiagnostic(raw) {
   if (typeof raw !== 'string' || !raw.trim()) return 'keine weiteren technischen Details';
@@ -60,7 +60,7 @@ export function sanitizeBackupDiagnostic(raw) {
  * @param {string} code Stable identifier used for error handling.
  * @param {*} signal Signal used by this operation.
  * @param {*} output Output used by this operation.
- * @return {string} Resulting text.
+ * @return {string} Command name, exit information and sanitized output for the operator log.
  */
 export function commandFailureDiagnostic(binary, code, signal, output) {
   const exit = signal ? `Signal ${String(signal).replace(/[^A-Z0-9]/g, '')}` :
@@ -85,7 +85,7 @@ const ERROR_TYPES = new Set([
  * Classifies unexpected worker failures for backup diagnostics.
  *
  * @param {*} error Error being handled.
- * @return {string} Resulting text.
+ * @return {string} Safe error classification, optional system code and source location, without raw exception text.
  */
 export function unexpectedBackupDiagnostic(error) {
   const kind = ERROR_TYPES.has(error?.name) ? error.name : 'Fehler';

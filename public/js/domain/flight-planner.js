@@ -344,7 +344,7 @@ function selectFlight(
    * Reads the precomputed novelty value for a candidate during set scoring.
    *
    * @param {!Object} item Candidate used as the cache key.
-   * @return {number} Cached novelty score.
+   * @return {number|undefined} Cached novelty score; undefined for an object outside the candidate set.
    */
   const noveltyScore = item => noveltyCache.get(item);
   const unfamiliarityCache = new Map();

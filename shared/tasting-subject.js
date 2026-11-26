@@ -3,11 +3,12 @@ export const TASTING_SUBJECT_FIELDS =
   Object.freeze(['name', 'distillery', 'bottler', 'ageYears', 'abv',
     'releaseYear']);
 /**
- * Normalizes tasting subject for tasting subject.
+ * Merges and validates the embedded whisky reference for an unowned tasting.
  *
- * @param {*} input Input to process.
- * @param {!Object=} previous Previous used by this operation.
- * @return {*} Whether the requested condition is met.
+ * @param {*} input Untrusted allowed subject fields.
+ * @param {Partial<import('./types.js').ExternalTastingBottling>=} previous Existing whisky details.
+ * @return {import('./types.js').ExternalTastingBottling} Trimmed names and nullable age, strength and release year.
+ * @throws {Error} For unsupported keys, invalid names or out-of-range numeric fields.
  */
 export function normalizeTastingSubject(input, previous = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input) ||

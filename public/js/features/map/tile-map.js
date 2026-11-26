@@ -439,7 +439,7 @@ export function createTileMap(
  * Accessible map structure and OSM attribution; all tile requests happen in
  * createTileMap while the map page is actually visible.
  *
- * @return {string} Resulting text.
+ * @return {!import('../../ui/render-plan.js').RenderPlan} Map viewport, zoom buttons and map attribution.
  */
 export function mapCanvasHtml() {
   return renderTemplate('distilleryMap', {

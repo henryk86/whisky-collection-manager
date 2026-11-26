@@ -6,6 +6,8 @@
  *
  * @typedef {Object} Photo
  * @property {string} id
+ * @property {import('./photo-images.js').PhotoAdjustment} [adjustment] Original-image editing state.
+ * @property {import('./photo-images.js').PhotoCutout} [cutout] Selected or retained transparent derivative.
  * @property {string} path Relative path, e.g.
  * images/<bottle-id>/photo-<id>.jpg.
  * @property {string} [createdAt] ISO timestamp.
@@ -51,8 +53,7 @@
  * @property {number|null} rating Optional score from 0 to 100.
  * @property {string} [ratingComment] Optional overall comment on the rating,
  * up to 10,000 characters.
- * @property {Object|null} flavorProfile Ten sensory axes (older records may
- * have eight).
+ * @property {import('./flavor-profile.js').FlavorProfile|null} flavorProfile Ten normalized sensory axes (older raw records may have eight).
  * @property {string|null} whiskyColor A fixed whisky colour key or
  * custom:#rrggbb (restricted warm whisky hue).
  * @property {string} createdAt ISO timestamp.
@@ -98,16 +99,19 @@
  * @property {number|null} [longitude]
  *
  * @typedef {Object} ExternalTastingBottling
- * @property {string} id Stable ID, never present in owned bottlings[].
  * @property {string} name Release name of an unowned whisky.
  * @property {string} distillery Optional free-text distillery.
  * @property {string} bottler Optional free-text bottler.
  * @property {number|null} ageYears
  * @property {number|null} abv
  * @property {number|null} releaseYear
- * @property {Tasting[]} tastings
- * @property {string} createdAt
- * @property {string} updatedAt
+ *
+ * @typedef {Tasting & {bottling: ExternalTastingBottling}} StandaloneTasting
+ *
+ * @typedef {Object} FlightPlanItem
+ * @property {string} bottlingId Owned release identifier.
+ * @property {string} bottleId Physical bottle intended for the session.
+ * @property {'noProfile'|'untried'|'contrast'|'similar'|'intensity'|'manual'} [reason] Rationale for the planned selection.
  *
  * @typedef {Object} TastingFlight
  * @property {string} id Stable UUID for the tasting session.
@@ -116,6 +120,8 @@
  * @property {string} notes Optional comparison notes.
  * @property {string[]} tastingIds Ordered references to individual owned or
  * external tastings; each tasting is in at most one flight.
+ * @property {'planned'|'inProgress'|'completed'} [phase] Lifecycle state; older flights omit it.
+ * @property {FlightPlanItem[]} [planItems] Up to six distinct planned releases; missing bottles are retained.
  * @property {string} createdAt
  * @property {string} updatedAt
  *
@@ -128,7 +134,7 @@
  * collection-wide preferences; older archives omit this.
  * @property {Distillery[]} distilleries
  * @property {Bottling[]} bottlings
- * @property {(Tasting & {bottling: Object})[]} [externalTastings] Standalone
+ * @property {StandaloneTasting[]} [externalTastings] Standalone
  * tastings of unowned whisky, excluded from inventory and analytics.
  * @property {TastingFlight[]} [tastingFlights] Optional ordered session
  * groups; no duplication of individual notes.
