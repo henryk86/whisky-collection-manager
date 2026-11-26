@@ -1,7 +1,7 @@
 # Whisky Collection Manager v1.14.1
 
 <p align="center">
-  <img src="public/assets/icon-512.png" width="96" alt="Whisky Collection Manager logo">
+  <img src="public/assets/logo-original.svg" width="96" alt="Whisky Collection Manager logo">
 </p>
 
 <p align="center"><strong>Deine Sammlung. Deine Nachweise. Deine Daten.</strong></p>
@@ -12,8 +12,6 @@
 
 <p align="center">
   <a href="https://github.com/henryk86/whisky-collection-manager/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/henryk86/whisky-collection-manager?display_name=release&label=Release"></a>
-  <a href="https://github.com/henryk86/whisky-collection-manager/actions/workflows/check.yml"><img alt="Checks workflow" src="https://img.shields.io/github/actions/workflow/status/henryk86/whisky-collection-manager/check.yml?branch=main&label=Checks"></a>
-  <a href="https://github.com/henryk86/whisky-collection-manager/actions/workflows/visual-regression.yml"><img alt="Visual comparison workflow" src="https://img.shields.io/github/actions/workflow/status/henryk86/whisky-collection-manager/visual-regression.yml?branch=main&label=Visual%20comparison"></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/henryk86/whisky-collection-manager"></a>
 </p>
 
@@ -84,9 +82,14 @@ Die Abbildungen zeigen Beispieldaten ohne private Sammlungsdaten. Für die Lager
 
 **Verkostung und Flight-Planung**
 
-| Verkostungsansicht | Tasting-Flight-Planung |
-| --- | --- |
-| ![Verkostungsnotiz mit Farb- und Notizbereichen](docs/images/tasting-notes.png) | ![Planung eines Tasting-Flights im Dialog](docs/images/tasting-flight-planning.png) |
+![Verkostung im Bearbeitungsmodus mit Farbwahl, ausgefülltem Geschmacksradar, Notizen und Bewertung](docs/images/tasting-notes.png)
+
+<details>
+<summary>Tasting-Flight-Planung anzeigen</summary>
+
+![Planung eines Tasting-Flights im Dialog](docs/images/tasting-flight-planning.png)
+
+</details>
 
 **Destillerie-Karte**
 
