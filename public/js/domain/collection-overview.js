@@ -62,6 +62,7 @@ function matchingBottlingText(bottling, distilleryNames) {
   return [
     bottling.name,
     bottling.subtitle,
+    bottling.fullName,
     distilleryNames(bottling),
     bottling.bottler,
     bottling.brand,

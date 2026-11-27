@@ -12,7 +12,7 @@ import {request} from './api.js';
 import {toast} from './ui/notifications.js';
 import {movePhoto} from './features/photo-order.js';
 import {bindFlightSorting} from './features/flight-order.js';
-import {suggestSingleDistilleryComposition} from './features/forms/composition.js';
+import {preserveManualComposition, suggestSingleDistilleryComposition} from './features/forms/composition.js';
 import {routeUrl} from './navigation/routes.js';
 import {readAnalyticsDate} from './domain/analytics-period.js';
 import {saveCollectionViewPreference}
@@ -637,6 +637,10 @@ export function bindEvents(
   });
   root.addEventListener('change', event => {
     const target = /** @type {HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement} */ (event.target);
+    if (target.matches?.('#bottling-form select[name=compositionComplete]')) {
+      if (target.form) preserveManualComposition(target.form);
+      return;
+    }
     if (target.matches?.('#bottling-form select[name=whiskyType], #bottling-form input[name=distilleryIds]')) {
       if (target.form) suggestSingleDistilleryComposition(target.form);
       return;

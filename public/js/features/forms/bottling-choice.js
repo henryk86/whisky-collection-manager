@@ -21,6 +21,7 @@ export function matchingBottlings(collection, value = '') {
     const terms = [
       bottling.name,
       bottling.subtitle,
+      bottling.fullName,
       bottling.brand,
       bottling.bottler,
       ...ids.map(id => distilleries.get(id)),

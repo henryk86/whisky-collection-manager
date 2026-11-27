@@ -228,14 +228,11 @@ export function createExternalImport({
     for (const choice of distilleryChoices) {
       if (selectedIds.has(choice.value)) choice.checked = true;
     }
-    // Only infer completeness from a single, actually assigned source distillery.
+    // Re-evaluate previous inference on every import; only infer anew for a matched source.
     const whiskyType = /** @type {?HTMLSelectElement} */ (form.elements.namedItem('whiskyType'));
-    if (importDetails.fields.whiskyType === whiskyType?.value) {
-      const matched = matchImportedDistilleries(importDetails.distilleryName, state.collection.distilleries);
-      if (matched.length === 1 && matched[0].id) {
-        suggestSingleDistilleryComposition(form, matched[0].id);
-      }
-    }
+    const matched = importDetails.fields.whiskyType === whiskyType?.value ?
+      matchImportedDistilleries(importDetails.distilleryName, state.collection.distilleries) : [];
+    suggestSingleDistilleryComposition(form, matched.length === 1 ? matched[0].id || null : null);
     importMessage(t('imports.import.selectedApplied'));
     toast(t("imports.import.dataApplied"));
   }
