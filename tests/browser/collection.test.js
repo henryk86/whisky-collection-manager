@@ -1889,8 +1889,8 @@ test('browser: optional release subtitle can be edited and found in the collecti
     await open();
     const card = page.locator('.whisky-card').filter({hasText: 'Kilchoman Genesis'});
     await card.waitFor();
-    assert.equal(await card.locator('h3').textContent(), 'Kilchoman Genesis');
-    assert.equal(await card.locator('.card-subtitle').textContent(), 'Fermenting – Stage 5');
+    assert.equal(await card.locator('h3').textContent(), 'Kilchoman Genesis Fermenting – Stage 5');
+    assert.equal(await card.locator('h3 > .ds-heading-subtitle').textContent(), 'Fermenting – Stage 5');
     await card.click();
     await page.locator('[data-act="edit-bottling"]').click();
     const field = page.locator('#bottling-form input[name="subtitle"]');
@@ -1900,5 +1900,63 @@ test('browser: optional release subtitle can be edited and found in the collecti
     await page.locator('#bottling-form button[type="submit"]').click();
     await page.locator('.detail-page-head').filter({hasText: 'Distilling – Stage 6'}).waitFor();
     assert.equal((await requestJson(base, '/api/collection')).data.bottlings.find(b => b.id === created.data.bottling.id).subtitle, 'Distilling – Stage 6');
+  });
+});
+
+test('browser: collection cards reuse heading subtitle typography in both inventory modes', async () => {
+  await session(async ({page, open, base}) => {
+    const subtitle = 'Fermenting - Stage 5 ' + 'LongReleaseDesignation'.repeat(6);
+    for (const [name, releaseSubtitle] of [['Kilchoman Genesis', subtitle], ['Plain Malt', '']]) {
+      const created = await requestJson(base, '/api/bottlings', 'POST', {
+        name, subtitle: releaseSubtitle, abv: 49.8, firstBottle: {status: 'closed'},
+      });
+      assert.equal(created.status, 201);
+    }
+    for (const mode of ['bottlings', 'bottles']) {
+      await open({query: mode === 'bottles' ? '?mode=bottles' : ''});
+      const card = page.locator('.whisky-card').filter({hasText: 'Kilchoman Genesis'});
+      const heading = card.locator('.card-body h3');
+      await heading.waitFor();
+      assert.equal(await heading.textContent(), `Kilchoman Genesis ${subtitle}`);
+      assert.equal(await heading.locator(':scope > .ds-heading-subtitle').textContent(), subtitle);
+      const plain = page.locator('.whisky-card').filter({hasText: 'Plain Malt'}).locator('h3');
+      assert.equal(await plain.textContent(), 'Plain Malt');
+      assert.equal(await plain.locator('.ds-heading-subtitle').count(), 0);
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate(value => {document.documentElement.dataset.theme = value;}, theme);
+        for (const width of [320, 390, 768, 1024, 1440]) {
+          await page.setViewportSize({width, height: 900});
+          const layout = await heading.evaluate(title => {
+            const sub = title.querySelector('.ds-heading-subtitle');
+            const mainStyle = getComputedStyle(title);
+            const subStyle = getComputedStyle(sub);
+            const rect = title.getBoundingClientRect();
+            const range = document.createRange();
+            range.selectNodeContents(sub);
+            return {
+              sameFont: mainStyle.fontFamily === subStyle.fontFamily,
+              size: parseFloat(subStyle.fontSize),
+              titleSize: parseFloat(mainStyle.fontSize),
+              expectedSize: matchMedia('(max-width: 740px)').matches ? 13 : 15,
+              metadataSizes: [...title.parentElement.querySelectorAll('.card-facts, .card-bottle-meta')].map(meta => parseFloat(getComputedStyle(meta).fontSize)),
+              gap: parseFloat(subStyle.marginTop),
+              display: subStyle.display,
+              fits: [...range.getClientRects()].every(line => line.right <= rect.right + 1 && line.left >= rect.left - 1),
+              overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+            };
+          });
+          const context = `${mode}/${theme}/${width}`;
+          assert.ok(layout.sameFont, `${context}: subtitle inherits the title font`);
+          assert.equal(layout.size, layout.expectedSize, `${context}: fixed responsive subtitle size`);
+          assert.ok(layout.metadataSizes.length > 0, `${context}: card has visible metadata`);
+          assert.ok(layout.size < layout.titleSize, `${context}: subtitle is smaller than the title`);
+          assert.ok(layout.metadataSizes.every(size => layout.size > size), `${context}: subtitle is larger than all bottle facts`);
+          assert.equal(layout.display, 'block');
+          assert.ok(layout.gap >= 0 && layout.gap <= 8, `${context}: title lines stay together`);
+          assert.ok(layout.fits, `${context}: subtitle wraps within the card heading`);
+          assert.equal(layout.overflow, false, `${context}: no horizontal page overflow`);
+        }
+      }
+    }
   });
 });

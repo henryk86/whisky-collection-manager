@@ -21,7 +21,7 @@
 .ds-heading-subtitle {
   display: block;
   margin-top: var(--ds-space-1);
-  font-size: .65em;
+  font-size: var(--ds-heading-subtitle-size, .65em);
   line-height: 1.25;
   letter-spacing: normal;
   color: var(--ds-color-text-subtle);
