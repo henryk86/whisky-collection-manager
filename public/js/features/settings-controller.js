@@ -7,6 +7,7 @@ import {query} from '../ui/dom.js';
 import {request} from '../api.js';
 import {toast} from '../ui/notifications.js';
 import {loadTemplates} from '../ui/templates.js';
+import {suggestSingleDistilleryComposition} from './forms/composition.js';
 
 const renderTemplate = await loadTemplates('settings/settings-controller.html');
 
@@ -120,6 +121,7 @@ export function createSettingsController({state, action, navigate, closeModal,
         const matching = [...options.querySelectorAll('.distillery-option')].find(option =>
           option.querySelector('span').textContent.localeCompare(saved.value.name, 'de') > 0);
         options.insertBefore(label, matching || null);
+        suggestSingleDistilleryComposition(/** @type {!HTMLFormElement} */(parentForm));
       }
     }
     toast(id ? t("features.notifications.distillerySaved") : t("features.notifications.distilleryCreated"));

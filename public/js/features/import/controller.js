@@ -7,6 +7,7 @@ import {toast} from '../../ui/notifications.js';
 import {request} from '../../api.js';
 import {importChoice} from './choice-template.js';
 import {matchImportedDistilleries} from './distillery-matching.js';
+import {suggestSingleDistilleryComposition} from '../forms/composition.js';
 import {loadTemplates} from '../../ui/templates.js';
 
 const renderTemplate = await loadTemplates('import/controller.html');
@@ -228,14 +229,11 @@ export function createExternalImport({
       if (selectedIds.has(choice.value)) choice.checked = true;
     }
     // Only infer completeness from a single, actually assigned source distillery.
-    if (importDetails.fields.whiskyType === 'single_malt') {
+    const whiskyType = /** @type {?HTMLSelectElement} */ (form.elements.namedItem('whiskyType'));
+    if (importDetails.fields.whiskyType === whiskyType?.value) {
       const matched = matchImportedDistilleries(importDetails.distilleryName, state.collection.distilleries);
-      const assigned = distilleryChoices.filter(choice => choice.checked);
-      const whiskyType = /** @type {?HTMLSelectElement} */ (form.elements.namedItem('whiskyType'));
-      const compositionComplete = /** @type {?HTMLSelectElement} */ (form.elements.namedItem('compositionComplete'));
-      if (whiskyType?.value === 'single_malt' && matched.length === 1 && matched[0].id &&
-        assigned.length === 1 && assigned[0].value === matched[0].id && compositionComplete) {
-        compositionComplete.value = 'true';
+      if (matched.length === 1 && matched[0].id) {
+        suggestSingleDistilleryComposition(form, matched[0].id);
       }
     }
     importMessage(t('imports.import.selectedApplied'));

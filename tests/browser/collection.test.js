@@ -82,6 +82,53 @@ test(
 
 
 
+for (const type of ['single_malt', 'single_grain']) {
+  test(`browser: manual ${type} composition follows category and distillery selection`, async () => {
+    await session(async ({page, open, base}) => {
+      await open();
+      const {distilleries} = (await requestJson(base, '/api/collection')).data;
+      const ardbeg = distilleries.find(site => site.name === 'Ardbeg');
+      const kilchoman = distilleries.find(site => site.name === 'Kilchoman');
+      assert.ok(ardbeg && kilchoman);
+      await page.locator('[data-act="new"]').first().click();
+      const form = page.locator('#bottling-form');
+      const category = form.locator('[name="whiskyType"]');
+      const complete = form.locator('[name="compositionComplete"]');
+      const first = form.locator(`[name="distilleryIds"][value="${ardbeg.id}"]`);
+      const second = form.locator(`[name="distilleryIds"][value="${kilchoman.id}"]`);
+      await category.selectOption(type);
+      assert.equal(await complete.inputValue(), 'false', 'category alone does not imply known composition');
+      await first.check();
+      assert.equal(await complete.inputValue(), 'true', 'selecting the only distillery after the category suggests completeness');
+      await complete.selectOption('false');
+      await category.selectOption('blended_malt');
+      assert.equal(await complete.inputValue(), 'false');
+      await second.check();
+      await category.selectOption(type);
+      assert.equal(await complete.inputValue(), 'false', 'multiple distilleries do not imply completeness');
+      await second.uncheck();
+      assert.equal(await complete.inputValue(), 'true');
+      await complete.selectOption('false');
+      await category.selectOption('blended_malt');
+      await category.selectOption(type);
+      assert.equal(await complete.inputValue(), 'true', 'selecting the category after the distillery also suggests completeness');
+      await complete.selectOption('false');
+      await form.locator('[name="name"]').fill(`Manual ${type}`);
+      await form.locator('button[type="submit"]').click();
+      await page.locator('[data-act="edit-bottling"]').waitFor();
+      const saved = (await requestJson(base, '/api/collection')).data.bottlings.find(b => b.name === `Manual ${type}`);
+      assert.equal(saved.compositionComplete, false, 'explicit override is persisted');
+      await page.locator('[data-act="edit-bottling"]').click();
+      assert.equal(await complete.inputValue(), 'false', 'opening an existing editor preserves the saved value');
+      await first.uncheck();
+      await first.check();
+      assert.equal(await complete.inputValue(), 'true', 'the rule also works when editing');
+    });
+  });
+}
+
+
+
 test(
   'browser: create a bottling, read-only bottle context, edit and photo upload',
   async () => {
@@ -1332,6 +1379,8 @@ test(
       await page.locator('[data-act="new"]').first().click();
       await page.locator('#bottling-form [name="name"]').fill('My unfinished bottling');
       await page.locator('#bottling-form [name="brand"]').fill('My unfinished brand');
+      await page.locator('#bottling-form [name="whiskyType"]').selectOption('single_malt');
+      assert.equal(await page.locator('#bottling-form [name="compositionComplete"]').inputValue(), 'false');
       await page.locator('#bottling-form [name="firstPhotos"]').setInputFiles({
         name: 'snapshot.png', mimeType: 'image/png',
         buffer: Buffer.from(
@@ -1353,6 +1402,7 @@ test(
       );
       const selection = page.locator('#bottling-form .distillery-option').filter({hasText: 'New Distillery in Draft'});
       assert.equal(await selection.locator('input:checked').count(), 1);
+      assert.equal(await page.locator('#bottling-form [name="compositionComplete"]').inputValue(), 'true');
     });
   }
 );

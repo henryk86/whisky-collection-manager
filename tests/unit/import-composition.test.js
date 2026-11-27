@@ -61,23 +61,26 @@ function applyComposition({type = 'single_malt', source = 'Kilchoman', selected 
   }
 }
 
-test('single malt import marks composition complete when its distillery is assigned', () => {
-  assert.equal(applyComposition(), 'true');
-  assert.equal(applyComposition({existing: ['kilchoman'], selected: [], existingType: 'single_malt', importType: false}), 'true');
-});
+for (const type of ['single_malt', 'single_grain']) {
+  test(`${type} import marks composition complete when its distillery is assigned`, () => {
+    assert.equal(applyComposition({type}), 'true');
+    assert.equal(applyComposition({type, existing: ['kilchoman'], selected: [], existingType: type, importType: false}), 'true');
+  });
 
-test('single malt import does not infer completeness from unknown, missing or rejected distilleries', () => {
-  assert.equal(applyComposition({source: 'Unknown', selected: []}), 'false');
-  assert.equal(applyComposition({source: '', selected: []}), 'false');
-  assert.equal(applyComposition({selected: []}), 'false');
-  assert.equal(applyComposition({source: 'Kilchoman, Unknown'}), 'false');
-  assert.equal(applyComposition({source: 'Kilchoman, Ardbeg'}), 'false');
-  assert.equal(applyComposition({existing: ['ardbeg']}), 'false');
-  assert.equal(applyComposition({existing: ['ardbeg'], selected: []}), 'false');
-});
+  test(`${type} import does not infer completeness from unknown, missing or rejected distilleries`, () => {
+    assert.equal(applyComposition({type, source: 'Unknown', selected: []}), 'false');
+    assert.equal(applyComposition({type, source: '', selected: []}), 'false');
+    assert.equal(applyComposition({type, selected: []}), 'false');
+    assert.equal(applyComposition({type, source: 'Kilchoman, Unknown'}), 'false');
+    assert.equal(applyComposition({type, source: 'Kilchoman, Ardbeg'}), 'false');
+    assert.equal(applyComposition({type, existing: ['ardbeg']}), 'false');
+    assert.equal(applyComposition({type, existing: ['ardbeg'], selected: []}), 'false');
+    assert.equal(applyComposition({type, existingType: 'blended_malt', importType: false}), 'false');
+  });
+}
 
 test('other categories and rejected category changes preserve the composition setting', () => {
-  for (const type of ['blended_malt', 'blended_scotch', 'single_grain', 'blended_grain', null]) {
+  for (const type of ['blended_malt', 'blended_scotch', 'blended_grain', null]) {
     assert.equal(applyComposition({type}), 'false');
     assert.equal(applyComposition({type, complete: 'true'}), 'true');
   }
