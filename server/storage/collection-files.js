@@ -29,17 +29,17 @@ export class CollectionCommitError extends PublishedWriteError {
 }
 
 /**
- * Serializes a validated logical snapshot, including the older four-file layout for recovery of a schema-8 journal.
+ * Serializes a validated logical snapshot, using the requested historical layout and sidecar versions during journal recovery.
  * @param {Collection} collection Complete logical collection.
- * @param {8|9=} version Physical layout version.
+ * @param {8|9|10=} version Physical layout version.
  * @return {SerializedFiles} Complete physical layout with newline-terminated JSON.
  */
-export function serializeCollectionFiles(collection, version = 9) {
+export function serializeCollectionFiles(collection, version = 10) {
   validate(collection);
   const core = {...collection, schemaVersion: Number(version)};
   const files = {};
   for (const key of version === 8 ? LEGACY_PARTS : PARTS) {
-    files[`${key}.json`] = {schemaVersion: 1, [key]: core[key] ?? null};
+    files[`${key}.json`] = {schemaVersion: key === 'externalTastings' && version === 10 ? 2 : 1, [key]: core[key] ?? null};
     delete core[key];
   }
   return Object.fromEntries(Object.entries({'collection.json': core, ...files}).map(([name, value]) => [name, JSON.stringify(value, null, 2) + '\n']));
@@ -58,12 +58,12 @@ function readJson(filename) {
 /**
  * Loads the complete legacy or split collection. Missing or conflicting sidecars are errors, not empty defaults.
  * @param {string} directory Data directory.
- * @return {{collection: Collection, changed: boolean, conflicts: Array<*>, legacySnapshot?: string}} Validated snapshot, migration information and complete legacy schema-8 export if applicable.
+ * @return {{collection: Collection, changed: boolean, conflicts: Array<*>, legacySnapshot?: string}} Validated snapshot, migration information and complete legacy split-schema export if applicable.
  */
 export function loadCollectionFiles(directory) {
   if (hasCollectionTransaction(directory)) throw Error('Unfinished collection transaction');
   const core = readJson(path.join(directory, 'collection.json'));
-  if (![8, 9].includes(core?.schemaVersion)) {
+  if (![8, 9, 10].includes(core?.schemaVersion)) {
     if (PARTS.some(key => fs.existsSync(path.join(directory, `${key}.json`)))) {
       throw Error('Legacy collection has conflicting separate data files');
     }
@@ -74,12 +74,12 @@ export function loadCollectionFiles(directory) {
   for (const key of legacy ? LEGACY_PARTS : PARTS) {
     if (Object.hasOwn(core, key)) throw Error(`Duplicate collection data: ${key}`);
     const part = readJson(path.join(directory, `${key}.json`));
-    if (part?.schemaVersion !== 1 || !Object.hasOwn(part, key) || Object.keys(part).length !== 2) {
+    if (part?.schemaVersion !== (key === 'externalTastings' && core.schemaVersion === 10 ? 2 : 1) || !Object.hasOwn(part, key) || Object.keys(part).length !== 2) {
       throw Error(`Invalid or unsupported collection part: ${key}`);
     }
     if (key !== 'settings' || part[key] !== null) core[key] = part[key];
   }
-  if (legacy) return {...migrateCollectionToCurrent(core), legacySnapshot: JSON.stringify(core, null, 2) + '\n'};
+  if (core.schemaVersion !== 10) return {...migrateCollectionToCurrent(core), legacySnapshot: JSON.stringify(core, null, 2) + '\n'};
   validate(core);
   return {collection: core, changed: false, conflicts: []};
 }
@@ -135,7 +135,7 @@ export function recoverCollectionTransaction(directory) {
   if (!hasCollectionTransaction(directory)) return 'complete';
   const filename = path.join(directory, JOURNAL);
   const journal = readJson(filename);
-  if (journal?.version !== 1 || ![8, 9].includes(journal.collection?.schemaVersion)) throw Error('Unsupported collection transaction');
+  if (journal?.version !== 1 || ![8, 9, 10].includes(journal.collection?.schemaVersion)) throw Error('Unsupported collection transaction');
   const files = serializeCollectionFiles(migrateCollectionToCurrent(journal.collection).collection, journal.collection.schemaVersion);
   // Persist a visible journal before replay, including any earlier published file renames.
   syncDirectory(directory);

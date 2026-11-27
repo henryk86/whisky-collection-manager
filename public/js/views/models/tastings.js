@@ -41,7 +41,7 @@ export function createPlannedFlightViewModel(current, collection, warehouse, sel
     const bottle = b?.bottles?.find(entry => entry.id === item.bottleId);
     return {
       item, b, bottle,
-      label: b ? `${b.name}${bottle?.inventoryNumber ? ' · #' + bottle.inventoryNumber : ''}` : t('flightPlan.missing'),
+      label: b ? `${b.fullName ?? b.name}${bottle?.inventoryNumber ? ' · #' + bottle.inventoryNumber : ''}` : t('flightPlan.missing'),
       unavailable: !bottle || bottle.status === 'empty',
       photo: displayPhotoPath(bottle?.photos?.[0]) || (b ? selectors?.coverPhoto?.(b.id) : null),
       place: bottle && warehouse ? storagePath(warehouse, warehouse.assignments?.[bottle.id]) : null,
@@ -79,7 +79,7 @@ export function localToday() {
 export function createRecordedFlightViewModel(collection, current) {
   return {
     refs: flightEntries(collection, current),
-    available: allTastingReferences(collection).filter(item => !flightForTasting(collection, item.record.id)).sort((a, b) => a.bottling.name.localeCompare(b.bottling.name)),
+    available: allTastingReferences(collection).filter(item => !flightForTasting(collection, item.record.id)).sort((a, b) => (a.bottling.fullName ?? a.bottling.name).localeCompare(b.bottling.fullName ?? b.bottling.name)),
   };
 }
 

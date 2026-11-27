@@ -121,7 +121,7 @@ export function createMapView({state, shell, navigate, settings}) {
         id: site.id,
       })));
     return renderTemplate('mapRelatedBottling', {
-      locationsFor: t("map.bottling.locationsFor", {name: String(relatedBottling.name ?? '')}),
+      locationsFor: t("map.bottling.locationsFor", {name: relatedBottling.fullName ?? relatedBottling.name}),
       mapRelatedSites: entries ? renderTemplate('mapRelatedSites', {entries: entries, }) : renderTemplate('hint'),
     });
   }

@@ -15,14 +15,17 @@
 ## Beispiele
 
 ```js
-import { pageHeader, backNavigation, sectionHeader } from '../ui/headers.js';
+import { pageHeader, headingTitle, backNavigation, sectionHeader } from '../ui/headers.js';
 import { panel, detailField } from '../ui/content.js';
 
 const header = pageHeader({ title: t('navigation.analytics') });
 // Benutzernamen und Abfüllungsnamen niemals mit automatisch angehängtem Punkt:
-const bottlingHeader = pageHeader({ title: bottling.name, period: false });
+const bottlingHeader = pageHeader({ title: bottling.name, subtitle: bottling.subtitle, period: false });
+const cardTitle = headingTitle({ title: bottling.name, subtitle: bottling.subtitle });
 const details = panel({ content: detailField({ label: t('bottle.age'), value: ageText }) });
 ```
+
+Optionale Zusatzbezeichnungen stehen innerhalb derselben Überschrift. Detailseiten und Sammlungskacheln verwenden dieselbe Untertitelkomponente. Detailseiten verwenden 65 % der Titelgröße; Sammlungskacheln setzen über `--ds-heading-subtitle-size` 15 px, mobil 13 px (`--ds-type-ui-md`). Der Untertitel bleibt auf Kacheln kleiner als der Haupttitel, aber größer als die Flaschendaten (einschließlich Mobilansicht).
 
 Nur übersetzte Texte, **keine** Pfeilzeichen, an die Back-Navigation geben. Eine gemeinsame Komponente nicht ausschließlich für eine einzige Fachausnahme ausweiten; Fachgeometrie lokal belassen. Optionen nur ergänzen, wenn ein realer, testbarer Wiederverwendungsfall existiert.
 

@@ -7,6 +7,7 @@ import {requireField} from './validation.js';
 import {WHISKY_TYPES} from './collection.js';
 const fields = [
   'name',
+  'subtitle',
   'distilleryIds',
   'distilleryId',
   'whiskyType',
@@ -79,6 +80,12 @@ export function normalizeBottling(input, old = {}) {
     ...old, ...filtered(input, fields),
   };
   value.name = requireField(value.name, 'name');
+  if (Object.hasOwn(value, 'subtitle')) {
+    if (value.subtitle != null && (typeof value.subtitle !== 'string' || value.subtitle.length > 180)) {
+      throw fail('Ungültige Zusatzbezeichnung', 400, 'api.errors.invalidSubtitle');
+    }
+    value.subtitle = value.subtitle?.trim() || null;
+  }
   if (Object.hasOwn(input, 'distilleryIds')) {
     if (!Array.isArray(input.distilleryIds)) {
       throw fail('Destillerien müssen eine Liste sein', 400, "api.errors.distilleriesMustBeAList");

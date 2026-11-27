@@ -18,6 +18,16 @@
   margin: var(--ds-space-3) 0;
 }
 
+.ds-heading-subtitle {
+  display: block;
+  margin-top: var(--ds-space-1);
+  font-size: var(--ds-heading-subtitle-size, .65em);
+  line-height: 1.25;
+  letter-spacing: normal;
+  color: var(--ds-color-text-subtle);
+  overflow-wrap: anywhere;
+}
+
 .ds-page-header .page-heading-copy {
   flex: 1 1 auto;
   min-width: 0;

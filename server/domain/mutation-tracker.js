@@ -2,6 +2,7 @@
  * from mixing patches and never exposes another client's collection. */
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {resourceDelta} from '../../shared/resource-delta.js';
+import {collectionMetadata} from './bottling-metadata.js';
 const storage = new AsyncLocalStorage();
 /**
  * Runs a collection mutation while tracking affected resources.
@@ -28,6 +29,6 @@ export function trackMutation(kind, previous, current, previousEtag, nextEtag) {
   const updates = storage.getStore();
   if (updates) updates.push({
     before: previousEtag, after: nextEtag,
-    delta: resourceDelta(kind, previous, current),
+    delta: kind === 'collection' ? resourceDelta(kind, collectionMetadata(previous), collectionMetadata(current)) : resourceDelta(kind, previous, current),
   });
 }

@@ -13,6 +13,7 @@ const renderTemplate = await loadTemplates('components/fields.html');
  * @property {string} [error] Validation error linked to the control.
  * @property {string} [type] Native input type (text input only).
  * @property {string|number} [step] Numeric step (text input only).
+ * @property {number} [maxlength] Maximum text input length.
  * @property {string} [placeholder] Empty text-input placeholder.
  */
 
@@ -84,7 +85,7 @@ export const textInput = (label, name, value = '', options = {}) => wrapper(
   label,
   name,
   renderTemplate('textInputInput', {
-    props: props(name, options),
+    props: {...props(name, options), maxlength: options.maxlength ?? null},
     type: String((options.type || 'text') ?? ''),
     stepAttributes: options.step != null ? {"step": options.step} : {},
     value: String(value ?? ''),

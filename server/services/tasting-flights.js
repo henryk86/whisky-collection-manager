@@ -1,3 +1,4 @@
+import {externalTastingMetadata} from '../domain/bottling-metadata.js';
 /** Tasting Flights: one ordered grouping per independently stored tasting. */
 import {read, change} from '../storage/collection-store.js';
 import {now, uid} from '../domain/collection.js';
@@ -219,6 +220,6 @@ export function createTasting(id, body) {
     } else (collection.externalTastings ||= []).push(/** @type {import('../../shared/types.js').StandaloneTasting} */(record));
     flight.tastingIds.push(record.id);
     flight.updatedAt = timestamp;
-    return {record, bottlingId: owned?.id || null};
+    return {record: owned ? record : externalTastingMetadata(/** @type {import('../../shared/types.js').StandaloneTasting} */(record)), bottlingId: owned?.id || null};
   });
 }

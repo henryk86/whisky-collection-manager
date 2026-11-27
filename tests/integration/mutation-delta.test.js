@@ -88,7 +88,7 @@ test(
 
 test('delta validation rejects malformed arrays and unsafe fields', () => {
   const source = {
-    schemaVersion: 9,
+    schemaVersion: 10,
     bottlings: [],
     distilleries: [],
     externalTastings: [],
@@ -114,4 +114,38 @@ test('delta validation rejects malformed arrays and unsafe fields', () => {
     /Invalid delta entity order/
   );
   assert.equal(Object.hasOwn(source, '__protoPollute'), false);
+});
+
+
+test('release fullName is derived in API results and state deltas, never stored or trusted on import', async () => {
+  const ctx = await startTestServer();
+  try {
+    const initial = await json(ctx.base, '/api/collection');
+    const created = await json(ctx.base, '/api/bottlings', 'POST', {name: 'Kilchoman Genesis', subtitle: 'Fermenting – Stage 5', fullName: 'wrong'}, {'X-WCM-State-Delta': '1'});
+    assert.equal(created.response.status, 201);
+    assert.equal(created.body.result.bottling.fullName, 'Kilchoman Genesis · Fermenting – Stage 5');
+    let snapshot = applyResourceDelta(initial.body, created.body.updates[0].delta);
+    const id = created.body.result.bottling.id;
+    const rename = await json(ctx.base, `/api/bottlings/${id}`, 'PATCH', {name: 'Genesis'}, {'X-WCM-State-Delta': '1'});
+    assert.equal(rename.body.result.fullName, 'Genesis · Fermenting – Stage 5');
+    snapshot = applyResourceDelta(snapshot, rename.body.updates[0].delta);
+    const external = await json(ctx.base, '/api/external-tastings', 'POST', {bottling: {name: 'External', subtitle: 'Special release'}, tastedOn: '2026-11-15'}, {'X-WCM-State-Delta': '1'});
+    assert.equal(external.response.status, 201);
+    assert.equal(external.body.result.bottling.fullName, 'External · Special release');
+    snapshot = applyResourceDelta(snapshot, external.body.updates[0].delta);
+    const cleared = await json(ctx.base, `/api/external-tastings/${external.body.result.id}`, 'PATCH', {bottling: {subtitle: ''}}, {'X-WCM-State-Delta': '1'});
+    assert.equal(cleared.body.result.bottling.fullName, 'External');
+    snapshot = applyResourceDelta(snapshot, cleared.body.updates[0].delta);
+    assert.deepEqual(snapshot, (await json(ctx.base, '/api/collection')).body);
+    assert.equal((await json(ctx.base, '/api/warehouse')).body.bottles[0].name, 'Genesis · Fermenting – Stage 5');
+    snapshot.bottlings[0].fullName = 'wrong';
+    snapshot.externalTastings[0].bottling.fullName = 'wrong';
+    assert.equal((await json(ctx.base, '/api/import/json', 'POST', snapshot)).response.status, 200);
+    const exported = (await json(ctx.base, '/api/export/json')).body;
+    assert.equal(Object.hasOwn(exported.bottlings[0], 'fullName'), false);
+    assert.equal(Object.hasOwn(exported.externalTastings[0].bottling, 'fullName'), false);
+    const response = (await json(ctx.base, '/api/collection')).body;
+    assert.equal(response.bottlings[0].fullName, 'Genesis · Fermenting – Stage 5');
+    assert.equal(response.externalTastings[0].bottling.fullName, 'External');
+  } finally {await ctx.stop();}
 });

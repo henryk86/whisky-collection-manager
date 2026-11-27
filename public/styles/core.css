@@ -349,6 +349,11 @@ main {
   align-items: flex-start;
 }
 
+.detail-page-head > div:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .detail-head-actions {
   margin-left: auto;
   justify-content: flex-end;
@@ -548,6 +553,7 @@ h3 {
 }
 
 .card-body h3 {
+  --ds-heading-subtitle-size: 15px;
   font-family: var(--serif);
   color: var(--navy);
   font-size: 18px;
@@ -1129,6 +1135,7 @@ tr.clickable:hover {
   }
 
   .card-body h3 {
+    --ds-heading-subtitle-size: var(--ds-type-ui-md);
     font-size: 14px;
     min-height: 0;
   }

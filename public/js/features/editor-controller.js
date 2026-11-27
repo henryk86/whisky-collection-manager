@@ -91,7 +91,7 @@ export function createEditors({
     false} = {}) {
     const token = fromImport ? getPendingImageToken() : null;
     showModal(
-      `Weitere Flasche · ${bottling.name}`,
+      `Weitere Flasche · ${bottling.fullName ?? bottling.name}`,
       bottleForm({}, bottling.id, {fromOverview, importPhoto: Boolean(token)}),
       true
     );

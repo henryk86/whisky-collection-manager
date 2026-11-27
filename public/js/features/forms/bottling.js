@@ -57,6 +57,9 @@ export function createBottlingForm({state, selectors}) {
           placeholder: t('forms.bottling.exampleName'),
         }
       ),
+      subtitleField: textInput(t('forms.bottling.subtitle'), 'subtitle', bottling.subtitle, {
+        full: true, maxlength: 180, placeholder: t('forms.bottling.exampleSubtitle'),
+      }),
       whiskyTypeField: selectInput(
         t("forms.bottling.whiskyCategory"),
         'whiskyType',

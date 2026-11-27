@@ -75,7 +75,7 @@ export function createTastingPresentation({state, selectors}) {
       external: external ? renderTemplate('bottlingInfo', {
         draft: draft ? '' :
           renderTemplate('tastingBottlingSummary', {
-            name: bottling.name || '',
+            name: bottling.fullName ?? bottling.name,
             editIcon: editIcon,
             edit: t('common.actions.edit'),
             tastingExternalAssignButton: actionButton({
@@ -104,9 +104,9 @@ export function createTastingPresentation({state, selectors}) {
         renderTemplate('tastingBottlingSummary2', {
           tastingBottlingPhoto: photo ? renderTemplate('tastingBottlingPhoto', {
             imageUrl: imageUrl(photo),
-            bottleAlt: t('home.image.bottleAlt', {name: bottling.name || ''}),
+            bottleAlt: t('home.image.bottleAlt', {name: bottling.fullName ?? bottling.name}),
           }) : '',
-          name: bottling.name || '',
+          name: bottling.fullName ?? bottling.name,
           tastingOpenBottlingButton: actionButton({
             label: t('tastings.openBottlingDetails'),
             action: 'tasting-open-bottling',
@@ -270,8 +270,8 @@ export function createTastingPresentation({state, selectors}) {
       act: home ? 'tastings-home-open' : 'tastings-open',
       dataExternalAttributes: home ? {"data-external": external ? '1' : '0', "data-bottling-id": external ? record.id : b.id} : {},
       id: record.id,
-      content: `${t('tastings.open')}: ${home ? b.name : (record.title || formatDate(record.tastedOn))}`,
-      entryTitle: home ? b.name : (record.title || formatDate(record.tastedOn)),
+      content: `${t('tastings.open')}: ${home ? (b.fullName ?? b.name) : (record.title || formatDate(record.tastedOn))}`,
+      entryTitle: home ? (b.fullName ?? b.name) : (record.title || formatDate(record.tastedOn)),
       entryDate: home ? formatDate(record.tastedOn) : (record.title ? formatDate(record.tastedOn) : ''),
       entrySubtitle: home && record.title ? ` · ${String(record.title ?? '')}` : '',
       tastingListGlasses: tastingListGlasses(record),
@@ -297,6 +297,7 @@ export function externalFields(info = {}) {
   /** @type {Array<[string, string, "text"|"number", number|null, boolean]>} */
   const fields = [
     ['name', 'tastings.externalName', 'text', 180, true],
+    ['subtitle', 'forms.bottling.subtitle', 'text', 180, false],
     ['distillery', 'tastings.externalDistillery', 'text', 140, false],
     ['bottler', 'tastings.externalBottler', 'text', 140, false],
     ['ageYears', 'tastings.externalAge', 'number', null, false],
@@ -324,7 +325,7 @@ export function externalFields(info = {}) {
  */
 export function readExternalFields(node) {
   const data = {};
-  for (const key of ['name', 'distillery', 'bottler', 'ageYears', 'abv',
+  for (const key of ['name', 'subtitle', 'distillery', 'bottler', 'ageYears', 'abv',
     'releaseYear']) {
     const input = node.querySelector(`[data-external-field="${key}"]`);
     if (!input?.checkValidity()) {input?.reportValidity(); return null;}

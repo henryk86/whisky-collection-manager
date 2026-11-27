@@ -47,7 +47,7 @@ export function createBottleForm({state, selectors}) {
       ],
     ].filter(([, value]) => value && value !== 'Nicht angegeben');
     const context = renderTemplate('bottlingContext', {
-      name: owner.name,
+      name: owner.fullName ?? owner.name,
       facts: composeMarkup(facts.map(([label, value]) => renderTemplate(
         'contextDiv',
         {

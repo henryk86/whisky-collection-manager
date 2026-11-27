@@ -338,3 +338,44 @@ test(
     });
   }
 );
+
+test('browser: detail subtitle shares the heading typography and wraps within the viewport', async () => {
+  await session(async ({page, open, base}) => {
+    const subtitle = 'Fermenting - Stage 5 ' + 'LongReleaseDesignation'.repeat(6);
+    const created = await requestJson(base, '/api/bottlings', 'POST', {
+      name: 'Kilchoman Genesis', subtitle,
+    });
+    assert.equal(created.status, 201);
+    await open({query: `?bottling=${created.data.bottling.id}`});
+    const heading = page.locator('.detail-page-head h2');
+    const secondLine = heading.locator('.ds-heading-subtitle');
+    assert.equal(await secondLine.textContent(), subtitle);
+    for (const width of [320, 390, 768, 1024, 1440]) {
+      await page.setViewportSize({width, height: 900});
+      const result = await heading.evaluate(title => {
+        const sub = title.querySelector('.ds-heading-subtitle');
+        const mainStyle = getComputedStyle(title);
+        const subStyle = getComputedStyle(sub);
+        const rect = sub.getBoundingClientRect();
+        const parent = title.getBoundingClientRect();
+        const range = document.createRange();
+        range.selectNodeContents(sub);
+        return {
+          sameFont: subStyle.fontFamily === mainStyle.fontFamily,
+          ratio: parseFloat(subStyle.fontSize) / parseFloat(mainStyle.fontSize),
+          display: subStyle.display,
+          gap: parseFloat(subStyle.marginTop),
+          fits: [...range.getClientRects()].every(line => line.right <= parent.right + 1 && line.left >= parent.left - 1),
+          inside: rect.right <= parent.right + 1,
+          overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+        };
+      });
+      assert.ok(result.sameFont, `${width}: subtitle inherits the title font`);
+      assert.ok(Math.abs(result.ratio - .65) < .01, `${width}: subtitle size follows the main title`);
+      assert.equal(result.display, 'block');
+      assert.ok(result.gap >= 0 && result.gap <= 8, `${width}: title lines stay together`);
+      assert.ok(result.fits && result.inside, `${width}: subtitle wraps inside the heading`);
+      assert.equal(result.overflow, false, `${width}: no horizontal page overflow`);
+    }
+  });
+});

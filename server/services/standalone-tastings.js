@@ -1,5 +1,6 @@
 /** CRUD for a single tasting of a whisky outside the collection. */
 import {read, change} from '../storage/collection-store.js';
+import {externalTastingMetadata} from '../domain/bottling-metadata.js';
 import {uid, now} from '../domain/collection.js';
 import {fail} from '../domain/errors.js';
 import {detachTastings} from '../../shared/tasting-flights.js';
@@ -37,7 +38,7 @@ function find(collection, id) {
  *
  * @return {!Array<!Object>} All saved standalone tasting records.
  */
-export function list() {return read().externalTastings || [];}
+export function list() {return (read().externalTastings || []).map(externalTastingMetadata);}
 
 /**
  * Retrieves the standalone tastings state.
@@ -45,7 +46,7 @@ export function list() {return read().externalTastings || [];}
  * @param {string} id Identifier used to select the relevant record.
  * @return {*} Standalone tasting with the requested identifier.
  */
-export function get(id) {return find(read(), id);}
+export function get(id) {return externalTastingMetadata(find(read(), id));}
 
 /**
  * Creates the standalone tastings state.
@@ -62,7 +63,7 @@ export function create(input) {
     };
     if (!collection.externalTastings) collection.externalTastings = [];
     collection.externalTastings.push(record);
-    return record;
+    return externalTastingMetadata(record);
   });
 }
 
@@ -77,7 +78,7 @@ export function update(id, input) {
   return change(collection => {
     const record = find(collection, id);
     Object.assign(record, clean(input, record), {updatedAt: now()});
-    return record;
+    return externalTastingMetadata(record);
   });
 }
 

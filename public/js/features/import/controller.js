@@ -7,6 +7,7 @@ import {toast} from '../../ui/notifications.js';
 import {request} from '../../api.js';
 import {importChoice} from './choice-template.js';
 import {matchImportedDistilleries} from './distillery-matching.js';
+import {suggestSingleDistilleryComposition} from '../forms/composition.js';
 import {loadTemplates} from '../../ui/templates.js';
 
 const renderTemplate = await loadTemplates('import/controller.html');
@@ -31,6 +32,7 @@ export function createExternalImport({
     whiskyType: t('forms.bottling.whiskyCategory'),
     brand: t('forms.bottling.brandOrProductLine'),
     name: t('imports.preview.name'),
+    subtitle: t('forms.bottling.subtitle'),
     bottler: t('forms.bottling.bottler'),
     ageYears: t('imports.preview.ageYears'),
     distillationYear: t('forms.bottling.distillationYear'),
@@ -182,7 +184,7 @@ export function createExternalImport({
         navigate('detail', existing.id, {replace: true, });
         showModal(t("imports.import.alreadyExists"), renderTemplate('panel2', {
           existingBottlingPrefix: t("imports.import.existingBottlingPrefix", {source: safeSourceName}),
-          name: existing.name,
+          name: existing.fullName ?? existing.name,
           importExistingPhoto: data.imageToken ? renderTemplate('importExistingPhoto', {
             preparedLocally: t("imports.images.preparedLocally", {source: safeSourceName}),
             formField: (existing.bottles || []).length ? renderTemplate('formField', {
@@ -222,9 +224,15 @@ export function createExternalImport({
       }
     }
     const selectedIds = new Set(queryAll('[name=import-distillery]:checked', query('#import-panel')).map((/** @type {HTMLInputElement} */ input) => input.value));
-    for (const choice of /** @type {Iterable<HTMLInputElement>} */ (queryAll('input[name=distilleryIds]', form))) {
+    const distilleryChoices = /** @type {!Array<HTMLInputElement>} */ (queryAll('input[name=distilleryIds]', form));
+    for (const choice of distilleryChoices) {
       if (selectedIds.has(choice.value)) choice.checked = true;
     }
+    // Re-evaluate previous inference on every import; only infer anew for a matched source.
+    const whiskyType = /** @type {?HTMLSelectElement} */ (form.elements.namedItem('whiskyType'));
+    const matched = importDetails.fields.whiskyType === whiskyType?.value ?
+      matchImportedDistilleries(importDetails.distilleryName, state.collection.distilleries) : [];
+    suggestSingleDistilleryComposition(form, matched.length === 1 ? matched[0].id || null : null);
     importMessage(t('imports.import.selectedApplied'));
     toast(t("imports.import.dataApplied"));
   }

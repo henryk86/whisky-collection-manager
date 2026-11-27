@@ -8,9 +8,10 @@ import {createDetailView} from '../../public/js/views/detail.js';
  *
  * @param {*} distilleryIds Distillery ids used by this operation.
  * @param {*} bottler Bottler used by this operation.
+ * @param {string=} subtitle Optional release subtitle.
  * @return {import('../../public/js/ui/render-plan.js').RenderContent} Captured detail view plan used to inspect the heading.
  */
-function renderDetail(distilleryIds, bottler) {
+function renderDetail(distilleryIds, bottler, subtitle = '') {
   const originalDocument = globalThis.document;
   globalThis.document = {
     /**
@@ -23,7 +24,7 @@ function renderDetail(distilleryIds, bottler) {
     let html = '';
     const bottling = {
       id: 'b1', name: 'Laphroaig WILLEM 14-year-old',
-      distilleryIds, completionStatus: 'incomplete',
+      subtitle, distilleryIds, completionStatus: 'incomplete',
       whiskyType: 'single_malt', bottler,
     };
     const detail = createDetailView({
@@ -86,6 +87,7 @@ test(
     const html = renderDetail(['distillery-laphroaig']);
     await assertDom(html, "h2", {"text": new RegExp("^Laphroaig WILLEM 14-year-old$")});
     await assertDom(html, "h2:has(.heading-period)", {directText: "Laphroaig WILLEM 14-year-old"}, true);
+    await assertDom(html, ".ds-heading-subtitle", {}, true);
   }
 );
 
@@ -118,3 +120,13 @@ test(
     assert.equal((await domElements(renderDetail([]), '[data-act="bottling-map"]')).length, 0);
   }
 );
+
+test('detail subtitle belongs to the same semantic heading and is rendered as plain text', async () => {
+  const subtitle = 'Release <Stage 5> & Reserve';
+  const html = renderDetail(['distillery-laphroaig'], undefined, subtitle);
+  await assertDom(html, '.detail-page-head h2 > .ds-heading-subtitle', {text: subtitle});
+  await assertDom(html, '.detail-page-head h2', {text: `Laphroaig WILLEM 14-year-old ${subtitle}`});
+  await assertDom(html, '.detail-page-head .intro', {}, true);
+  await assertDom(html, '.detail-page-head .heading-period', {}, true);
+  assert.equal((await domElements(html, '.detail-page-head h2')).length, 1);
+});

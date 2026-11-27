@@ -5,7 +5,7 @@ import {createCollectionViewModel, createCollectionEntryModels, createActiveColl
 import {composeMarkup} from '../ui/render-plan.js';
 
 import {actionButton} from '../ui/buttons.js';
-import {pageHeader} from '../ui/headers.js';
+import {pageHeader, headingTitle} from '../ui/headers.js';
 
 import {FLAVOR_AXES} from '../../../shared/flavor-profile.js';
 
@@ -249,12 +249,12 @@ export function createHomeView({
         img: photo ?
           renderTemplate('img', {
             imageUrl: imageUrl(photo),
-            bottleAlt: t("home.image.bottleAlt", {name: bottling.name}),
+            bottleAlt: t("home.image.bottleAlt", {name: bottling.fullName ?? bottling.name}),
           }) :
           renderTemplate('imagePlaceholder'),
         collectionCardRating: collectionCardRating(bottling, bottle?.id),
         cardKicker: origin ? renderTemplate('cardKicker', {origin: origin, }) : '',
-        name: bottling.name,
+        headingTitle: headingTitle({title: bottling.name, subtitle: bottling.subtitle || ''}),
         cardBottleMeta: bottleInfo ? renderTemplate('cardBottleMeta', {bottleInfo: bottleInfo, }) : '',
         cardFacts: facts ? renderTemplate('cardFacts', {facts}) : '',
         badge: bottle ? renderTemplate('badge3', {

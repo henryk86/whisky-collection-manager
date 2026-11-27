@@ -82,6 +82,61 @@ test(
 
 
 
+for (const type of ['single_malt', 'single_grain']) {
+  test(`browser: manual ${type} composition follows category and distillery selection`, async () => {
+    await session(async ({page, open, base}) => {
+      await open();
+      const {distilleries} = (await requestJson(base, '/api/collection')).data;
+      const ardbeg = distilleries.find(site => site.name === 'Ardbeg');
+      const kilchoman = distilleries.find(site => site.name === 'Kilchoman');
+      assert.ok(ardbeg && kilchoman);
+      await page.locator('[data-act="new"]').first().click();
+      const form = page.locator('#bottling-form');
+      const category = form.locator('[name="whiskyType"]');
+      const complete = form.locator('[name="compositionComplete"]');
+      const first = form.locator(`[name="distilleryIds"][value="${ardbeg.id}"]`);
+      const second = form.locator(`[name="distilleryIds"][value="${kilchoman.id}"]`);
+      await category.selectOption(type);
+      assert.equal(await complete.inputValue(), 'false', 'category alone does not imply known composition');
+      await first.check();
+      assert.equal(await complete.inputValue(), 'true', 'selecting the only distillery after the category suggests completeness');
+      await first.uncheck();
+      assert.equal(await complete.inputValue(), 'false', 'removing the only distillery retracts inference');
+      await first.check();
+      await second.check();
+      assert.equal(await complete.inputValue(), 'false', 'adding another distillery retracts inference');
+      await second.uncheck();
+      assert.equal(await complete.inputValue(), 'true');
+      await category.selectOption('blended_malt');
+      assert.equal(await complete.inputValue(), 'false', 'changing category retracts inference');
+      await category.selectOption(type);
+      assert.equal(await complete.inputValue(), 'true', 'selecting category after distillery suggests completeness');
+      await complete.selectOption('false');
+      await category.selectOption('blended_malt');
+      await category.selectOption(type);
+      await first.uncheck();
+      await first.check();
+      assert.equal(await complete.inputValue(), 'false', 'explicit override survives classification changes');
+      await form.locator('[name="name"]').fill(`Manual ${type}`);
+      await form.locator('button[type="submit"]').click();
+      await page.locator('[data-act="edit-bottling"]').waitFor();
+      const saved = (await requestJson(base, '/api/collection')).data.bottlings.find(b => b.name === `Manual ${type}`);
+      assert.equal(saved.compositionComplete, false, 'explicit override is persisted');
+      await page.locator('[data-act="edit-bottling"]').click();
+      assert.equal(await complete.inputValue(), 'false', 'opening an existing editor preserves the saved value');
+      await first.uncheck();
+      await first.check();
+      assert.equal(await complete.inputValue(), 'true', 'the rule also works when editing');
+      await complete.selectOption('false');
+      await complete.selectOption('true');
+      await first.uncheck();
+      assert.equal(await complete.inputValue(), 'true', 'explicit completeness is not reverted');
+    });
+  });
+}
+
+
+
 test(
   'browser: create a bottling, read-only bottle context, edit and photo upload',
   async () => {
@@ -1332,6 +1387,8 @@ test(
       await page.locator('[data-act="new"]').first().click();
       await page.locator('#bottling-form [name="name"]').fill('My unfinished bottling');
       await page.locator('#bottling-form [name="brand"]').fill('My unfinished brand');
+      await page.locator('#bottling-form [name="whiskyType"]').selectOption('single_malt');
+      assert.equal(await page.locator('#bottling-form [name="compositionComplete"]').inputValue(), 'false');
       await page.locator('#bottling-form [name="firstPhotos"]').setInputFiles({
         name: 'snapshot.png', mimeType: 'image/png',
         buffer: Buffer.from(
@@ -1353,6 +1410,7 @@ test(
       );
       const selection = page.locator('#bottling-form .distillery-option').filter({hasText: 'New Distillery in Draft'});
       assert.equal(await selection.locator('input:checked').count(), 1);
+      assert.equal(await page.locator('#bottling-form [name="compositionComplete"]').inputValue(), 'true');
     });
   }
 );
@@ -1881,3 +1939,92 @@ test(
     });
   }
 );
+
+test('browser: optional release subtitle can be edited and found in the collection', async () => {
+  await session(async ({page, open, base}) => {
+    const created = await requestJson(base, '/api/bottlings', 'POST', {name: 'Kilchoman Genesis', subtitle: 'Fermenting – Stage 5', brand: 'Genesis'});
+    assert.equal(created.status, 201);
+    await open();
+    const card = page.locator('.whisky-card').filter({hasText: 'Kilchoman Genesis'});
+    await card.waitFor();
+    assert.equal(await card.locator('h3').textContent(), 'Kilchoman Genesis Fermenting – Stage 5');
+    assert.equal(await card.locator('h3 > .ds-heading-subtitle').textContent(), 'Fermenting – Stage 5');
+    const fullName = 'Kilchoman Genesis · Fermenting – Stage 5';
+    await page.locator('#search').fill(fullName);
+    await card.waitFor();
+    assert.equal(await page.locator('.whisky-card').count(), 1);
+    await page.locator('header [data-act="new"]').click();
+    await page.locator('#bottling-choice-search').fill(fullName);
+    assert.equal(await page.locator('#bottling-choice-select option').count(), 2);
+    assert.equal(await page.locator('#bottling-choice-select option').nth(1).getAttribute('value'), created.data.bottling.id);
+    await page.keyboard.press('Escape');
+    await page.locator('#new-bottle-choice-form').waitFor({state: 'detached'});
+    await card.click();
+    await page.locator('[data-act="edit-bottling"]').click();
+    const field = page.locator('#bottling-form input[name="subtitle"]');
+    assert.equal(await field.inputValue(), 'Fermenting – Stage 5');
+    assert.equal(await field.getAttribute('maxlength'), '180');
+    await field.fill('Distilling – Stage 6');
+    await page.locator('#bottling-form button[type="submit"]').click();
+    await page.locator('.detail-page-head').filter({hasText: 'Distilling – Stage 6'}).waitFor();
+    assert.equal((await requestJson(base, '/api/collection')).data.bottlings.find(b => b.id === created.data.bottling.id).subtitle, 'Distilling – Stage 6');
+  });
+});
+
+test('browser: collection cards reuse heading subtitle typography in both inventory modes', async () => {
+  await session(async ({page, open, base}) => {
+    const subtitle = 'Fermenting - Stage 5 ' + 'LongReleaseDesignation'.repeat(6);
+    for (const [name, releaseSubtitle] of [['Kilchoman Genesis', subtitle], ['Plain Malt', '']]) {
+      const created = await requestJson(base, '/api/bottlings', 'POST', {
+        name, subtitle: releaseSubtitle, abv: 49.8, firstBottle: {status: 'closed'},
+      });
+      assert.equal(created.status, 201);
+    }
+    for (const mode of ['bottlings', 'bottles']) {
+      await open({query: mode === 'bottles' ? '?mode=bottles' : ''});
+      const card = page.locator('.whisky-card').filter({hasText: 'Kilchoman Genesis'});
+      const heading = card.locator('.card-body h3');
+      await heading.waitFor();
+      assert.equal(await heading.textContent(), `Kilchoman Genesis ${subtitle}`);
+      assert.equal(await heading.locator(':scope > .ds-heading-subtitle').textContent(), subtitle);
+      const plain = page.locator('.whisky-card').filter({hasText: 'Plain Malt'}).locator('h3');
+      assert.equal(await plain.textContent(), 'Plain Malt');
+      assert.equal(await plain.locator('.ds-heading-subtitle').count(), 0);
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate(value => {document.documentElement.dataset.theme = value;}, theme);
+        for (const width of [320, 390, 768, 1024, 1440]) {
+          await page.setViewportSize({width, height: 900});
+          const layout = await heading.evaluate(title => {
+            const sub = title.querySelector('.ds-heading-subtitle');
+            const mainStyle = getComputedStyle(title);
+            const subStyle = getComputedStyle(sub);
+            const rect = title.getBoundingClientRect();
+            const range = document.createRange();
+            range.selectNodeContents(sub);
+            return {
+              sameFont: mainStyle.fontFamily === subStyle.fontFamily,
+              size: parseFloat(subStyle.fontSize),
+              titleSize: parseFloat(mainStyle.fontSize),
+              expectedSize: matchMedia('(max-width: 740px)').matches ? 13 : 15,
+              metadataSizes: [...title.parentElement.querySelectorAll('.card-facts, .card-bottle-meta')].map(meta => parseFloat(getComputedStyle(meta).fontSize)),
+              gap: parseFloat(subStyle.marginTop),
+              display: subStyle.display,
+              fits: [...range.getClientRects()].every(line => line.right <= rect.right + 1 && line.left >= rect.left - 1),
+              overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+            };
+          });
+          const context = `${mode}/${theme}/${width}`;
+          assert.ok(layout.sameFont, `${context}: subtitle inherits the title font`);
+          assert.equal(layout.size, layout.expectedSize, `${context}: fixed responsive subtitle size`);
+          assert.ok(layout.metadataSizes.length > 0, `${context}: card has visible metadata`);
+          assert.ok(layout.size < layout.titleSize, `${context}: subtitle is smaller than the title`);
+          assert.ok(layout.metadataSizes.every(size => layout.size > size), `${context}: subtitle is larger than all bottle facts`);
+          assert.equal(layout.display, 'block');
+          assert.ok(layout.gap >= 0 && layout.gap <= 8, `${context}: title lines stay together`);
+          assert.ok(layout.fits, `${context}: subtitle wraps within the card heading`);
+          assert.equal(layout.overflow, false, `${context}: no horizontal page overflow`);
+        }
+      }
+    }
+  });
+});

@@ -20,7 +20,7 @@ const seedFile = new URL('../../seed/distillery.json', import.meta.url);
  * the seed catalog is loaded from disk.
  */
 export const empty = () => ({
-  schemaVersion: 9,
+  schemaVersion: 10,
   nextInventoryNumber: 1,
   reservedInventoryNumbers: [],
   settings: {establishedYear: null, },
@@ -116,7 +116,7 @@ export function initialize() {
   const migration = loadCollectionFiles(DATA_DIR);
   if (migration.changed) {
     // No modifications until the migration is valid and a complete original snapshot is safe.
-    const backup = path.join(BACKUP_DIR, `pre-schema9-${Date.now()}-${crypto.randomUUID()}.json`);
+    const backup = path.join(BACKUP_DIR, `pre-schema10-${Date.now()}-${crypto.randomUUID()}.json`);
     if (migration.legacySnapshot !== undefined) {
       writeDurableFile(backup, migration.legacySnapshot, {exclusive: true});
     } else {

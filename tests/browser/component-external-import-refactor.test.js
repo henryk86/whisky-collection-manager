@@ -25,9 +25,14 @@ test(
     };
     let panel = null;
     const choices = [{dataset: {importField: 'name'}}, {dataset: {importField: 'abv'}},];
+    const distilleryChoice = {value: 'local-d', checked: false};
     const form = {
       dataset: {},
-      elements: {name: {value: ''}, abv: {value: ''}},
+      elements: {
+        name: {value: ''}, abv: {value: ''},
+        whiskyType: {value: ''}, compositionComplete: {value: 'false'},
+        namedItem(name) {return this[name] ?? null;},
+      },
       /**
        * Derives the query selector result from the supplied values.
        *
@@ -54,7 +59,8 @@ test(
        * @return {!Array<*>} Resulting entries in their output order.
        */
       querySelectorAll(selector) {
-        return selector === 'input[name=distilleryIds]:checked' ? [] : selector === 'input[name=distilleryIds]' ? [{value: 'local-d', checked: false}] : [];
+        if (selector === 'input[name=distilleryIds]:checked') return distilleryChoice.checked ? [distilleryChoice] : [];
+        return selector === 'input[name=distilleryIds]' ? [distilleryChoice] : [];
       },
     };
     const calls = [];
@@ -145,6 +151,8 @@ test(
       controller.applyImport();
       assert.equal(form.elements.name.value, 'Example');
       assert.equal(form.elements.abv.value, 48);
+      assert.equal(distilleryChoice.checked, true);
+      assert.equal(form.elements.compositionComplete.value, 'false');
       assert.ok(calls.some(message => /Importdaten/.test(message)));
     } finally {
       if (previous.document === undefined) delete globalThis.document;

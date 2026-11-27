@@ -447,7 +447,7 @@ test(
       );
       assert.equal(apply.status, 200, JSON.stringify(apply.data));
       const upgraded = (await request(ctx.base, '/api/collection')).data;
-      assert.equal(upgraded.schemaVersion, 9);
+      assert.equal(upgraded.schemaVersion, 10);
       assert.equal(upgraded.bottlings[0].id, created.data.bottling.id);
       assert.equal(upgraded.bottlings[0].bottles[0].id, bottleId);
       assert.equal(upgraded.bottlings[0].bottles[0].comment, 'Do not discard');
@@ -686,7 +686,7 @@ test('confirmed restore waits for a suspended mutation and rejects new requests 
   }
 });
 
-test('schema 6 ZIP restore upgrades to 8 without modifying evidence files or warehouse', async () => {
+test('schema 6 ZIP restore upgrades to 10 without modifying evidence files or warehouse', async () => {
   const ctx = await fixture();
   const legacyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-v6-restore-'));
   try {
@@ -698,7 +698,7 @@ test('schema 6 ZIP restore upgrades to 8 without modifying evidence files or war
       const result = await request(ctx.base, `/api/bottles/${id}/files`, 'POST', {filename, data: `data:application/pdf;base64,${pdf.toString('base64')}`});
       assert.equal(result.status, 201);
     }
-    const collection = (await request(ctx.base, '/api/collection')).data;
+    const collection = (await request(ctx.base, '/api/export/json')).data;
     const files = collection.bottlings[0].bottles[0].files;
     files[0].purchaseEvidence = true;
     assert.equal(files[1].purchaseEvidence, undefined);
@@ -713,7 +713,7 @@ test('schema 6 ZIP restore upgrades to 8 without modifying evidence files or war
     const preview = await uploaded.json();
     const apply = await request(ctx.base, `/api/backups/import-zip/${preview.id}/apply`, 'POST', {acknowledge: true, password: zipPass});
     assert.equal(apply.status, 200, JSON.stringify(apply.data));
-    assert.deepEqual((await request(ctx.base, '/api/collection')).data, collection);
+    assert.deepEqual((await request(ctx.base, '/api/export/json')).data, collection);
     for (const file of files) assert.deepEqual(fs.readFileSync(path.join(ctx.dir, file.path)), pdf);
     assert.deepEqual(JSON.parse(fs.readFileSync(path.join(ctx.dir, 'data/warehouse.json'))), JSON.parse(warehouse));
   } finally {

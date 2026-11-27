@@ -14,7 +14,7 @@ export function projectedWarehouseBottles(collection) {
     (bottling.bottles || []).map(bottle => ({
       id: bottle.id,
       bottlingId: bottling.id,
-      name: bottling.name,
+      name: bottling.fullName ?? bottling.name,
       number: bottle.inventoryNumber || '',
       volumeType: bottle.volumeType || 'standard',
       status: bottle.status,

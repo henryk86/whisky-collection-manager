@@ -678,7 +678,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
     const record = standalone().find(item => item.id === flavorSession?.id);
     const panel = flavorNode()?.querySelector('.tasting-bottling-info');
     if (record && panel) {
-      for (const key of ['name', 'distillery', 'bottler', 'ageYears', 'abv',
+      for (const key of ['name', 'subtitle', 'distillery', 'bottler', 'ageYears', 'abv',
         'releaseYear']) {
         const input = panel.querySelector(`[data-external-field="${key}"]`);
         if (input) input.value = String(record.bottling?.[key] ?? '');
@@ -717,7 +717,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   function showAssignDialog() {
     const session = flavorSession;
     if (!session?.external || session.draft) return;
-    const owned = [...(state.collection?.bottlings || [])].sort((a, b) => a.name.localeCompare(b.name));
+    const owned = [...(state.collection?.bottlings || [])].sort((a, b) => (a.fullName ?? a.name).localeCompare(b.fullName ?? b.name));
     if (!owned.length) {
       toast(t('tastings.assignNoBottlings'), true);
       return;
@@ -725,7 +725,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
     const options = composeMarkup(owned.map(b =>
       renderTemplate('optionsOption', {
         id: b.id,
-        name: b.name,
+        name: b.fullName ?? b.name,
       })));
     showModal(
       t('tastings.assignToCollection'),

@@ -61,6 +61,8 @@ export function matchesOverviewRating(bottling, filter = 'all') {
 function matchingBottlingText(bottling, distilleryNames) {
   return [
     bottling.name,
+    bottling.subtitle,
+    bottling.fullName,
     distilleryNames(bottling),
     bottling.bottler,
     bottling.brand,
@@ -161,7 +163,7 @@ function compareEntries(left, right, sort, distilleryNames) {
   const a = left.bottling;
   const b = right.bottling;
   switch (sort) {
-    case 'nameDesc': return b.name.localeCompare(a.name, 'de');
+    case 'nameDesc': return (b.fullName ?? b.name).localeCompare(a.fullName ?? a.name, 'de');
     case 'inventoryAsc': return comparePresent(left.bottle?.inventoryNumber || null, right.bottle?.inventoryNumber || null);
     case 'inventoryDesc': return comparePresent(left.bottle?.inventoryNumber || null, right.bottle?.inventoryNumber || null, true);
     case 'ageAsc': return comparePresent(asNumber(a.ageYears), asNumber(b.ageYears));
@@ -270,7 +272,7 @@ export function collectionOverviewEntries(collection, {
   entries.sort((left, right) => {
     const difference = compareEntries(left, right, sort, distilleryNames);
     if (difference) return difference;
-    const names = left.bottling.name.localeCompare(right.bottling.name, 'de');
+    const names = (left.bottling.fullName ?? left.bottling.name).localeCompare(right.bottling.fullName ?? right.bottling.name, 'de');
     if (names) return names;
     // Sorting equal bottlings by a stable bottle identifier makes repeat views
     // predictable.

@@ -14,10 +14,15 @@
 <span class="warehouse-assignment-bulk-list">{{content:bottleNames}}{{content:length}}</span>
 <!-- /wcm-template -->
 
+<!-- wcm-template:warehouseAssignmentOccupancy -->
+<small class="warehouse-assignment-current-occupancy">{{content:occupancy}}</small>
+<!-- /wcm-template -->
+
 <!-- wcm-template:warehouseAssignmentCurrent -->
 <div class="warehouse-assignment-current" aria-label="{{attr:ariaLabel}}">
   <span>{{content:currentLocationLabel}}</span>
   <strong>{{content:currentLocation}}</strong>
+  {{content:occupancy}}
 </div>
 <!-- /wcm-template -->
 

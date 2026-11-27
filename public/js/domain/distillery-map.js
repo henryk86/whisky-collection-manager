@@ -94,7 +94,7 @@ export function buildDistilleryMap(collection, {includeAllDistilleries =
       const physicalBottles = Array.isArray(bottling.bottles) ? bottling.bottles : [];
       site.bottlings.push({
         id: bottling.id,
-        name: bottling.name,
+        name: bottling.fullName ?? bottling.name,
         bottleCount: physicalBottles.length,
         ageYears: bottling.ageYears,
         abv: bottling.abv,

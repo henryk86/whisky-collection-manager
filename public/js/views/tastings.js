@@ -81,7 +81,7 @@ export function createTastingsView({
           owned: composeMarkup(owned.map(b =>
             renderTemplate('homeOption', {
               id: b.id,
-              name: b.name,
+              name: b.fullName ?? b.name,
             }))),
           disabledAttributes: owned.length ? {} : {"disabled": true},
           fromCollection: t('tastings.fromCollection'),

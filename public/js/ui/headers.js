@@ -5,6 +5,7 @@
  */
 import {arrowLeftIcon, helpCircleIcon} from './action-icons.js';
 import {loadTemplates} from './templates.js';
+import {composeMarkup} from './render-plan.js';
 
 const renderTemplate = await loadTemplates('components/headers.html');
 
@@ -25,7 +26,7 @@ export function headerActions(content, {className = ''} = {}) {
 }
 
 /**
- * Renders a text heading and optional trusted action markup.
+ * Renders a text heading with an optional secondary title line and trusted action markup.
  *
  * @param {!Object} options Heading text, level and presentation settings.
  * @return {!import('./render-plan.js').RenderPlan} Heading with optional punctuation and action.
@@ -33,6 +34,7 @@ export function headerActions(content, {className = ''} = {}) {
  */
 export function headingTitle({
   title,
+  subtitle = '',
   level = 3,
   className = '',
   id = '',
@@ -47,6 +49,7 @@ export function headingTitle({
     idAttributes: id ? {"id": id} : {},
     title: String(title),
     headingPeriod: period ? renderTemplate('headingPeriod') : '',
+    subtitle: subtitle ? composeMarkup(' ', renderTemplate('headingSubtitle', {subtitle: String(subtitle)})) : '',
     trailingAction: trailingAction || '',
     closingHeadingTag: `h${level}`,
   });
@@ -97,7 +100,7 @@ export function sectionHeader({
 }
 
 /**
- * Renders the shared page heading without changing persisted names.
+ * Renders the shared page heading with an optional subtitle within the same heading element.
  *
  * @param {!Object=} options Page heading and optional application-owned
  * markup.
@@ -105,6 +108,7 @@ export function sectionHeader({
  */
 export function pageHeader({
   title,
+  subtitle = '',
   eyebrow = '',
   intro = '',
   className = '',
@@ -119,7 +123,7 @@ export function pageHeader({
     classAttributes: copyClass ? {"class": copyClass} : {},
     eyebrow: eyebrow ? renderTemplate('eyebrow', {eyebrow: eyebrow, }) : '',
     preTitle: preTitle,
-    headingTitle: headingTitle({title, level: 2, period}),
+    headingTitle: headingTitle({title, subtitle, level: 2, period}),
     intro: intro ? renderTemplate('intro', {intro: intro, }) : '',
     actions: actions,
   });

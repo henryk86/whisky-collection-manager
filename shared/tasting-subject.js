@@ -1,6 +1,6 @@
 /** Embedded, non-inventory whisky details for one standalone tasting. */
 export const TASTING_SUBJECT_FIELDS =
-  Object.freeze(['name', 'distillery', 'bottler', 'ageYears', 'abv',
+  Object.freeze(['name', 'subtitle', 'distillery', 'bottler', 'ageYears', 'abv',
     'releaseYear']);
 /**
  * Merges and validates the embedded whisky reference for an unowned tasting.
@@ -23,6 +23,10 @@ export function normalizeTastingSubject(input, previous = {}) {
     ...previous,
     ...input,
   };
+  if (Object.hasOwn(value, 'subtitle')) {
+    if (typeof value.subtitle !== 'string' || value.subtitle.length > 180) throw new Error('Ungültiges Feld: subtitle');
+    value.subtitle = value.subtitle.trim();
+  }
   /** @type {Array<['name'|'distillery'|'bottler', number]>} */
   const textLimits = [['name', 180], ['distillery', 140], ['bottler', 140]];
   for (const [key, length] of textLimits) {

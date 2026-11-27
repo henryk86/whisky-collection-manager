@@ -441,3 +441,19 @@ test(
     assert.deepEqual(ids('updatedAsc', 'bottles'), ['a2', 'b1', 'a1']);
   }
 );
+
+test('release subtitles participate in search and name ordering without changing the main name', () => {
+  const collection = sample();
+  collection.bottlings[0].name = 'Kilchoman Genesis';
+  collection.bottlings[0].subtitle = 'Fermenting – Stage 5';
+  collection.bottlings[0].fullName = 'Kilchoman Genesis · Fermenting – Stage 5';
+  collection.bottlings[1].name = 'Kilchoman Genesis';
+  collection.bottlings[1].subtitle = 'Distilling – Stage 6';
+  collection.bottlings[1].fullName = 'Kilchoman Genesis · Distilling – Stage 6';
+  assert.deepEqual(collectionOverviewEntries(collection, {search: 'Fermenting', ...selectors}).map(entry => entry.bottling.id), ['a']);
+  assert.deepEqual(collectionOverviewEntries(collection, {search: collection.bottlings[0].fullName, ...selectors}).map(entry => entry.bottling.id), ['a']);
+  assert.deepEqual(collectionOverviewEntries(collection, {search: collection.bottlings[0].fullName, mode: 'bottles', ...selectors}).map(entry => entry.bottle.id), ['a-1', 'a-2', 'a-3']);
+  assert.deepEqual(collectionOverviewEntries(collection, {search: 'Stage 5', mode: 'bottles', ...selectors}).map(entry => entry.bottle.id), ['a-1', 'a-2', 'a-3']);
+  assert.deepEqual(collectionOverviewEntries(collection, {...selectors}).map(entry => entry.bottling.id), ['z', 'a']);
+  assert.deepEqual(collectionOverviewEntries(collection, {sort: 'nameDesc', ...selectors}).map(entry => entry.bottling.id), ['a', 'z']);
+});

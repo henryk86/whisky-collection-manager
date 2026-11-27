@@ -23,6 +23,6 @@ Das Bild wird bei jedem Speichern aus der **unveränderten gewählten Quelle** n
 
 ## Datenformat und Sicherheit
 
-Alle optionalen Fotofelder gehören zum aktuellen **Collection-Schema 9**. Bild-Dateipfade und IDs werden serverseitig geprüft; schreibende Operationen unterliegen den geltenden CSRF-/Host-Regeln. Die lokalen Modelle benötigen die freigegebene WebAssembly-CSP-Einstellung; Kameraaufnahme benötigt HTTPS.
+Alle optionalen Fotofelder gehören zum aktuellen **Collection-Schema 10**. Bild-Dateipfade und IDs werden serverseitig geprüft; schreibende Operationen unterliegen den geltenden CSRF-/Host-Regeln. Die lokalen Modelle benötigen die freigegebene WebAssembly-CSP-Einstellung; Kameraaufnahme benötigt HTTPS.
 
 Die API für Fotokorrektur und Dateien ist unter [API](API.md#bildkorrekturen) aufgeführt. Bei Problemen mit `.mjs`-Modulen muss der Server `text/javascript` ausliefern; Modelldateien separat mit `npm run cutout:verify` prüfen. Funktionstests ohne heruntergeladene Modellbytes beweisen keine reale ONNX-Inferenzqualität.

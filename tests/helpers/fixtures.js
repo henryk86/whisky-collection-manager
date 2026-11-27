@@ -8,7 +8,7 @@ import path from 'node:path';
  */
 export function collectionFixture() {
   return {
-    schemaVersion: 9,
+    schemaVersion: 10,
     nextInventoryNumber: 124,
     reservedInventoryNumbers: ['000123'],
     distilleries: [{

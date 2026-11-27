@@ -1,3 +1,4 @@
+import {collectionMetadata, canonicalCollectionInput} from '../domain/bottling-metadata.js';
 import {read, change} from '../storage/collection-store.js';
 import {migrateCollectionToCurrent} from '../storage/migrations.js';
 import {suggestNumber} from '../domain/inventory.js';
@@ -7,7 +8,7 @@ import {suggestNumber} from '../domain/inventory.js';
  * @return {import('../../shared/types.js').Collection} Current validated collection snapshot.
  */
 export function getCollection() {
-  return read();
+  return collectionMetadata(read());
 }
 
 /**
@@ -27,7 +28,7 @@ export function getNextInventoryNumber() {
  * @return {!Promise<!Object>} Import confirmation and resulting collection statistics.
  */
 export async function importCollection(input) {
-  const migrated = migrateCollectionToCurrent(input).collection;
+  const migrated = migrateCollectionToCurrent(canonicalCollectionInput(input)).collection;
   await change(collection => {
     migrated.reservedInventoryNumbers = [...new Set([...migrated.reservedInventoryNumbers, ...collection.reservedInventoryNumbers,])];
     for (const key of Object.keys(collection)) {
