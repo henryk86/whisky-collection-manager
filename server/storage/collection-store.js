@@ -182,8 +182,8 @@ let queue = Promise.resolve();
  * A rejected pre-commit mutation leaves storage untouched. An unresolved published commit is recovered before the next mutation; neither error poisons the queue.
  *
  * @template T
- * @param {function(import('../../shared/types.js').Collection):
- *     (T|!Promise<T>)} mutator Mutates a private copy and returns a result.
+ * @param {(collection: import('../../shared/types.js').Collection) =>
+ *     T|Promise<T>} mutator Mutates a private copy and returns a result.
  * @return {!Promise<T>} Result after the collection write is committed.
  */
 export function change(mutator) {
@@ -206,7 +206,7 @@ export function change(mutator) {
  * Queues an exclusive operation behind pending collection mutations.
  *
  * @template T
- * @param {function(): (T|!Promise<T>)} task Restore or other exclusive work.
+ * @param {() => T|Promise<T>} task Restore or other exclusive work.
  * @return {!Promise<T>} Operation result when its turn completes.
  */
 export function runExclusive(task) {

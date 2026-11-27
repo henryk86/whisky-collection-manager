@@ -124,7 +124,7 @@ export async function startTestServer({parentDirectory = os.tmpdir()} = {}) {
  * @param {*} base Base used by this operation.
  * @param {string} url URL of the requested resource.
  * @param {string=} method HTTP method for the operation.
- * @param {!Object} data Input data for the operation.
+ * @param {!Object=} data Input data for the operation.
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 export async function requestJson(base, url, method = 'GET', data) {

@@ -8,120 +8,84 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import ts from 'typescript';
 import {listJavaScriptFiles} from './javascript-files.js';
+import {parseJavaScript, forEachChild, declarationOf, isFunction, returnsValue, parameterBinding} from './javascript-ast.js';
+import {parseJSDoc, docsFor, parameterTags} from './jsdoc-contract.js';
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 /**
- * Checks whether a function body returns an expression of its own.
- *
- * Returns inside nested functions are not part of the enclosing signature.
- *
- * @param {!ts.FunctionLikeDeclaration} fn Function under inspection.
- * @return {boolean} Whether the function returns a meaningful value.
- */
-function returnsValue(fn) {
-  if (ts.isArrowFunction(fn) && !ts.isBlock(fn.body)) return true;
-  let result = false;
-  /**
-   * Searches the enclosing body without counting returns in nested functions.
-   *
-   * @param {!ts.Node} node Syntax node in the current traversal.
-   */
-  function visit(node) {
-    if (node !== fn && ts.isFunctionLike(node)) return;
-    if (ts.isReturnStatement(node) && node.expression) result = true;
-    ts.forEachChild(node, visit);
-  }
-  visit(fn);
-  return result;
-}
-
-/**
- * Finds module-level renderer bindings initialized with the shared loader.
- * Only directly recognizable factories are checked, not inferred aliases.
- *
- * @param {!ts.SourceFile} file Parsed JavaScript module.
- * @return {Set<string>} Names of locally bound template factories.
+ * Finds direct module-level bindings initialized by the template loader.
+ * @param {*} file Parsed module.
+ * @return {Set<string>} Template factory identifiers.
  */
 function templateRenderers(file) {
   const loaders = new Set();
-  for (const statement of file.statements) {
-    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier) ||
-      !/(?:^|\/)templates\.js$/.test(statement.moduleSpecifier.text)) continue;
-    const bindings = statement.importClause?.namedBindings;
-    if (!bindings || !ts.isNamedImports(bindings)) continue;
-    for (const specifier of bindings.elements) {
-      if ((specifier.propertyName ?? specifier.name).text === 'loadTemplates') loaders.add(specifier.name.text);
+  for (const statement of file.body) {
+    if (statement.type !== 'ImportDeclaration' || !/(?:^|\/)templates\.js$/.test(statement.source.value)) continue;
+    for (const specifier of statement.specifiers) {
+      if (specifier.type === 'ImportSpecifier' && specifier.imported.name === 'loadTemplates') loaders.add(specifier.local.name);
     }
   }
   const renderers = new Set();
-  for (const statement of file.statements) {
-    if (!ts.isVariableStatement(statement) || !(statement.declarationList.flags & ts.NodeFlags.Const)) continue;
-    for (const declaration of statement.declarationList.declarations) {
-      const initializer = declaration.initializer;
-      if (ts.isIdentifier(declaration.name) && initializer && ts.isAwaitExpression(initializer) &&
-        ts.isCallExpression(initializer.expression) && ts.isIdentifier(initializer.expression.expression) &&
-        loaders.has(initializer.expression.expression.text)) renderers.add(declaration.name.text);
+  for (const statement of file.body) {
+    const node = declarationOf(statement);
+    if (node?.type !== 'VariableDeclaration' || node.kind !== 'const') continue;
+    for (const item of node.declarations) {
+      const call = item.init?.type === 'AwaitExpression' ? item.init.argument : null;
+      if (item.id.type === 'Identifier' && call?.type === 'CallExpression' && call.callee.type === 'Identifier' && loaders.has(call.callee.name)) renderers.add(item.id.name);
     }
   }
   return renderers;
 }
 
 /**
- * Detects direct calls to a known factory in return expressions. Indirect calls
- * and nested functions are deliberately left to semantic review.
- *
- * @param {!ts.FunctionLikeDeclaration} fn Function under inspection.
- * @param {Set<string>} renderers Known module-level template factory names.
- * @return {boolean} True if a direct factory call is returned.
+ * Recognizes direct returns of a template factory, excluding shadowed identifiers.
+ * @param {*} fn Function under inspection.
+ * @param {Set<string>} renderers Module-level factory identifiers.
+ * @return {boolean} Whether a direct factory call is returned.
  */
 function directlyReturnsPlan(fn, renderers) {
   if (!renderers.size) return false;
   const candidates = new Set(renderers);
   /**
-   * Excludes names shadowed by declarations within the function or its enclosing scopes.
-   *
-   * @param {!ts.Node} node Syntax subtree being checked.
+   * Excludes identifiers bound by declarations or parameters in the function.
+   * @param {*} binding Binding pattern to traverse.
    */
-  function excludeShadowed(node) {
-    if ((ts.isParameter(node) || ts.isVariableDeclaration(node) || ts.isFunctionDeclaration(node) ||
-      ts.isBindingElement(node)) && node.name && ts.isIdentifier(node.name)) candidates.delete(node.name.text);
-    ts.forEachChild(node, excludeShadowed);
+  function excludeBinding(binding) {
+    if (!binding) return;
+    if (binding.type === 'Identifier') candidates.delete(binding.name);
+    else if (binding.type === 'Property') excludeBinding(binding.value);
+    else if (binding.type === 'AssignmentPattern') excludeBinding(binding.left);
+    else if (binding.type === 'RestElement') excludeBinding(binding.argument);
+    else forEachChild(binding, excludeBinding);
   }
-  // Restrict the check to module-level declarations or variable initializers,
-  // so outer local bindings cannot be mistaken for the imported factory.
-  /** @type {ts.Node} */
-  let owner = fn;
-  if (ts.isVariableDeclaration(owner.parent)) owner = owner.parent.parent.parent;
-  if (!ts.isSourceFile(owner.parent)) return false;
-  excludeShadowed(fn);
+
   /**
-   * Recognizes direct calls, including conditional return branches.
-   *
-   * @param {!ts.Expression} expression Returned expression.
-   * @return {boolean} Whether a factory is called directly.
-   */
-  function isPlan(expression) {
-    if (ts.isParenthesizedExpression(expression)) return isPlan(expression.expression);
-    if (ts.isConditionalExpression(expression)) return isPlan(expression.whenTrue) || isPlan(expression.whenFalse);
-    return ts.isCallExpression(expression) && ts.isIdentifier(expression.expression) && candidates.has(expression.expression.text);
-  }
-  if (ts.isArrowFunction(fn) && !ts.isBlock(fn.body)) return isPlan(fn.body);
-  let found = false;
-  /**
-   * Visits return statements of this function only.
-   *
-   * @param {!ts.Node} node Syntax node in the function body.
+   * Visits local declarations that could hide a module-level template factory.
+   * @param {*} node Syntax node in the function body.
    */
   function visit(node) {
-    if (node !== fn && ts.isFunctionLike(node)) return;
-    if (ts.isReturnStatement(node) && node.expression && isPlan(node.expression)) found = true;
-    if (!found) ts.forEachChild(node, visit);
+    if (isFunction(node)) {
+      excludeBinding(node.id);
+      if (node !== fn) return;
+      for (const param of node.params) excludeBinding(param);
+    }
+    if (node.type === 'VariableDeclarator' || node.type === 'ClassDeclaration') excludeBinding(node.id);
+    if (node.type === 'CatchClause') excludeBinding(node.param);
+    forEachChild(node, visit);
   }
   visit(fn);
-  return found;
+  /**
+   * Checks direct call expressions, including conditional return branches.
+   * @param {*} expression Returned expression.
+   * @return {boolean} Whether the expression directly calls a template factory.
+   */
+  function isPlan(expression) {
+    if (expression.type === 'ConditionalExpression') return isPlan(expression.consequent) || isPlan(expression.alternate);
+    return expression.type === 'CallExpression' && expression.callee.type === 'Identifier' && candidates.has(expression.callee.name);
+  }
+  return returnsValue(fn, isPlan);
 }
 
 /**
@@ -133,11 +97,10 @@ function directlyReturnsPlan(fn, renderers) {
  * @return {!Array<string>} Violations with source-line locations.
  */
 export function jsdocViolations(filename, source) {
-  const file = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const {program: file, comments} = parseJavaScript(filename, source);
   const issues = [];
-  for (const diagnostic of (/** @type {ts.SourceFile & {jsDocDiagnostics?: readonly ts.Diagnostic[]}} */ (file)).jsDocDiagnostics ?? []) {
-    const {line} = file.getLineAndCharacterOfPosition(diagnostic.start ?? 0);
-    issues.push(`${filename}:${line + 1}: invalid JSDoc syntax: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ')}`);
+  for (const comment of comments.filter(comment => comment.type === 'Block' && comment.value.startsWith('*'))) {
+    for (const issue of parseJSDoc(comment).issues) issues.push(`${filename}:${comment.loc.start.line}: invalid JSDoc syntax: ${issue}`);
   }
   const requireComplete = !filename.replaceAll('\\', '/').startsWith('tests/');
   const renderers = templateRenderers(file);
@@ -147,120 +110,78 @@ export function jsdocViolations(filename, source) {
   /**
    * Checks the declared interface against the function syntax.
    *
-   * @param {!ts.Node} owner Syntax node carrying the documentation.
-   * @param {!ts.FunctionLikeDeclaration} fn Function or method being documented.
+   * @param {*} owner Syntax node carrying the documentation.
+   * @param {*} fn Function or method being documented.
+   * @param {boolean} moduleLevel Whether the function is a module-level binding.
    */
-  function inspect(owner, fn) {
-    const docs = (/** @type {ts.Node & {jsDoc?: readonly ts.JSDoc[]}} */ (owner)).jsDoc ?? [];
-    const position = file.getLineAndCharacterOfPosition(owner.getStart(file));
-    const prefix = `${filename}:${position.line + 1}`;
+  function inspect(owner, fn, moduleLevel) {
+    const docs = docsFor(owner, source, comments);
+    const prefix = `${filename}:${owner.loc.start.line}`;
     if (!docs.length) {
       if (requireComplete) issues.push(`${prefix}: missing JSDoc on named function`);
       return;
     }
-    const tags = ts.getJSDocTags(owner);
-    if (tags.some(tag => ['typedef', 'type', 'enum', 'fileoverview'].includes(tag.tagName.text))) return;
-    const description = docs.map(doc => typeof doc.comment === 'string' ? doc.comment.trim() : '').find(Boolean);
-    if (requireComplete && !description) {
-      issues.push(`${prefix}: missing meaningful JSDoc description`);
-    }
+    const tags = docs.flatMap(doc => doc.tags);
+    if (tags.some(tag => ['typedef', 'type', 'enum', 'fileoverview'].includes(tag.kind))) return;
+    const description = docs.find(doc => doc.description)?.description;
+    if (requireComplete && !description) issues.push(`${prefix}: missing meaningful JSDoc description`);
     if (requireComplete && (placeholder.test((description ?? '').replace(/\s+/g, ' ')) || tags.some(tag =>
-      ['param', 'return', 'returns'].includes(tag.tagName.text) && typeof tag.comment === 'string' && placeholder.test(tag.comment.trim().replace(/\s+/g, ' '))))) {
+      ['param', 'return', 'returns'].includes(tag.kind) && placeholder.test(tag.description.replace(/\s+/g, ' '))))) {
       issues.push(`${prefix}: JSDoc uses a known placeholder instead of explaining the contract`);
     }
-    const params = fn.parameters ?? [];
-    const documented = tags.filter(ts.isJSDocParameterTag).filter(tag => tag.name && !tag.name.getText(file).includes('.'));
-    const allParams = tags.filter(ts.isJSDocParameterTag).filter(tag => tag.name);
-    // The TypeScript parser nests dotted property tags under object parameters.
-    // Walk that representation as well as standalone dotted tags.
-    for (const tag of allParams) {
-      const type = tag.typeExpression?.type;
-      if (type && ts.isJSDocTypeLiteral(type)) allParams.push(...type.jsDocPropertyTags.filter(ts.isJSDocParameterTag));
-    }
+    const params = fn.params;
+    const allParams = parameterTags(tags);
+    const documented = allParams.filter(tag => !tag.name.includes('.'));
     const seen = new Set();
     for (const tag of allParams) {
-      const name = tag.name.getText(file);
-      if (seen.has(name)) issues.push(`${prefix}: duplicate @param ${name}`);
-      seen.add(name);
+      if (seen.has(tag.name)) issues.push(`${prefix}: duplicate @param ${tag.name}`);
+      seen.add(tag.name);
     }
-    if (requireComplete && documented.length !== params.length) {
-      issues.push(`${prefix}: expected ${params.length} @param tags, ` + `found ${documented.length}`);
-    }
-    // Destructured parameters may use a descriptive name not present in the AST.
-    // Only validate surplus names when every parameter has a literal identifier.
-    if (!requireComplete && params.every(param => ts.isIdentifier(param.name))) {
+    if (requireComplete && documented.length !== params.length) issues.push(`${prefix}: expected ${params.length} @param tags, found ${documented.length}`);
+    if (!requireComplete && params.every(param => parameterBinding(param).type === 'Identifier')) {
       for (const tag of documented) {
-        if (!params.some(param => param.name.getText(file) === tag.name.getText(file))) {
-          issues.push(`${prefix}: @param ${tag.name.getText(file)} does not name a parameter`);
-        }
+        if (!params.some(param => parameterBinding(param).name === tag.name)) issues.push(`${prefix}: @param ${tag.name} does not name a parameter`);
       }
     }
     for (const [index, param] of params.entries()) {
-      const named = ts.isIdentifier(param.name);
-      const name = named ? param.name.text : null;
-      const tag = (name ? documented.find(tag => tag.name.getText(file) === name) : documented[index]);
+      const binding = parameterBinding(param);
+      const name = binding.type === 'Identifier' ? binding.name : null;
+      const tag = name ? documented.find(tag => tag.name === name) : documented[index];
       if (!tag) {
         if (requireComplete) issues.push(`${prefix}: undocumented parameter ` + (name ?? `#${index + 1}`));
         continue;
       }
-      const type = tag.typeExpression?.type;
-      if (requireComplete && !type) {
-        issues.push(`${prefix}: @param ${tag.name.getText(file)} has no valid type`);
-      } else if (requireComplete && param.initializer && !tag.isBracketed && !ts.isJSDocOptionalType(type)) {
-        issues.push(`${prefix}: defaulted @param ${tag.name.getText(file)} must be optional`);
-      }
-      if (requireComplete && (typeof tag.comment !== 'string' || !tag.comment.trim())) {
-        issues.push(`${prefix}: @param ${tag.name.getText(file)} ` + 'has no explanation');
-      }
+      if (requireComplete && !tag.type) issues.push(`${prefix}: @param ${tag.name} has no valid type`);
+      else if (requireComplete && param.type === 'AssignmentPattern' && !tag.optional) issues.push(`${prefix}: defaulted @param ${tag.name} must be optional`);
+      if (requireComplete && !tag.description) issues.push(`${prefix}: @param ${tag.name} has no explanation`);
     }
-    if (requireComplete && tags.some(tag => tag.tagName.text === 'returns')) {
-      issues.push(`${prefix}: use Google JSDoc @return, not @returns`);
-    }
-    const result = tags.filter(ts.isJSDocReturnTag);
-    if (requireComplete && returnsValue(fn) && (result.length !== 1 || !result[0].typeExpression?.type)) {
-      issues.push(`${prefix}: non-void function requires typed @return`);
-    }
-    const declared = result[0]?.typeExpression?.type;
-    if (declared?.kind === ts.SyntaxKind.StringKeyword && directlyReturnsPlan(fn, renderers)) {
-      issues.push(`${prefix}: @return {string} contradicts a direct template RenderPlan return`);
-    }
-    if (result.length > 1) {
-      issues.push(`${prefix}: duplicate @return`);
-    }
-    if (requireComplete && result.length && (typeof result[0].comment !== 'string' || !result[0].comment.trim())) {
-      issues.push(`${prefix}: @return has no explanation`);
-    }
+    if (requireComplete && tags.some(tag => tag.kind === 'returns')) issues.push(`${prefix}: use Google JSDoc @return, not @returns`);
+    const result = tags.filter(tag => ['return', 'returns'].includes(tag.kind));
+    if (requireComplete && returnsValue(fn) && (result.length !== 1 || !result[0].type)) issues.push(`${prefix}: non-void function requires typed @return`);
+    if (moduleLevel && result[0]?.type === 'string' && directlyReturnsPlan(fn, renderers)) issues.push(`${prefix}: @return {string} contradicts a direct template RenderPlan return`);
+    if (result.length > 1) issues.push(`${prefix}: duplicate @return`);
+    if (requireComplete && result.length && !result[0].description) issues.push(`${prefix}: @return has no explanation`);
   }
 
   /**
-   * Locates each named function and its documentation owner.
-   *
-   * @param {!ts.Node} node Current source syntax node.
+   * Locates named declarations, methods and assigned functions with their comment owners.
+   * @param {*} node Current syntax node.
+   * @param {!Array<*>=} parents Ancestors from the module to the current parent.
    */
-  function visit(node) {
-    if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isConstructorDeclaration(node) ||
-      ts.isGetAccessorDeclaration(node) || ts.isSetAccessorDeclaration(node)) {
-      inspect(node, node);
-    } else if (ts.isVariableDeclaration(node) && node.initializer &&
-      (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
-      inspect(node.parent.parent, node.initializer);
-    } else if (ts.isPropertyAssignment(node) && node.initializer &&
-      (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
-      inspect(node, node.initializer);
-    } else if (ts.isPropertyDeclaration(node) && node.initializer &&
-      (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
-      inspect(node, node.initializer);
-    } else if (ts.isFunctionExpression(node) && node.name && !ts.isVariableDeclaration(node.parent) &&
-      !ts.isPropertyAssignment(node.parent)) {
-      const assignment = node.parent;
-      if (ts.isBinaryExpression(assignment) && assignment.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-        ts.isExpressionStatement(assignment.parent)) {
-        inspect(assignment.parent, node);
-      } else {
-        inspect(node, node);
-      }
+  function visit(node, parents = []) {
+    const parent = parents.at(-1);
+    const grandparent = parents.at(-2);
+    const exportOwner = parent?.type === 'ExportNamedDeclaration' || parent?.type === 'ExportDefaultDeclaration';
+    if (node.type === 'FunctionDeclaration') inspect(exportOwner ? parent : node, node, parents.length === (exportOwner ? 2 : 1));
+    else if (node.type === 'VariableDeclarator' && isFunction(node.init)) {
+      const exported = ['ExportNamedDeclaration', 'ExportDefaultDeclaration'].includes(grandparent?.type);
+      inspect(exported ? grandparent : parent, node.init, parents.length === (exported ? 3 : 2));
+    } else if (['Property', 'PropertyDefinition', 'MethodDefinition'].includes(node.type) && isFunction(node.value)) inspect(node, node.value, false);
+    else if (node.type === 'FunctionExpression' && node.id && !['VariableDeclarator', 'Property', 'PropertyDefinition', 'MethodDefinition'].includes(parent?.type)) {
+      const assignment = parent?.type === 'AssignmentExpression' && parent.operator === '=' && grandparent?.type === 'ExpressionStatement';
+      inspect(assignment ? grandparent : node, node, false);
     }
-    ts.forEachChild(node, visit);
+    forEachChild(node, child => visit(child, [...parents, node]));
   }
   visit(file);
   return issues;

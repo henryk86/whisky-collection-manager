@@ -36,7 +36,7 @@ function applyComposition({type = 'single_malt', source = 'Kilchoman', selected 
     querySelector: selector => selector === '#bottling-form' ? form : selector === '#import-panel' ? panel : null,
     /** @return {!Object} Notification element. */
     createElement: () => ({}),
-    body: {/** Ignores notifications. */ append() {} },
+    body: {/** Ignores notifications. */ append() {}},
   };
   globalThis.setTimeout = () => 0;
   try {

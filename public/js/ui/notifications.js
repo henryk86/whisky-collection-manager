@@ -11,7 +11,7 @@ const renderTemplate = await loadTemplates('components/notifications.html');
  *
  * @param {*} message Notification text or render content to display temporarily.
  * @param {boolean=} error Whether the notification reports an error.
- * @param {function(!Element, *): void=} mountContent Content mount boundary.
+ * @param {((element: Element, content: *) => void)=} mountContent Content mount boundary.
  */
 export function toast(message, error = false, mountContent = replaceContent) {
   query('.toast')?.remove();

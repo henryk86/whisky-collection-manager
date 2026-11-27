@@ -97,7 +97,7 @@ const avg = values => values.length ? sum(values) / values.length : null;
  * Selects and transforms the valid numbers records.
  *
  * @param {*} rows Input records to process.
- * @param {function(...*): *} getter Function selecting a value from a record.
+ * @param {(...args: any[]) => any} getter Function selecting a value from a record.
  * @return {*} Finite numeric values extracted by the supplied getter.
  */
 const validNumbers = (rows, getter) => rows.map(getter).filter(isNumber);
@@ -350,7 +350,7 @@ export function analyzeCollection(collection, filters = {}) {
   }))
     .sort((a, b) => b.avg - a.avg || b.count - a.count);
   const notesCount = bottlings.filter(b => ['nose', 'palate', 'finish'].some(key => text(latestTasting(b)?.tastingNotes?.[key]))).length;
-  /** @type {Array<[string, function(*): boolean]>} */
+  /** @type {Array<[string, (record: *) => boolean]>} */
   const missingField = [
     ['Alter', b => isNumber(b.ageYears)],
     ['Alkoholgehalt', b => isNumber(b.abv)],
@@ -372,7 +372,7 @@ export function analyzeCollection(collection, filters = {}) {
     name, count: bottlings.filter(b => !has(b)).length,
     ids: bottlings.filter(b => !has(b)).map(b => b.id),
   })).sort((a, b) => b.count - a.count);
-  /** @type {Array<[string, function(*): boolean]>} */
+  /** @type {Array<[string, (record: *) => boolean]>} */
   const purchaseChecks = [['Kaufpreis', b => amount(b.purchasePrice) != null], ['Kaufdatum', b => !!dateMonth(b.purchaseDate)],];
   const missingPurchase = purchaseChecks.map(([name, has]) => ({
     name, count: bottles.filter(b => !has(b)).length,

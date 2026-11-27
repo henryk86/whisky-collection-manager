@@ -153,7 +153,7 @@ function loadProfiles() {
 
 /**
  * Builds the environment for restic and rclone subprocesses.
- * @return {Object<string,string>} Process environment with backup configuration and secret-file paths.
+ * @return {Record<string,string>} Process environment with backup configuration and secret-file paths.
  */
 function jobEnv() {
   const password = process.env.RESTIC_PASSWORD_FILE || '/run/secrets/restic-password';
@@ -212,7 +212,7 @@ export function runCommand(binary, args, {cwd, timeout = 3600000} = {}) {
  * Runs restic against the specified repository.
  * @param {string} repo Restic repository path or URL.
  * @param {string[]} args Restic operation arguments.
- * @param {Object} options Subprocess options.
+ * @param {Object=} options Subprocess options.
  * @return {Promise<*>} Subprocess result.
  */
 const restic = (repo, args, options) => runCommand('restic', ['-r', repo, ...args], options);

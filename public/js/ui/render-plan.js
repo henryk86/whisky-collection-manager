@@ -13,7 +13,7 @@ export const SLOT = /\{\{(content|attr|attrs|text|t|tag):([\w.]+)\}\}/g;
 /**
  * Named DOM attributes. False omits boolean HTML attributes but remains a
  * literal value for other attributes, including ARIA.
- * @typedef {Object<string, BindingScalar>} AttributeMap
+ * @typedef {Record<string, BindingScalar>} AttributeMap
  */
 
 /**
@@ -32,7 +32,7 @@ export const SLOT = /\{\{(content|attr|attrs|text|t|tag):([\w.]+)\}\}/g;
 /**
  * Named values for a template fragment. Structural tag choices are strings;
  * content and attribute maps are validated according to their slot kinds.
- * @typedef {Object<string, RenderContent|AttributeMap>} TemplateBindings
+ * @typedef {Record<string, RenderContent|AttributeMap>} TemplateBindings
  */
 
 /**

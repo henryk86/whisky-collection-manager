@@ -17,7 +17,7 @@ function supportedPageSize(value) {
 /**
  * Recover safely when storage is unavailable or contains an obsolete value.
  *
- * @param {*} storage Storage adapter used to load or save preferences.
+ * @param {*=} storage Storage adapter used to load or save preferences.
  * @return {number} Supported number of results per page, using the default if storage is invalid.
  */
 export function getPageSizePreference(storage) {
@@ -33,7 +33,7 @@ export function getPageSizePreference(storage) {
  * Persist only values that can also be selected in the UI.
  *
  * @param {*} value Input value to process.
- * @param {*} storage Storage adapter used to load or save preferences.
+ * @param {*=} storage Storage adapter used to load or save preferences.
  * @return {boolean} True if the supported page-size preference was stored.
  */
 export function savePageSizePreference(value, storage) {

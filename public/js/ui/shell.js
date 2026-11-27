@@ -14,7 +14,7 @@ const renderTemplate = await loadTemplates('components/shell.html');
  * Creates the route-aware application shell and preserves the mounted modal during data refreshes.
  *
  * @param {!Object} options Optional configuration for the operation.
- * @return {function(import("./render-plan.js").RenderContent): void} Function that mounts or reconciles the active view.
+ * @return {(content: import("./render-plan.js").RenderContent) => void} Function that mounts or reconciles the active view.
  */
 export function createShell({root, state, applyTheme, renderModal, mountContent = replaceContent}) {
   let displayedRoute = null;

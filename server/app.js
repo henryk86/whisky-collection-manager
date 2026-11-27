@@ -15,7 +15,7 @@ import {hasInterruptedRestore, recoverInterruptedRestore} from './storage/restor
 import {ROOT} from './storage/paths.js';
 /**
  * Initializes persisted stores and returns the secured HTTP request dispatcher.
- * @return {function(import('node:http').IncomingMessage, import('node:http').ServerResponse): Promise<void>} Asynchronous request handler.
+ * @return {(request: import('node:http').IncomingMessage, response: import('node:http').ServerResponse) => Promise<void>} Asynchronous request handler.
  */
 export function createRequestHandler() {
   // Recovery must precede initialization: a missing live directory may be temporarily parked.

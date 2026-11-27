@@ -213,7 +213,7 @@ let pending = Promise.resolve();
  * A rejected mutation does not affect later writes or the current warehouse.
  *
  * @template T
- * @param {function(!Object): (T|!Promise<T>)} mutator Mutates a fresh copy.
+ * @param {(warehouse: Object) => T|Promise<T>} mutator Mutates a fresh copy.
  * @return {!Promise<T>} Result after the write has committed.
  */
 export function changeWarehouse(mutator) {

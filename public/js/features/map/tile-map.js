@@ -211,7 +211,7 @@ export function createTileMap(
    * Changes map zoom around the anchor point and records a manually adjusted view.
    *
    * @param {*} next Next candidate state or entry.
-   * @param {*} anchor Optional pixel coordinate about which to zoom; otherwise use the map center.
+   * @param {*=} anchor Optional pixel coordinate about which to zoom; otherwise use the map center.
    */
   function setZoom(next, anchor) {
     const {width, height} = dimensions();

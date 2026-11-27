@@ -4,7 +4,7 @@ export const COLLECTION_VIEW_STORAGE_KEY = 'whisky-collection-view';
 /**
  * Retrieves collection view preference for collection view preference.
  *
- * @param {*} storage Storage adapter used to load or save preferences.
+ * @param {*=} storage Storage adapter used to load or save preferences.
  * @return {(string)} Text assembled for the caller.
  */
 export function getCollectionViewPreference(storage) {
@@ -20,7 +20,7 @@ export function getCollectionViewPreference(storage) {
  * Updates collection view preference for collection view preference.
  *
  * @param {*} view Requested collection presentation, accepted only for cards or table.
- * @param {*} storage Storage adapter used to load or save preferences.
+ * @param {*=} storage Storage adapter used to load or save preferences.
  * @return {boolean} True if the collection view preference was saved successfully.
  */
 export function saveCollectionViewPreference(view, storage) {

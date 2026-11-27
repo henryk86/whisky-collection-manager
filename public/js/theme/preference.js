@@ -1,7 +1,7 @@
 /**
  * Browser preference only; never persisted in the collection JSON.
  *
- * @param {*} storage Storage adapter used to load or save preferences.
+ * @param {*=} storage Storage adapter used to load or save preferences.
  * @return {'dark'|'light'|'system'} Stored preference or system when absent or inaccessible.
  */
 export function getThemePreference(storage) {

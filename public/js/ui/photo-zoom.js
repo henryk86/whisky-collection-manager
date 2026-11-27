@@ -106,7 +106,7 @@ export function createPhotoZoom() {
    * Changes the photo zoom while preserving the selected point and constraining pan.
    *
    * @param {*} next Next candidate state or entry.
-   * @param {*} point Optional anchor in viewport pixels; defaults to the viewport center.
+   * @param {*=} point Optional anchor in viewport pixels; defaults to the viewport center.
    */
   function zoomTo(next, point) {
     if (!stage?.isConnected || !image) return;

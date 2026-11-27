@@ -4,7 +4,7 @@ import {apiErrorFallbacks} from '../../shared/api-error-fallbacks.js';
 /**
  * Interpolates named placeholders in an English error message, preserving unknown placeholders.
  * @param {string} template Message template.
- * @param {Object<string,string>=} params Named replacement values.
+ * @param {Record<string,string>=} params Named replacement values.
  * @return {string} Message with known placeholders replaced.
  */
 function englishMessage(template, params = {}) {
@@ -15,7 +15,7 @@ function englishMessage(template, params = {}) {
 /**
  * Filters public error parameters to short strings with valid placeholder names.
  * @param {*} value Potentially untrusted error parameters.
- * @return {Object<string,string>} Safe placeholder values; invalid fields are omitted.
+ * @return {Record<string,string>} Safe placeholder values; invalid fields are omitted.
  */
 function safeParams(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};

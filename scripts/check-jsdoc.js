@@ -8,97 +8,35 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import ts from 'typescript';
 import {listJavaScriptFiles} from './javascript-files.js';
+import {parseJavaScript, declarationOf, isFunction} from './javascript-ast.js';
+import {docsFor, hasTypedContract} from './jsdoc-contract.js';
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 /**
- * Determines whether a function returns a meaningful value. Nested callbacks
- * and local function declarations have separate contracts.
- *
- * @param {!ts.Node} func Function declaration or expression.
- * @return {boolean} Whether the return contract needs a type.
- */
-function returnsValue(func) {
-  if (ts.isArrowFunction(func) && !ts.isBlock(func.body)) return true;
-  let result = false;
-  /**
-   * Searches the current function body, excluding nested functions.
-   *
-   * @param {!ts.Node} node Syntax node in the current traversal.
-   */
-  function visit(node) {
-    if (node !== func && ts.isFunctionLike(node)) return;
-    if (ts.isReturnStatement(node) && node.expression) result = true;
-    ts.forEachChild(node, visit);
-  }
-  visit(func);
-  return result;
-}
-
-/**
- * Verifies the presence of a meaningful summary and typed function tags.
- * Destructured parameters count once; their dotted property tags are optional.
- *
- * @param {!ts.Node} owner Statement holding the JSDoc comment.
- * @param {ts.FunctionLikeDeclaration|ts.ClassDeclaration} func Function or class described by the comment.
- * @return {boolean} Whether the public API has a complete typed contract.
- */
-function hasTypedJSDoc(owner, func) {
-  const comment = (/** @type {ts.Node & {jsDoc?: readonly ts.JSDoc[]}} */ (owner)).jsDoc?.find(doc => typeof doc.comment === 'string' && doc.comment.trim().length > 0);
-  if (!comment) return false;
-  if (ts.isClassDeclaration(func)) {
-    return func.members.filter(ts.isConstructorDeclaration).every(ctor =>
-      !ctor.parameters.length || hasTypedJSDoc(ctor, ctor));
-  }
-  const tags = ts.getJSDocTags(owner);
-  const params = tags.filter(ts.isJSDocParameterTag).filter(tag => tag.typeExpression && tag.name && !tag.name.getText().includes('.'));
-  const names = new Set(params.map(tag => tag.name.getText()));
-  const declarations = func.parameters ?? [];
-  if (names.size !== declarations.length) return false;
-  for (const [index, parameter] of declarations.entries()) {
-    if (ts.isIdentifier(parameter.name) && !names.has(parameter.name.text)) return false;
-    // Destructured options can be documented under their semantic parameter
-    // name, which is not available as a JavaScript AST identifier.
-    if (!ts.isIdentifier(parameter.name) && !params[index]) return false;
-  }
-  const returns = tags.filter(ts.isJSDocReturnTag).filter(tag => tag.tagName.text === 'return');
-  if (returnsValue(func)) return returns.some(tag => tag.typeExpression);
-  return returns.length === 0 || returns.some(tag => tag.typeExpression);
-}
-
-/**
- * Inspects all direct exported functions and classes in one ES module.
- *
- * @param {string} file Relative file path used in stable export identifiers.
- * @param {string} source JavaScript module source.
- * @return {!Array<{key: string, documented: boolean}>} Exported APIs and
- *     their documentation status.
+ * Inspects direct exported functions and classes in an ES module.
+ * @param {string} file Relative source path.
+ * @param {string} source Original JavaScript text.
+ * @return {!Array<{key: string, documented: boolean}>} Export names and contract validity.
  */
 export function inspectExports(file, source) {
-  const syntax = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const {program, comments} = parseJavaScript(file, source);
   const entries = [];
-  /**
-   * Records one exported name and the result of its documentation check.
-   *
-   * @param {string} name Exported identifier.
-   * @param {!ts.Node} statement Syntax node holding the JSDoc.
-   * @param {ts.FunctionLikeDeclaration|ts.ClassDeclaration} func Exported function or class declaration.
-   */
-  function add(name, statement, func) {
-    const key = `${file}#${name}`;
-    entries.push({key, documented: hasTypedJSDoc(statement, func)});
-  }
-  for (const statement of syntax.statements) {
-    if (!(ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined)?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)) continue;
-    if (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) {
-      if (statement.name) add(statement.name.text, statement, statement);
-    } else if (ts.isVariableStatement(statement)) {
-      for (const declaration of statement.declarationList.declarations) {
-        const value = declaration.initializer;
-        if (!value || (!ts.isArrowFunction(value) && !ts.isFunctionExpression(value))) continue;
-        add(declaration.name.getText(syntax), statement, value);
+  for (const statement of program.body) {
+    if (!['ExportNamedDeclaration', 'ExportDefaultDeclaration'].includes(statement.type)) continue;
+    const declaration = declarationOf(statement);
+    if (!declaration) continue;
+    const docs = docsFor(statement, source, comments);
+    if (declaration.type === 'FunctionDeclaration' && declaration.id) {
+      entries.push({key: `${file}#${declaration.id.name}`, documented: hasTypedContract(declaration, docs)});
+    } else if (declaration.type === 'ClassDeclaration' && declaration.id) {
+      const documented = docs.some(doc => doc.description) && declaration.body.body.filter(member => member.kind === 'constructor').every(member =>
+        !member.value.params.length || hasTypedContract(member.value, docsFor(member, source, comments)));
+      entries.push({key: `${file}#${declaration.id.name}`, documented});
+    } else if (declaration.type === 'VariableDeclaration') {
+      for (const item of declaration.declarations) {
+        if (isFunction(item.init)) entries.push({key: `${file}#${source.slice(item.id.start, item.id.end)}`, documented: hasTypedContract(item.init, docs)});
       }
     }
   }

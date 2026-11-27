@@ -364,7 +364,7 @@ export function quality(analytics) {
  * Prepares overview navigation card for an analysis section.
  *
  * @param {*} page Page or view being rendered or selected.
- * @param {*} stat Statistics supplied for the section-card call; currently not read by the renderer.
+ * @param {*=} stat Statistics supplied for the section-card call; currently not read by the renderer.
  * @return {!import('../ui/render-plan.js').RenderPlan} Overview navigation card for an analysis section.
  */
 function sectionCard(page, stat) {

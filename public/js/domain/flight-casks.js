@@ -190,7 +190,7 @@ const normalize = text => String(text || '').normalize('NFKD').replace(/[\u0300-
 
 /**
  * Retains the strongest known weight instead of counting duplicate mentions.
- * @param {!Object<string, number>} map Accumulated weights.
+ * @param {!Record<string, number>} map Accumulated weights.
  * @param {string} key Feature identifier.
  * @param {number} weight Relevance of the cask phase.
  */
@@ -274,7 +274,7 @@ function caskSegments(clause) {
  * @return {{groups: !Object, profiles: !Array<!Object>}} Classification.
  */
 export function classifyCask(text) {
-  /** @type {Object<string, number>} */
+  /** @type {Record<string, number>} */
   const groups = {};
   const profiles = [];
   const separator = new RegExp('(' + [
@@ -320,8 +320,8 @@ export function classifyCask(text) {
 
 /**
  * Computes weighted Jaccard distance for two known feature sets.
- * @param {!Object<string, number>} a First set.
- * @param {!Object<string, number>} b Second set.
+ * @param {!Record<string, number>} a First set.
+ * @param {!Record<string, number>} b Second set.
  * @return {?number} Distance, or null when either set is unknown.
  */
 function jaccard(a, b) {
@@ -340,10 +340,10 @@ function jaccard(a, b) {
  * @param {!Object} profile Classified cask description.
  * @param {string} group Beverage family.
  * @param {string} dimension Feature dimension.
- * @return {!Object<string, number>} Weighted feature set.
+ * @return {!Record<string, number>} Weighted feature set.
  */
 function featureWeights(profile, group, dimension) {
-  /** @type {Object<string, number>} */
+  /** @type {Record<string, number>} */
   const weights = {};
   for (const entry of profile.profiles) {
     if (entry.group !== group) continue;

@@ -43,7 +43,7 @@ function write(fd, buffer) {
  * Streams a file to the supplied callback in bounded blocks, closing the descriptor even on failure.
  *
  * @param {*} file File resource to read, write or inspect.
- * @param {function(...*): *} callback Callback invoked by the operation.
+ * @param {(chunk: Buffer) => void} callback Callback invoked by the operation.
  */
 function fileContent(file, callback) {
   const fd = fs.openSync(file, 'r');
