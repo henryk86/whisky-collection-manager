@@ -21,7 +21,7 @@ export class EvidenceArchive {
   constructor() {
     /** @type {BlobPart[]} */
     this.parts = [];
-    /** @type {Uint8Array[]} */
+    /** @type {Uint8Array<ArrayBuffer>[]} */
     this.central = [];
     this.offset = 0;
     this.directorySize = 0;
