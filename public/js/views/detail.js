@@ -270,7 +270,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
       backNavigation: backNavigation("back", t("detail.navigation.backToCollection"), "detail-back"),
       pageHeader: pageHeader({
         title: bottling.name,
-        intro: bottling.subtitle || '',
+        subtitle: bottling.subtitle || '',
         period: false,
         className: 'detail-page-head',
         preTitle: renderTemplate('detailHeadingMeta', {
