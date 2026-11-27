@@ -1,4 +1,4 @@
-# Whisky Collection Manager v1.14.2
+# Whisky Collection Manager v1.15.0
 
 <p align="center">
   <img src="public/assets/logo-original.svg" width="96" alt="Whisky Collection Manager logo">

@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.15.0 - 2026-11-27
+
+- test: fix import form fixture for composition inference
+- fix: revalidate inferred composition and support full bottling name searches
+- feat: infer complete composition for single malt and single grain
+- fix: improve bottling subtitle placeholder
+- fix: mark single malt composition complete on matched distillery import
+- chore: ignore patch files
+- fix: separate current shelf occupancy from relocation destination
+- fix: preserve subtitle hierarchy above collection card metadata
+- fix: integrate bottling subtitle into detail page heading
+- refactor: expose derived bottling fullName as API metadata
+- feat: add optional bottling subtitles and migrate collection schema to version 10
+
 ## 1.14.2 - 2026-11-26
 
 - fix: prevent analytics card text and chevron overflow
