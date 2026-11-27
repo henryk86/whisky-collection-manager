@@ -42,7 +42,8 @@ test(
     assert.equal((await domElements(html, 'test')).length, 0);
     assert.ok((await domElements(html, '[value="s1"][selected]')).length > 0);
     assert.ok((await domElements(html, '[value="s2"][disabled]')).length > 0);
-    assert.match(await domText(html), /1 von 1 Plätzen belegt/);
+    await assertDom(html, '.warehouse-assignment-current-occupancy', {text: /^1 von 1 Plätzen belegt$/});
+    assert.equal((await domElements(html, '.warehouse-assignment-feedback'))[0].text.trim(), '');
     assert.deepEqual(assignmentLocation(warehouse, 's1')?.shelf, shelf);
   }
 );
@@ -74,6 +75,8 @@ test(
     const {renderWarehouseAssignment} = await import('../../public/js/ui/warehouse-assignment.js');
     const html = renderWarehouseAssignment(w, [w.bottles[0], w.bottles[1]]);
     assert.match(await domText(html), /2 Flaschen ausgewählt/);
+    assert.equal((await domElements(html, '.warehouse-assignment-current-occupancy')).length, 0);
+    assert.equal((await domElements(html, '.warehouse-assignment-feedback'))[0].text.trim(), '');
     assert.ok((await domElements(html, 'div[class="warehouse-assignment-editor"]')).length > 0);
     await assertDom(html, "details,summary", {}, true);
   }
@@ -95,3 +98,15 @@ test(
     assert.ok((await domElements(renderWarehouseAssignment(warehouse, [warehouse.bottles[0], warehouse.bottles[1]]), '[value="r1"]')).length > 0);
   }
 );
+
+test('current occupancy is omitted for unassigned bottles and supports unlimited shelves', async () => {
+  const {warehouse, shelf} = fixture();
+  shelf.capacity = null;
+  const bottle = warehouse.bottles[0];
+  const assigned = renderWarehouseAssignment(warehouse, bottle);
+  await assertDom(assigned, '.warehouse-assignment-current-occupancy', {text: /1 Flaschen · keine Kapazitätsgrenze/});
+  delete warehouse.assignments[bottle.id];
+  const unassigned = renderWarehouseAssignment(warehouse, bottle);
+  await assertDom(unassigned, '.warehouse-assignment-current-occupancy', {}, true);
+  assert.equal((await domElements(unassigned, '.warehouse-assignment-feedback'))[0].text.trim(), '');
+});

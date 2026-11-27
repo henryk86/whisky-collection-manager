@@ -14,6 +14,7 @@ Das Lager ist ein **eigenes Datenmodell** (`warehouse.json`, Schema 1); es refer
 - Regale, Hängeregale, Vitrinen, Schränke, Kommoden/Schubladen, Kisten und sonstige Möbel werden unterstützt; ihre Fächer können Front-/Tür-/Schubladenvarianten erhalten.
 - Eine Fachkapazität von `null` bedeutet unbegrenzt, `0` verbietet Belegung, positive Ganzzahlen geben die Obergrenze an. Belegte Lagerorte können nicht unbemerkt gelöscht werden.
 - Fächer zeigen zugewiesene Flaschen und ermöglichen Vorschau, Umlagerung und Mehrfachbearbeitung. Nach Kapazitätsänderungen aktualisiert sich die bereits offene Fach-/Möbelansicht.
+- Beim Umlagern zeigt der aktuelle Lagerort die tatsächliche Fachbelegung. Die Fachauswahl zeigt die Belegung möglicher Ziele; zusätzliche Hinweise erscheinen nur bei Kapazitätsüberschreitung.
 - Fachbearbeitung schützt ungespeicherte Eingaben bei Navigation und verschachtelten Rückfragen. Bestätigungen bleiben Anwendungsmodals.
 - Möbel können eigene Fotos besitzen (bis zu 24); die Fotos sind Teil des vollständigen Backups. Möbelkopien übernehmen keine Fotos.
 - Die Flaschensuche verbindet Inventarnummern und Lagerorte, ohne die physische Lagerzuordnung in die Abfüllungsdaten zu kopieren.

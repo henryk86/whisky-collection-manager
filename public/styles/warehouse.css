@@ -1379,6 +1379,11 @@
   overflow-wrap: anywhere;
 }
 
+.warehouse-assignment-current-occupancy {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .warehouse-assignment-editor {
   min-width: 0;
   grid-column: 1 / -1;
@@ -1469,10 +1474,13 @@
 }
 
 .warehouse-assignment-feedback {
-  min-height: 18px;
-  margin: 8px 0 0;
+  margin: 0;
   font-size: 12px;
   color: var(--muted);
+}
+
+.warehouse-assignment-feedback:not(:empty) {
+  margin-top: 8px;
 }
 
 .warehouse-assignment-form .warehouse-form-actions {

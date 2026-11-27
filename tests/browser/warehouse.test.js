@@ -578,7 +578,8 @@ test(
         `assignment radios should retain an 18px control instead of text-field dimensions: ${JSON.stringify(radioStyle)}`
       );
       assert.equal(radioStyle.appearance, 'auto');
-      assert.match(await assign.locator('.warehouse-assignment-feedback').innerText(), /1 von 6/);
+      assert.equal(await assign.locator('.warehouse-assignment-current-occupancy').innerText(), '1 von 6 Plätzen belegt');
+      assert.equal(await assign.locator('.warehouse-assignment-feedback').innerText(), '');
       // A tall real bottle photo used to inflate the CSS grid's intrinsic row
       // beyond the fixed preview frame, silently cropping the bottom in Chrome.
       await assign.evaluate(element => {
@@ -649,6 +650,7 @@ test(
   async () => {
     await session(async ({base, page, open}) => {
       const {bottle} = await seed(base, '098766');
+      const {bottle: otherBottle} = await seed(base, '098767');
       const room = (await requestJson(base, '/api/warehouse/rooms', 'POST', {name: 'Umlagerraum', width: 4, height: 4})).data;
       const rack = (await requestJson(
         base,
@@ -667,11 +669,13 @@ test(
         }
       )).data;
       const first = (await requestJson(base, `/api/warehouse/furniture/${rack.id}/shelves`, 'POST', {name: 'Bisheriges Fach', capacity: 5})).data;
-      const target = (await requestJson(base, `/api/warehouse/furniture/${rack.id}/shelves`, 'POST', {name: 'Zielfach', capacity: 5})).data;
+      const target = (await requestJson(base, `/api/warehouse/furniture/${rack.id}/shelves`, 'POST', {name: 'Zielfach', capacity: 7})).data;
       assert.equal(
         (await requestJson(base, `/api/warehouse/bottles/${bottle.id}`, 'PUT', {shelfId: first.id})).status,
         200
       );
+      const full = (await requestJson(base, `/api/warehouse/furniture/${rack.id}/shelves`, 'POST', {name: 'Volles Fach', capacity: 1})).data;
+      assert.equal((await requestJson(base, `/api/warehouse/bottles/${otherBottle.id}`, 'PUT', {shelfId: full.id})).status, 200);
       await open();
       await page.locator('header [data-act="toggle-menu"]').click();
       await page.locator('#site-drawer [data-act="goto-warehouse"]').click();
@@ -696,7 +700,20 @@ test(
         true,
         'Speichern must be available without clicking Lagerort ändern'
       );
-      await form.locator('[data-assignment-shelf]').selectOption(target.id);
+      const currentOccupancy = form.locator('.warehouse-assignment-current-occupancy');
+      const warning = form.locator('.warehouse-assignment-feedback');
+      const shelfSelector = form.locator('[data-assignment-shelf]');
+      assert.equal(await currentOccupancy.innerText(), '1 von 5 Plätzen belegt');
+      assert.equal(await warning.innerText(), '');
+      assert.match(await shelfSelector.locator(`option[value="${target.id}"]`).innerText(), /0 von 7/);
+      await shelfSelector.selectOption(full.id);
+      assert.match(await warning.innerText(), /Kapazitätserhöhung auf 2 Plätze/);
+      assert.doesNotMatch(await warning.innerText(), /Plätzen belegt/);
+      assert.equal(await currentOccupancy.innerText(), '1 von 5 Plätzen belegt');
+      await shelfSelector.selectOption(target.id);
+      assert.equal(await warning.innerText(), '');
+      assert.equal(await currentOccupancy.innerText(), '1 von 5 Plätzen belegt');
+      assert.match(await form.locator('.warehouse-assignment-current strong').innerText(), /Bisheriges Fach/);
       await form.locator('button[type="submit"]').click();
       await form.waitFor({state: 'detached'});
       const stored = await requestJson(base, '/api/warehouse');
@@ -706,14 +723,21 @@ test(
       await page.locator(`[data-act="warehouse-assign"][data-id="${bottle.id}"]`).click();
       await form.waitFor();
       assert.match(await form.locator('.warehouse-assignment-current strong').innerText(), /Zielfach/);
+      assert.equal(await currentOccupancy.innerText(), '1 von 7 Plätzen belegt');
       await form.locator('[name="warehouseAssignmentMode"][value="none"]').check();
       assert.equal(await form.locator('[data-assignment-shelf]').isDisabled(), true);
+      assert.equal(await currentOccupancy.innerText(), '1 von 7 Plätzen belegt');
+      assert.equal(await warning.innerText(), '');
       await form.locator('button[type="submit"]').click();
       await form.waitFor({state: 'detached'});
       const unassigned = await requestJson(base, '/api/warehouse');
       assert.equal(unassigned.status, 200);
       assert.equal(unassigned.data.assignments[bottle.id] ?? null, null,
         'Ohne Lagerort should be saved without opening an extra editor');
+      await page.locator(`[data-act="warehouse-assign"][data-id="${bottle.id}"]`).click();
+      await form.waitFor();
+      assert.equal(await currentOccupancy.count(), 0);
+      assert.equal(await warning.innerText(), '');
     });
   }
 );

@@ -138,38 +138,46 @@ function furnitureOptions(room, selected) {
  *
  * @param {*} warehouse Warehouse containing rooms, furniture, shelves and assignments.
  * @param {*} furniture Warehouse furniture record being modified.
- * @param {*} bottleId Identifier of the bottle whose existing assignment is considered.
  * @param {*} selected Currently selected item or identifier.
  * @return {import('./render-plan.js').RenderPlan|string} Shelf choices including availability and capacity restrictions (or scalar/empty text when no plan is needed).
  */
-function shelfOptions(warehouse, furniture, bottleId, selected) {
+function shelfOptions(warehouse, furniture, selected) {
   return composeMarkup(
     option('', t('warehouse.assignment.chooseShelf')),
     composeMarkup((furniture?.shelves || []).map(shelf => {
-      const info = assignmentShelfInfo(warehouse, shelf, bottleId);
-      const detail = shelf.capacity === null
-        ? t('warehouse.assignment.occupiedUnlimited', {count: info.occupied})
-        : t('warehouse.assignment.occupiedLimited', {count: info.occupied, capacity: shelf.capacity});
+      const detail = occupancyMessage(warehouse, shelf);
       return option(shelf.id, `${shelf.name} · ${detail}`, {selected: shelf.id === selected, disabled: shelf.capacity === 0});
     }))
   );
 }
 
 /**
- * Formats shelf occupancy while accounting for the bottle currently being assigned.
+ * Formats the actual occupancy of a shelf, independent of the proposed move.
  *
- * @param {*} warehouse Warehouse containing current shelf assignments.
- * @param {*} shelfId Identifier of the selected destination shelf.
- * @param {*} bottleId Identifier of the bottle being reassigned.
- * @return {*} Localized shelf capacity or selection hint.
+ * @param {!Object} warehouse Warehouse containing current shelf assignments.
+ * @param {!Object} shelf Shelf whose current occupancy is displayed.
+ * @return {string} Localized occupancy with the configured capacity, if limited.
  */
-function occupancyMessage(warehouse, shelfId, bottleId) {
-  const place = assignmentLocation(warehouse, shelfId);
-  if (!place) return t('warehouse.assignment.selectHint');
-  const info = assignmentShelfInfo(warehouse, place.shelf, bottleId);
-  return place.shelf.capacity === null
-    ? t('warehouse.assignment.occupiedUnlimited', {count: info.occupied})
-    : t('warehouse.assignment.occupiedLimited', {count: info.occupied, capacity: place.shelf.capacity});
+function occupancyMessage(warehouse, shelf) {
+  const occupied = count(warehouse, shelf.id);
+  return shelf.capacity === null
+    ? t('warehouse.assignment.occupiedUnlimited', {count: occupied})
+    : t('warehouse.assignment.occupiedLimited', {count: occupied, capacity: shelf.capacity});
+}
+
+/**
+ * Describes exceptional capacity requirements for a proposed move.
+ *
+ * @param {!Object} warehouse Warehouse containing current shelf assignments.
+ * @param {?Object} shelf Proposed destination, or null when no shelf is selected.
+ * @param {*} bottleIds Physical bottle identifier or identifiers being assigned.
+ * @return {string} Capacity warning, or empty text for an ordinary assignment.
+ */
+function capacityWarning(warehouse, shelf, bottleIds) {
+  const need = shelfCapacityIncrease(warehouse, shelf, bottleIds);
+  if (!need) return '';
+  return need.blocked ? t('warehouse.shelves.dragFull') :
+    t('warehouse.assignment.increaseCapacityNotice', {required: need.required});
 }
 
 /**
@@ -205,6 +213,9 @@ export function renderWarehouseAssignment(warehouse, bottle) {
         ariaLabel: t('warehouse.assignment.currentLocation'),
         currentLocationLabel: t('warehouse.assignment.currentLocation'),
         currentLocation: String((current?.label || t('warehouse.bottles.unassignedLabel')) ?? ''),
+        occupancy: current ? renderTemplate('warehouseAssignmentOccupancy', {
+          occupancy: occupancyMessage(warehouse, current.shelf),
+        }) : '',
       }),
     newLocation: t('warehouse.assignment.newLocation'),
     modeLabel: t('warehouse.assignment.modeLabel'),
@@ -215,8 +226,8 @@ export function renderWarehouseAssignment(warehouse, bottle) {
     furnitureOptions: furnitureOptions(current?.room, furnitureId),
     shelfLabel: t('warehouse.assignment.shelf'),
     shelfDisabled: !furnitureId ? {"disabled": true} : {},
-    shelfOptions: shelfOptions(warehouse, current?.furniture, ids, shelfId),
-    feedback: String((shelfId ? occupancyMessage(warehouse, shelfId, ids) : t('warehouse.assignment.selectHint')) ?? ''),
+    shelfOptions: shelfOptions(warehouse, current?.furniture, shelfId),
+    feedback: capacityWarning(warehouse, current?.shelf ?? null, ids),
   });
 }
 
@@ -255,19 +266,12 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
   const mode = () => form.querySelector('[name="warehouseAssignmentMode"]:checked')?.value || 'shelf';
 
   /**
-   * Shows the capacity, expansion or unassigned-state feedback for the current shelf choice.
+   * Shows a warning only when the proposed move exceeds the destination capacity.
    */
   const updateFeedback = () => {
     const id = mode() === 'none' ? null : shelf.value;
     const place = id ? assignmentLocation(warehouse, id) : null;
-    if (!place) {
-      feedback.textContent = t(mode() === 'none' ? 'warehouse.assignment.withoutLocationHint' : 'warehouse.assignment.selectHint');
-      return;
-    }
-    const need = shelfCapacityIncrease(warehouse, place.shelf, bottleId);
-    feedback.textContent = need && !need.blocked
-      ? `${occupancyMessage(warehouse, id, bottleId)} · ${t('warehouse.assignment.increaseCapacityNotice', {required: need.required})}`
-      : occupancyMessage(warehouse, id, bottleId);
+    feedback.textContent = capacityWarning(warehouse, place?.shelf ?? null, bottleId);
   };
 
   /**
@@ -288,9 +292,9 @@ export function mountWarehouseAssignment(form, warehouse, bottleId) {
   form.addEventListener('change', event => {
     if (event.target === room) {
       replaceContent(furniture, furnitureOptions(selectedRoom(), ''));
-      replaceContent(shelf, shelfOptions(warehouse, null, bottleId, ''));
+      replaceContent(shelf, shelfOptions(warehouse, null, ''));
     } else if (event.target === furniture) {
-      replaceContent(shelf, shelfOptions(warehouse, selectedFurniture(), bottleId, ''));
+      replaceContent(shelf, shelfOptions(warehouse, selectedFurniture(), ''));
     }
     updateMode();
   });
