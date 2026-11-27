@@ -8,6 +8,7 @@ import {projectedWarehouseBottles}
   from '../../shared/warehouse-bottle-projection.js';
 import {createRoomExport, planRoomImport} from './room-transfer.js';
 import {read} from '../storage/collection-store.js';
+import {collectionMetadata} from '../domain/bottling-metadata.js';
 import {readWarehouse, changeWarehouse} from '../storage/warehouse-store.js';
 import {fail} from '../domain/errors.js';
 import {saveImage, deleteImage} from '../storage/photos.js';
@@ -85,7 +86,7 @@ function refuseOccupied(data, shelfIds) {
  * Projects physical bottle records from the current persisted collection into the storage model.
  * @return {Object[]} Projected physical bottle records.
  */
-function physicalBottles() {return projectedWarehouseBottles(read());}
+function physicalBottles() {return projectedWarehouseBottles(collectionMetadata(read()));}
 
 /**
  * Retrieves warehouse for warehouse.

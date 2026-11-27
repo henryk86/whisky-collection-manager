@@ -1,4 +1,3 @@
-import {bottlingName} from '../../../../shared/bottling-name.js';
 import {composeMarkup} from '../../ui/render-plan.js';
 import {appendContent, replaceContent} from '../../ui/dom-renderer.js';
 import {t} from '../../i18n/index.js';
@@ -184,7 +183,7 @@ export function createExternalImport({
         navigate('detail', existing.id, {replace: true, });
         showModal(t("imports.import.alreadyExists"), renderTemplate('panel2', {
           existingBottlingPrefix: t("imports.import.existingBottlingPrefix", {source: safeSourceName}),
-          name: bottlingName(existing),
+          name: existing.fullName ?? existing.name,
           importExistingPhoto: data.imageToken ? renderTemplate('importExistingPhoto', {
             preparedLocally: t("imports.images.preparedLocally", {source: safeSourceName}),
             formField: (existing.bottles || []).length ? renderTemplate('formField', {

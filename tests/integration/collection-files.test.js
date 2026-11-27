@@ -21,7 +21,7 @@ test('schema 7 startup migration preserves all records and produces independentl
     const flight = (await api(ctx.base, '/api/tasting-flights', 'POST', {name: 'Flight', date: day})).data;
     assert.equal((await api(ctx.base, `/api/tasting-flights/${flight.id}/tastings`, 'PUT', {tastingIds: [external.id, note.id]})).status, 200);
     assert.equal((await api(ctx.base, '/api/settings', 'PATCH', {establishedYear: 1999})).status, 200);
-    const snapshot = (await api(ctx.base, '/api/collection')).data;
+    const snapshot = (await api(ctx.base, '/api/export/json')).data;
     const original = Buffer.from(JSON.stringify({...snapshot, schemaVersion: 7}));
     const core = path.join(directory, 'collection.json');
     removeSeparateCollectionFiles(directory);
@@ -75,7 +75,7 @@ test('schema 8 split storage and unfinished schema 8 journal migrate losslessly 
   const ctx = await startTestServer();
   try {
     const directory = path.join(ctx.dir, 'data');
-    const snapshot = (await api(ctx.base, '/api/collection')).data;
+    const snapshot = (await api(ctx.base, '/api/export/json')).data;
     const chosen = snapshot.distilleries[0];
     assert.ok(chosen);
     const updated = {...snapshot, settings: {establishedYear: 1988}};
@@ -117,7 +117,7 @@ test('schema 9 migration, subtitle persistence and ZIP restore preserve release 
     const id = created.data.bottling.id;
     const external = await api(ctx.base, '/api/external-tastings', 'POST', {bottling: {name: 'Kilchoman Genesis'}, tastedOn: day});
     assert.equal(external.status, 201);
-    const snapshot = (await api(ctx.base, '/api/collection')).data;
+    const snapshot = (await api(ctx.base, '/api/export/json')).data;
     for (const [name, content] of Object.entries(serializeCollectionFiles(snapshot, 9))) fs.writeFileSync(path.join(directory, name), content);
     fs.writeFileSync(path.join(directory, '.collection-transaction.json'), JSON.stringify({version: 1, collection: {...snapshot, schemaVersion: 9}}));
     const args = ['--input-type=module', '-e', "import {initialize} from './server/storage/collection-store.js';initialize();"];
@@ -138,6 +138,7 @@ test('schema 9 migration, subtitle persistence and ZIP restore preserve release 
     assert.equal(updated.status, 200);
     assert.equal(updated.data.subtitle, subtitle);
     assert.equal(updated.data.name, 'Kilchoman Genesis');
+    assert.equal(updated.data.fullName, `Kilchoman Genesis · ${subtitle}`);
     assert.equal(updated.data.brand, 'Genesis');
     assert.equal((await api(ctx.base, ownedPath, 'PATCH', {subtitle: 5})).status, 400);
     assert.equal((await api(ctx.base, ownedPath, 'PATCH', {subtitle: 'a'.repeat(181)})).status, 400);
@@ -146,6 +147,11 @@ test('schema 9 migration, subtitle persistence and ZIP restore preserve release 
     assert.equal((await api(ctx.base, externalPath, 'PATCH', {bottling: {subtitle: 5}})).status, 400);
     const saved = loadCollectionFiles(directory).collection;
     assert.equal(saved.bottlings[0].subtitle, subtitle);
+    assert.equal(Object.hasOwn(saved.bottlings[0], 'fullName'), false);
+    assert.equal(Object.hasOwn(saved.externalTastings[0].bottling, 'fullName'), false);
+    const response = (await api(ctx.base, '/api/collection')).data;
+    assert.equal(response.bottlings[0].fullName, `Kilchoman Genesis · ${subtitle}`);
+    assert.equal(response.externalTastings[0].bottling.fullName, `Kilchoman Genesis · ${subtitle}`);
     assert.equal(saved.externalTastings[0].bottling.subtitle, subtitle);
     assert.equal(JSON.parse(fs.readFileSync(path.join(directory, 'externalTastings.json'))).schemaVersion, 2);
     const csv = await fetch(ctx.base + '/api/export/csv');
@@ -157,7 +163,9 @@ test('schema 9 migration, subtitle persistence and ZIP restore preserve release 
     inspectReadableZip(archive, extracted, password);
     validatePreview(extracted, {writeMigrated: true});
     assert.deepEqual(loadCollectionFiles(path.join(extracted, 'data')).collection, saved);
-    assert.equal((await api(ctx.base, ownedPath, 'PATCH', {subtitle: null})).data.subtitle, null);
+    const cleared = (await api(ctx.base, ownedPath, 'PATCH', {subtitle: null})).data;
+    assert.equal(cleared.subtitle, null);
+    assert.equal(cleared.fullName, 'Kilchoman Genesis');
     assert.equal((await api(ctx.base, externalPath, 'PATCH', {bottling: {subtitle: ''}})).data.bottling.subtitle, '');
   } finally {await ctx.stop();}
 });

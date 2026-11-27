@@ -1,4 +1,3 @@
-import {bottlingName} from '../../../../shared/bottling-name.js';
 import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
@@ -28,7 +27,7 @@ export function matchingBottlings(collection, value = '') {
     ]
       .filter(Boolean).join(' ').toLocaleLowerCase('de');
     return tokens.every(token => terms.includes(token));
-  }).sort((left, right) => bottlingName(left).localeCompare(bottlingName(right), 'de', {numeric: true}) || left.id.localeCompare(right.id));
+  }).sort((left, right) => (left.fullName ?? left.name).localeCompare(right.fullName ?? right.name, 'de', {numeric: true}) || left.id.localeCompare(right.id));
 }
 
 /**
@@ -48,7 +47,7 @@ export function bottlingChoiceOptions(collection, search = '') {
     const details = [bottling.bottler, `${quantity} ${quantity === 1 ? t("forms.bottle.title") : t("forms.bottle.plural")}`,].filter(Boolean).join(' · ');
     return renderTemplate('bottlingChoiceOptionsOption', {
       id: bottling.id,
-      name: bottlingName(bottling),
+      name: bottling.fullName ?? bottling.name,
       details: details ? ` · ${String(details ?? '')}` : '',
     });
   })));

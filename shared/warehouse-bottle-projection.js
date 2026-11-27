@@ -1,4 +1,3 @@
-import {bottlingName} from './bottling-name.js';
 /** One collection -> warehouse-bottle projection on client and server.
  * Pure function: changing tasting notes never alters room or shelf assignments.
  */
@@ -15,7 +14,7 @@ export function projectedWarehouseBottles(collection) {
     (bottling.bottles || []).map(bottle => ({
       id: bottle.id,
       bottlingId: bottling.id,
-      name: bottlingName(bottling),
+      name: bottling.fullName ?? bottling.name,
       number: bottle.inventoryNumber || '',
       volumeType: bottle.volumeType || 'standard',
       status: bottle.status,

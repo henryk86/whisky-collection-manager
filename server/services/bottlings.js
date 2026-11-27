@@ -1,3 +1,4 @@
+import {bottlingMetadata} from '../domain/bottling-metadata.js';
 import {change} from '../storage/collection-store.js';
 import {normalizeBottle, normalizeBottling} from '../domain/normalization.js';
 import {markNumber} from '../domain/inventory.js';
@@ -50,7 +51,7 @@ export function createBottling(input) {
     bottling.bottles.push(bottle);
     collection.bottlings.push(bottling);
     return {
-      bottling, bottle,
+      bottling: bottlingMetadata(bottling), bottle,
     };
   });
 }
@@ -83,7 +84,7 @@ export function updateBottling(id, input) {
     const updated = normalizeBottling(input, bottling);
     checkDistilleries(collection, updated);
     Object.assign(bottling, updated, {updatedAt: now(), });
-    return bottling;
+    return bottlingMetadata(bottling);
   });
 }
 

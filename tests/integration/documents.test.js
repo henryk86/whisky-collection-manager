@@ -199,7 +199,7 @@ test('schema 6 startup and JSON import preserve original attachments and explici
       assert.equal(result.status, 201);
       attachments.push(result.data);
     }
-    const legacy = (await requestJson(ctx.base, '/api/collection')).data;
+    const legacy = (await requestJson(ctx.base, '/api/export/json')).data;
     legacy.schemaVersion = 6;
     const files = legacy.bottlings[0].bottles[0].files;
     files[0].purchaseEvidence = true;
@@ -227,13 +227,13 @@ test('schema 6 startup and JSON import preserve original attachments and explici
     assert.equal(second.status, 0, second.stderr);
     assert.deepEqual(fs.readdirSync(backupDir).filter(name => name.startsWith('pre-schema10-')), backups);
     assert.equal((await requestJson(ctx.base, '/api/import/json', 'POST', legacy)).status, 200);
-    assert.deepEqual((await requestJson(ctx.base, '/api/collection')).data, expected);
+    assert.deepEqual((await requestJson(ctx.base, '/api/export/json')).data, expected);
     for (const attachment of attachments) assert.deepEqual(fs.readFileSync(path.join(ctx.dir, attachment.path)), pdf);
     assert.deepEqual(fs.readFileSync(warehouse), warehouseBytes);
     const invalid = structuredClone(legacy);
     invalid.bottlings[0].bottles[0].files[0].purchaseEvidence = 'true';
     assert.equal((await requestJson(ctx.base, '/api/import/json', 'POST', invalid)).status, 400);
     assert.equal((await requestJson(ctx.base, '/api/import/json', 'POST', {...expected, schemaVersion: 11})).status, 400);
-    assert.deepEqual((await requestJson(ctx.base, '/api/collection')).data, expected);
+    assert.deepEqual((await requestJson(ctx.base, '/api/export/json')).data, expected);
   } finally {await ctx.stop();}
 });

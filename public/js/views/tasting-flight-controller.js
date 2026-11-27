@@ -1,4 +1,3 @@
-import {bottlingName} from '../../../shared/bottling-name.js';
 import {createPlannedFlightViewModel} from './models/tastings.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {replaceContent, appendContent} from '../ui/dom-renderer.js';
@@ -293,7 +292,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
               `${t('forms.bottling.ageYears')}: ${t('home.facts.years', {count: b.ageYears})}` : '',
           ].filter(Boolean);
           return renderTemplate('li', {
-            name: bottlingName(b),
+            name: b.fullName ?? b.name,
             t: t(`flightPlan.reason.${item.reason}`),
             small: metadata.length ? renderTemplate('small', {metadata: metadata.join(' · '), }) : '',
           });
@@ -365,7 +364,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
      */
     const choices = (excludeId = '') => composeMarkup(choicesFor(excludeId).map(x => renderTemplate('choicesOption', {
       id: x.bottle.id,
-      name: bottlingName(x.bottling),
+      name: x.bottling.fullName ?? x.bottling.name,
       inventoryNumber: x.bottle.inventoryNumber || '–',
     })));
     return renderTemplate('analyticsPanel3', {
@@ -536,7 +535,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
    * @param {*} item Current item under consideration.
    * @return {string} Whisky name, optional tasting title and formatted date for a flight entry.
    */
-  const flightEntryLabel = item => `${bottlingName(item.bottling)}${item.record.title ? ` · ${item.record.title}` : ''} · ${formatDate(item.record.tastedOn || '')}`;
+  const flightEntryLabel = item => `${item.bottling.fullName ?? item.bottling.name}${item.record.title ? ` · ${item.record.title}` : ''} · ${formatDate(item.record.tastedOn || '')}`;
 
   /**
    * Selects and transforms the flight records.
@@ -596,7 +595,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
         tastingId: item.record.id,
         external: item.external ? item.record.id : item.bottling.id,
         externalFlag: item.external ? '1' : '0',
-        name: bottlingName(item.bottling),
+        name: item.bottling.fullName ?? item.bottling.name,
         title: item.record.title || formatDate(item.record.tastedOn),
         tastingListGlasses: tastingListGlasses(item.record) || renderTemplate('tastingListGlasses2'),
         tastingRating: tastingRating(item.record),
@@ -671,7 +670,7 @@ export function createTastingFlightController({state, selectors, shell, navigate
           bottlings: composeMarkup((state.collection?.bottlings || []).map(b =>
             renderTemplate('flightOption2', {
               id: b.id,
-              name: bottlingName(b),
+              name: b.fullName ?? b.name,
             }))),
           ownedDisabled: (state.collection?.bottlings || []).length ? {} : {"disabled": true},
           fromCollection: t('tastings.fromCollection'),

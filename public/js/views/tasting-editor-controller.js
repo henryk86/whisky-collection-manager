@@ -1,4 +1,3 @@
-import {bottlingName} from '../../../shared/bottling-name.js';
 import {readExternalFields} from './tasting-presentation.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {replaceElement} from '../ui/dom-renderer.js';
@@ -718,7 +717,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
   function showAssignDialog() {
     const session = flavorSession;
     if (!session?.external || session.draft) return;
-    const owned = [...(state.collection?.bottlings || [])].sort((a, b) => bottlingName(a).localeCompare(bottlingName(b)));
+    const owned = [...(state.collection?.bottlings || [])].sort((a, b) => (a.fullName ?? a.name).localeCompare(b.fullName ?? b.name));
     if (!owned.length) {
       toast(t('tastings.assignNoBottlings'), true);
       return;
@@ -726,7 +725,7 @@ export function createTastingEditorController({state, shell, navigate, refresh, 
     const options = composeMarkup(owned.map(b =>
       renderTemplate('optionsOption', {
         id: b.id,
-        name: bottlingName(b),
+        name: b.fullName ?? b.name,
       })));
     showModal(
       t('tastings.assignToCollection'),

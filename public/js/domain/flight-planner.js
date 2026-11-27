@@ -1,4 +1,3 @@
-import {bottlingName} from '../../../shared/bottling-name.js';
 /**
  * Offline and deterministic proposals. The scores are heuristics, not claims
  * about taste.
@@ -39,7 +38,7 @@ const isRated = value => Number.isFinite(value) && value >= 0 && value <= 10;
  * @param {!Object} b Second flight candidate.
  * @return {number} Negative, zero or positive comparison result.
  */
-const compareItems = (a, b) => bottlingName(a.bottling).localeCompare(bottlingName(b.bottling), 'de') || a.bottling.id.localeCompare(b.bottling.id) || a.bottle.id.localeCompare(b.bottle.id);
+const compareItems = (a, b) => (a.bottling.fullName ?? a.bottling.name).localeCompare(b.bottling.fullName ?? b.bottling.name, 'de') || a.bottling.id.localeCompare(b.bottling.id) || a.bottle.id.localeCompare(b.bottle.id);
 
 /**
  * Selects at most one available physical bottle per bottling and derives

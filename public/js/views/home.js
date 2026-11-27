@@ -1,4 +1,3 @@
-import {bottlingName} from '../../../shared/bottling-name.js';
 import {createSavedViewsController} from './collection-saved-views-controller.js';
 import {createCollectionFlavorController} from './collection-flavor-controller.js';
 import {statusText, inventoryBadges, collectionTableCell, collectionCardRating, pagerHtml} from './collection-presentation.js';
@@ -250,7 +249,7 @@ export function createHomeView({
         img: photo ?
           renderTemplate('img', {
             imageUrl: imageUrl(photo),
-            bottleAlt: t("home.image.bottleAlt", {name: bottlingName(bottling)}),
+            bottleAlt: t("home.image.bottleAlt", {name: bottling.fullName ?? bottling.name}),
           }) :
           renderTemplate('imagePlaceholder'),
         collectionCardRating: collectionCardRating(bottling, bottle?.id),

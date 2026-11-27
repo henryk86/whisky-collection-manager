@@ -65,6 +65,7 @@
  * @property {string} id
  * @property {string} name
  * @property {string|null} [subtitle] Optional release subtitle, up to 180 characters.
+ * @property {string} [fullName] Derived read-only API metadata; not persisted.
  * @property {string|null} [distilleryId] Legacy single-distillery reference.
  * @property {string|null} [whiskybaseUrl] External Whiskybase reference URL.
  * @property {string[]} distilleryIds Zero, one, or multiple known contributors.
@@ -107,6 +108,7 @@
  * @typedef {Object} ExternalTastingBottling
  * @property {string} name Release name of an unowned whisky.
  * @property {string} [subtitle] Optional release subtitle, up to 180 characters.
+ * @property {string} [fullName] Derived read-only API metadata; not persisted.
  * @property {string} distillery Optional free-text distillery.
  * @property {string} bottler Optional free-text bottler.
  * @property {number|null} ageYears

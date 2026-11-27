@@ -1,4 +1,3 @@
-import {bottlingName} from '../../../shared/bottling-name.js';
 import {bottlingDistilleryIds} from './distillery-origin.js';
 import {APPROXIMATE_LOCATIONS, normalizeDistilleryName}
   from './distillery-locations.js';
@@ -95,7 +94,7 @@ export function buildDistilleryMap(collection, {includeAllDistilleries =
       const physicalBottles = Array.isArray(bottling.bottles) ? bottling.bottles : [];
       site.bottlings.push({
         id: bottling.id,
-        name: bottlingName(bottling),
+        name: bottling.fullName ?? bottling.name,
         bottleCount: physicalBottles.length,
         ageYears: bottling.ageYears,
         abv: bottling.abv,
