@@ -223,8 +223,20 @@ export function createExternalImport({
       }
     }
     const selectedIds = new Set(queryAll('[name=import-distillery]:checked', query('#import-panel')).map((/** @type {HTMLInputElement} */ input) => input.value));
-    for (const choice of /** @type {Iterable<HTMLInputElement>} */ (queryAll('input[name=distilleryIds]', form))) {
+    const distilleryChoices = /** @type {!Array<HTMLInputElement>} */ (queryAll('input[name=distilleryIds]', form));
+    for (const choice of distilleryChoices) {
       if (selectedIds.has(choice.value)) choice.checked = true;
+    }
+    // Only infer completeness from a single, actually assigned source distillery.
+    if (importDetails.fields.whiskyType === 'single_malt') {
+      const matched = matchImportedDistilleries(importDetails.distilleryName, state.collection.distilleries);
+      const assigned = distilleryChoices.filter(choice => choice.checked);
+      const whiskyType = /** @type {?HTMLSelectElement} */ (form.elements.namedItem('whiskyType'));
+      const compositionComplete = /** @type {?HTMLSelectElement} */ (form.elements.namedItem('compositionComplete'));
+      if (whiskyType?.value === 'single_malt' && matched.length === 1 && matched[0].id &&
+        assigned.length === 1 && assigned[0].value === matched[0].id && compositionComplete) {
+        compositionComplete.value = 'true';
+      }
     }
     importMessage(t('imports.import.selectedApplied'));
     toast(t("imports.import.dataApplied"));
