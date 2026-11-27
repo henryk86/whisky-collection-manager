@@ -24,6 +24,19 @@ function readJson(file) {
 }
 
 /**
+ * Matches npm platform allowlists, including exclusions and the special any value.
+ * @param {string[]|undefined} constraints Package platform restrictions.
+ * @param {string} value Current operating system or architecture.
+ * @return {boolean} Whether the package supports the platform dimension.
+ */
+function matchesPlatform(constraints, value) {
+  if (!constraints?.length) return true;
+  if (constraints.includes(`!${value}`)) return false;
+  const allowed = constraints.filter(item => !item.startsWith('!'));
+  return !allowed.length || allowed.includes('any') || allowed.includes(value);
+}
+
+/**
  * Use npm's installed lockfile to detect stale or partial installations.
  * Unlike blindly running npm ci at every start, this works offline after the
  * initial install and does not delete node_modules unnecessarily.
@@ -38,6 +51,8 @@ export function needsNpmCi(root, {production = false} = {}) {
   if (!wanted?.packages || !installed?.packages) return true;
   for (const [name, entry] of Object.entries(wanted.packages)) {
     if (!name.startsWith('node_modules/') || (production && entry.dev)) continue;
+    // npm keeps every native variant in the project lock but installs only compatible optional packages.
+    if (entry.optional && (!matchesPlatform(entry.os, process.platform) || !matchesPlatform(entry.cpu, process.arch))) continue;
     if (installed.packages[name]?.version !== entry.version) return true;
     if (!fs.existsSync(path.join(root, name, 'package.json'))) return true;
   }

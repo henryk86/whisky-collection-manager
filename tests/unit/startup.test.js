@@ -128,6 +128,27 @@ test(
   }
 );
 
+test('startup ignores foreign optional native packages but requires the local compiler package', t => {
+  const root = fixture(t);
+  const local = `node_modules/@typescript/typescript-${process.platform}-${process.arch}`;
+  const foreign = 'node_modules/@typescript/typescript-foreign';
+  const wanted = {...packages,
+    [local]: {version: '7.0.2', optional: true, dev: true, os: [process.platform], cpu: [process.arch]},
+    [foreign]: {version: '7.0.2', optional: true, dev: true, os: [`!${process.platform}`]},
+  };
+  const lock = path.join(root, 'node_modules/.package-lock.json');
+  fs.writeFileSync(path.join(root, 'package-lock.json'), JSON.stringify({packages: wanted}));
+  assert.equal(needsNpmCi(root), true);
+  fs.mkdirSync(path.join(root, local), {recursive: true});
+  fs.writeFileSync(path.join(root, local, 'package.json'), JSON.stringify({version: '7.0.2'}));
+  fs.writeFileSync(lock, JSON.stringify({packages: {...packages, [local]: wanted[local]}}));
+  assert.equal(needsNpmCi(root), false);
+  fs.rmSync(path.join(root, local, 'package.json'));
+  assert.equal(needsNpmCi(root), true);
+  install(root, {dev: false});
+  assert.equal(needsNpmCi(root, {production: true}), false);
+});
+
 test(
   'npm start provisions missing local HTTPS once without replacing an existing .env',
   t => {
