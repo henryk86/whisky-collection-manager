@@ -64,6 +64,7 @@ function fixture(
   text(dir, 'package.json', JSON.stringify({name: 'wcm-fixture', type: 'module', version: '1.4.0'}) + '\n');
   text(dir, 'package-lock.json', JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) + '\n');
   text(dir, 'README.md', '# Whisky Collection Manager v1.4.0\n\nIntroduction.\n');
+  text(dir, 'README.en.md', '# Whisky Collection Manager v1.4.0\n\nIntroduction.\n');
   text(dir, 'CHANGELOG.md', '# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Historical information\n');
   text(dir, 'docs/TESTSTATUS.md', '# Teststatus - Whisky Collection Manager v1.4.0\n');
   if (!minimalManifest) for (let i = 0; i < 20; i++) text(dir, `public/js/stable-${i}.js`, `export const stable${i} = ${i};\n`);
@@ -84,6 +85,7 @@ function fixture(
   text(dir, 'package.json', JSON.stringify({name: 'wcm-fixture', type: 'module', version: '1.4.1'}) + '\n');
   text(dir, 'package-lock.json', JSON.stringify({version: '1.4.1', packages: {'': {version: '1.4.1'}}}) + '\n');
   text(dir, 'README.md', '# Whisky Collection Manager v1.4.1\n\nIntroduction.\n');
+  text(dir, 'README.en.md', '# Whisky Collection Manager v1.4.1\n\nIntroduction.\n');
   text(
     dir,
     'CHANGELOG.md',
@@ -185,6 +187,7 @@ test(
       assert.equal(JSON.parse(get(dir, branch, 'package.json')).version, '1.4.1');
       assert.equal(JSON.parse(get(dir, branch, 'package-lock.json')).version, '1.4.1');
       assert.match(get(dir, branch, 'README.md'), /^# Whisky Collection Manager v1\.4\.1/);
+      assert.match(get(dir, branch, 'README.en.md'), /^# Whisky Collection Manager v1\.4\.1/);
       assert.match(get(dir, branch, 'docs/TESTSTATUS.md'), /v1\.4\.1/);
       assert.match(get(dir, branch, 'CHANGELOG.md'), /## 1\.4\.1/);
       assert.equal(JSON.parse(get(dir, branch, 'wcm-source-manifest.json')).version, '1.4.1');

@@ -145,6 +145,7 @@ test(
         JSON.stringify({version: '1.3.0', packages: {'': {version: '1.3.0'}}})
       );
       fs.writeFileSync(path.join(root, 'README.md'), '# Whisky Collection Manager v1.3.0\n');
+      fs.writeFileSync(path.join(root, 'README.en.md'), '# Whisky Collection Manager v1.3.0\n');
       fs.writeFileSync(path.join(root, 'CHANGELOG.md'), '# Changelog\n\n## 1.3.0 - 2026-11-16\n\n- Fixes\n');
       fs.mkdirSync(path.join(root, 'docs'));
       fs.writeFileSync(path.join(root, 'docs/TESTSTATUS.md'), '# Teststatus - Whisky Collection Manager v1.3.0\n');

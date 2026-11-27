@@ -13,7 +13,7 @@ import {verifyReleaseMetadata} from './release-version.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const RELEASE_METADATA = [
-  'package.json', 'package-lock.json', 'README.md', 'CHANGELOG.md',
+  'package.json', 'package-lock.json', 'README.md', 'README.en.md', 'CHANGELOG.md',
   'docs/TESTSTATUS.md', 'wcm-source-manifest.json',
 ];
 /**

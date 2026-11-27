@@ -95,8 +95,10 @@ export function verifyReleaseMetadata(root = ROOT, {allowReadmeMismatch =
   if (lock.version !== version || lock.packages?.['']?.version !== version) {
     throw new Error('Versionen von package.json und package-lock.json stimmen nicht ueberein.');
   }
-  if (!allowReadmeMismatch && !content('README.md').startsWith(`# Whisky Collection Manager v${version}\n`)) {
-    throw new Error('README.md enthaelt nicht die Release-Version im Titel.');
+  for (const name of ['README.md', 'README.en.md']) {
+    if (!allowReadmeMismatch && !content(name).startsWith(`# Whisky Collection Manager v${version}\n`)) {
+      throw new Error(`${name} enthaelt nicht die Release-Version im Titel.`);
+    }
   }
   if (!content('docs/TESTSTATUS.md').startsWith(`# Teststatus - Whisky Collection Manager v${version}\n`)) {
     throw new Error(`docs/TESTSTATUS.md enthaelt nicht die Release-Version v${version}. Bitte release:bump verwenden.`);
@@ -153,9 +155,11 @@ export function updateReadmeTitle(source, version) {
  */
 function syncReadme() {
   const {version} = verifyReleaseMetadata(ROOT, {allowReadmeMismatch: true});
-  const before = read('README.md');
-  const after = updateReadmeTitle(before, version);
-  if (after !== before) write('README.md', after);
+  for (const name of ['README.md', 'README.en.md']) {
+    const before = read(name);
+    const after = updateReadmeTitle(before, version);
+    if (after !== before) write(name, after);
+  }
   verifyReleaseMetadata();
   console.log(`README-Titel synchronisiert: v${version}`);
 }
@@ -209,7 +213,7 @@ function bump(part, note) {
   lock.version = version;
   lock.packages[''].version = version;
   write('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
-  write('README.md', updateReadmeTitle(read('README.md'), version));
+  for (const name of ['README.md', 'README.en.md']) write(name, updateReadmeTitle(read(name), version));
   const date = new Date().toISOString().slice(0, 10);
   write('CHANGELOG.md', read('CHANGELOG.md').replace(/^# Changelog\s*\n/, `# Changelog\n\n## ${version} - ${date}\n\n- ${note.trim()}\n\n`));
   write('docs/TESTSTATUS.md', pendingTestStatus(version, note, date));
@@ -258,7 +262,7 @@ export function applyAutomatedRelease(version, commits, mergeSha, previousTag) {
   lock.version = version;
   lock.packages[''].version = version;
   write('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
-  write('README.md', updateReadmeTitle(read('README.md'), version));
+  for (const name of ['README.md', 'README.en.md']) write(name, updateReadmeTitle(read(name), version));
   const date = new Date().toISOString().slice(0, 10);
   const changes = commits.map(commit => `- ${commit.subject.replace(/[\r\n]/g, ' ')}`).join('\n');
   write('CHANGELOG.md', previousChangelog.replace(/^# Changelog\s*\n/, `# Changelog\n\n## ${version} - ${date}\n\n${changes}\n\n`));

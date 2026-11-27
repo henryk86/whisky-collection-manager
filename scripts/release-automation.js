@@ -217,10 +217,10 @@ export function planRelease({head = 'HEAD', requireMerge = true} = {}) {
     // Do not run release:check on a development checkout: its source
     // manifest intentionally reflects the previous packaged release.
     const lock = JSON.parse(fs.readFileSync(path.join(ROOT, 'package-lock.json'), 'utf8'));
-    const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+    const readmes = ['README.md', 'README.en.md'].map(name => fs.readFileSync(path.join(ROOT, name), 'utf8'));
     const changelog = fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8');
     if (lock.version !== baseline || lock.packages?.['']?.version !== baseline
-      || !readme.includes(`Whisky Collection Manager v${baseline}`)
+      || !readmes.every(readme => readme.startsWith(`# Whisky Collection Manager v${baseline}\n`))
       || !changelog.includes(`## ${baseline} -`))
       throw new Error('Vorhandene Versionsmetadaten beim einmaligen Automatik-Umstieg sind inkonsistent.');
   }
@@ -332,6 +332,7 @@ function main() {
       'package.json',
       'package-lock.json',
       'README.md',
+      'README.en.md',
       'CHANGELOG.md',
       'docs/TESTSTATUS.md',
       'wcm-source-manifest.json'
