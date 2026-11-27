@@ -1,3 +1,4 @@
+import {bottlingName} from '../../../shared/bottling-name.js';
 import {createMapSidebarViewModel, createMapMissingModel, createMapDataModel} from './models/map.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {replaceContent, replaceElement} from '../ui/dom-renderer.js';
@@ -121,7 +122,7 @@ export function createMapView({state, shell, navigate, settings}) {
         id: site.id,
       })));
     return renderTemplate('mapRelatedBottling', {
-      locationsFor: t("map.bottling.locationsFor", {name: String(relatedBottling.name ?? '')}),
+      locationsFor: t("map.bottling.locationsFor", {name: bottlingName(relatedBottling)}),
       mapRelatedSites: entries ? renderTemplate('mapRelatedSites', {entries: entries, }) : renderTemplate('hint'),
     });
   }

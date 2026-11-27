@@ -1,3 +1,4 @@
+import {bottlingName} from '../../../shared/bottling-name.js';
 import {readAnalyticsDate} from './analytics-period.js';
 
 export const evidenceKeys = {
@@ -36,7 +37,7 @@ export function insuranceInventory(collection, warehouse, includeSamples = false
         receipt: files.some(file => file.purchaseEvidence === true),
         location: Boolean(place),
       };
-      return {bottlingId: bottling.id, name: bottling.name, abv: bottling.abv, volumeMl: bottle.volumeMl ?? bottling.volumeMl, bottle, photos, files, place, checks, complete: Object.values(checks).every(Boolean)};
+      return {bottlingId: bottling.id, name: bottlingName(bottling), abv: bottling.abv, volumeMl: bottle.volumeMl ?? bottling.volumeMl, bottle, photos, files, place, checks, complete: Object.values(checks).every(Boolean)};
     }));
   rows.sort((a, b) => String(a.bottle.inventoryNumber || '').localeCompare(String(b.bottle.inventoryNumber || ''), undefined, {numeric: true}) || a.name.localeCompare(b.name));
   const totals = new Map();

@@ -5,6 +5,7 @@ import {t} from '../../i18n/index.js';
  */
 const COMMON_IMPORT_FIELDS = Object.freeze([
   'name',
+  'subtitle',
   'whiskyType',
   'brand',
   'bottler',

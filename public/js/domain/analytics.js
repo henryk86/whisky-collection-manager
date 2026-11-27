@@ -1,3 +1,4 @@
+import {bottlingName} from '../../../shared/bottling-name.js';
 import {displayedTastingRating, latestTasting}
   from '../../../shared/tasting-records.js';
 /**
@@ -291,7 +292,7 @@ export function analyzeCollection(collection, filters = {}) {
     b.abv < 40 ? 'Unter 40 %' : b.abv <= 46 ? '40–46 %' : b.abv <= 50 ? 'Über 46–50 %' : b.abv <= 60 ? 'Über 50–60 %' : 'Über 60 %');
   const distillationYears = grouped(bottlings, b => String(yearOf(b.distillationDate, b.distillationYear) || 'Unbekannt'));
   const bottlingYears = grouped(bottlings, b => String(yearOf(b.bottlingDate, b.bottlingYear) || 'Unbekannt'));
-  const edition = bottlings.filter(b => isNumber(b.limitedEditionCount) && b.limitedEditionCount > 0).map(b => ({id: b.id, name: b.name, value: b.limitedEditionCount}))
+  const edition = bottlings.filter(b => isNumber(b.limitedEditionCount) && b.limitedEditionCount > 0).map(b => ({id: b.id, name: bottlingName(b), value: b.limitedEditionCount}))
     .sort((a, b) => a.value - b.value);
   const priceEntries = bottleEntries.filter(({bottle}) => amount(bottle.purchasePrice) != null);
   const byCurrency = new Map();
@@ -313,7 +314,7 @@ export function analyzeCollection(collection, filters = {}) {
   const mostExpensive = [...byCurrency].flatMap(([currency, entries]) =>
     rank(entries.map(({bottling, bottle}) => ({
       id: bottling.id, bottleId: bottle.id,
-      name: bottling.name, price: bottle.purchasePrice, currency,
+      name: bottlingName(bottling), price: bottle.purchasePrice, currency,
     }))
       .sort((a, b) => b.price - a.price))); // Top ten per currency; never compare currencies directly.
   const costsByDistillery = distilleries.flatMap(d => [...d.costs].map(([currency, total]) => ({
@@ -344,7 +345,7 @@ export function analyzeCollection(collection, filters = {}) {
   const ratings = bottlings.filter(b =>
     isNumber(displayedTastingRating(b)) && displayedTastingRating(b) >= 0 && displayedTastingRating(b) <= 100);
   const rated = ratings.map(displayedTastingRating);
-  const bestRated = rank(ratings.map(b => ({id: b.id, name: b.name, rating: displayedTastingRating(b)})).sort((a, b) => b.rating - a.rating));
+  const bestRated = rank(ratings.map(b => ({id: b.id, name: bottlingName(b), rating: displayedTastingRating(b)})).sort((a, b) => b.rating - a.rating));
   const distilleryRatings = distilleries.filter(d => d.ratings.length).map(d => ({
     id: d.id, name: d.name, count: d.ratings.length, avg: avg(d.ratings),
   }))

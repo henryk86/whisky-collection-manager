@@ -332,8 +332,8 @@ export function migrateCollection(collection) {
 /**
  * Upgrade historical collections without discarding inventory, distilleries,
  * physical bottles, media references, settings or any warehouse data. Only
- * pre-schema-5 sensory data is intentionally not carried forward. Schemas 5 through 8
- * are upgraded losslessly to schema 9. The input is never changed; validation runs
+ * pre-schema-5 sensory data is intentionally not carried forward. Schemas 5 through 9
+ * are upgraded losslessly to schema 10. The input is never changed; validation runs
  * before any file is replaced.
  *
  * @param {*} source Untrusted collection document, validated for a supported schema before migration.
@@ -341,21 +341,22 @@ export function migrateCollection(collection) {
  */
 export function migrateCollectionToCurrent(source) {
   assert(
-    source && typeof source === 'object' && !Array.isArray(source) && Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >= 1 && source.schemaVersion <= 9,
+    source && typeof source === 'object' && !Array.isArray(source) && Number.isSafeInteger(source.schemaVersion) && source.schemaVersion >= 1 && source.schemaVersion <= 10,
     'Unbekannte oder neuere Sammlungsversion: vorhandene Daten bleiben unverändert',
     400,
     "api.errors.unsupportedCollectionVersion"
   );
   const collection = structuredClone(source);
-  if (collection.schemaVersion === 9) {
+  if (collection.schemaVersion === 10) {
     validate(collection);
     return {collection, changed: false, conflicts: []};
   }
   if (collection.schemaVersion >= 5) {
     // v5 -> v6 adds optional ratingComment; v6 -> v7 adds optional
-    // purchaseEvidence; v7 -> v8 separates three stores; v8 -> v9 separates distilleries. Preserve metadata, including explicit flags
-    // from transitional installations. Unclassified attachments stay unclassified.
-    collection.schemaVersion = 9;
+    // purchaseEvidence; v7 -> v8 separates three stores; v8 -> v9
+    // separates distilleries; v9 -> v10 adds optional subtitles. Preserve
+    // metadata, including explicit flags from transitional installations.
+    collection.schemaVersion = 10;
     validate(collection);
     return {collection, changed: true, conflicts: []};
   }
@@ -380,7 +381,7 @@ export function migrateCollectionToCurrent(source) {
   }
   collection.externalTastings = [];
   collection.tastingFlights = [];
-  collection.schemaVersion = 9;
+  collection.schemaVersion = 10;
   validate(collection);
   return {collection, changed: true, conflicts: previous.conflicts};
 }

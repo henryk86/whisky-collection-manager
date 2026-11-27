@@ -88,7 +88,7 @@ test(
 
 test('delta validation rejects malformed arrays and unsafe fields', () => {
   const source = {
-    schemaVersion: 9,
+    schemaVersion: 10,
     bottlings: [],
     distilleries: [],
     externalTastings: [],

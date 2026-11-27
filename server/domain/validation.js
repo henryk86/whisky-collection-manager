@@ -73,7 +73,7 @@ const validImagePath = p => typeof p === 'string' && /^images\/[a-f0-9-]{36}\/[\
  */
 export function validate(collection) {
   assert(
-    isObject(collection) && collection.schemaVersion === 9,
+    isObject(collection) && collection.schemaVersion === 10,
     'Ungültige oder nicht unterstützte JSON-Schemaversion',
     400,
     "api.errors.invalidOrUnsupportedJSONSchemaVersion"
@@ -202,6 +202,7 @@ export function validate(collection) {
       400,
       "api.errors.invalidWhiskyCategory"
     );
+    assert(bottling.subtitle == null || (typeof bottling.subtitle === 'string' && bottling.subtitle.length <= 180), 'Ungültige Zusatzbezeichnung', 400, 'api.errors.invalidSubtitle');
     assert(optionalString(bottling.brand), 'Ungültige Marke', 400, "api.errors.invalidBrand");
     assert(
       !Object.hasOwn(bottling, 'volumeType'),

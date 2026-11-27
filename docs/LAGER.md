@@ -1,6 +1,6 @@
 # Lagerverwaltung
 
-Das Lager ist ein **eigenes Datenmodell** (`warehouse.json`, Schema 1); es referenziert physische Flaschen in `collection.json` (Schema 9) über stabile IDs. Räume enthalten Möbel, Möbel enthalten Fächer; die Zuweisungen liegen getrennt von den Flaschendaten. Ein reiner Collection-JSON-Export enthält **kein** vollständiges Lagerbackup; das vollständige ZIP enthält beide Datenmodelle und Fotos.
+Das Lager ist ein **eigenes Datenmodell** (`warehouse.json`, Schema 1); es referenziert physische Flaschen in `collection.json` (Schema 10) über stabile IDs. Räume enthalten Möbel, Möbel enthalten Fächer; die Zuweisungen liegen getrennt von den Flaschendaten. Ein reiner Collection-JSON-Export enthält **kein** vollständiges Lagerbackup; das vollständige ZIP enthält beide Datenmodelle und Fotos.
 
 ## Räume und Raumplan
 

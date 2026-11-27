@@ -57,6 +57,7 @@ function isPrivateLocation(file, realFile) {
 export const SHARED_BROWSER_FILES = new Set([
   'resource-delta.js',
   'warehouse-bottle-projection.js',
+  'bottling-name.js',
   'api-error-codes.js',
   'api-error-field-labels.js',
   'flavor-profile.js',

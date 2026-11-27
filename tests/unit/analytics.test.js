@@ -9,7 +9,7 @@ import {ANALYSIS_PAGES} from '../../public/js/views/analytics.js';
  * @return {!Array<*>} Resulting entries in their output order.
  */
 const collection = () => ({
-  schemaVersion: 9,
+  schemaVersion: 10,
   distilleries: [
     {id: 'a', name: 'Alpha', country: 'Schottland', region: 'Islay'},
     {id: 'b', name: 'Beta', country: 'Irland'},

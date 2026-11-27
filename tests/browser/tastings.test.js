@@ -890,6 +890,7 @@ test(
       await page.waitForFunction(() => document.querySelectorAll('.tasting-flight-member').length === 1);
       await page.locator('[data-act="tasting-flight-new-external"]').click();
       await page.locator('[data-external-field="name"]').fill('A whisky outside the collection');
+      await page.locator('[data-external-field="subtitle"]').fill('Fermenting – Stage 5');
       await page.locator('[data-tasting-title]').fill('Second glass');
       await page.locator('[data-act="tasting-create"]').click();
       await page.locator('[data-tasting-readonly="true"]').waitFor();
@@ -904,6 +905,8 @@ test(
       const before = (await requestJson(base, '/api/collection')).data;
       assert.equal(before.bottlings.length, 1);
       assert.equal(before.externalTastings.length, 1);
+      assert.equal(before.externalTastings[0].bottling.subtitle, 'Fermenting – Stage 5');
+      assert.match(await page.locator('.tasting-flight-member').last().innerText(), /Fermenting – Stage 5/);
       assert.equal(before.tastingFlights[0].tastingIds.length, 2);
       await page.locator('[data-act="tasting-flight-move"][data-index="1"][data-direction="-1"]').click();
       await page.waitForFunction(

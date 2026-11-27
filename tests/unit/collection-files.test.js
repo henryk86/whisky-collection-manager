@@ -7,7 +7,7 @@ import {CollectionCommitError, COLLECTION_FILES, loadCollectionFiles, writeColle
 import {spawnSync} from 'node:child_process';
 import {normalizeStandaloneTasting} from '../../shared/standalone-tastings.js';
 
-const fixture = () => ({schemaVersion: 9, nextInventoryNumber: 1, reservedInventoryNumbers: [], distilleries: [], bottlings: [], settings: {establishedYear: null}, externalTastings: [], tastingFlights: []});
+const fixture = () => ({schemaVersion: 10, nextInventoryNumber: 1, reservedInventoryNumbers: [], distilleries: [], bottlings: [], settings: {establishedYear: null}, externalTastings: [], tastingFlights: []});
 
 const temporary = () => fs.mkdtempSync(path.join(os.tmpdir(), 'wcm-collection-files-'));
 

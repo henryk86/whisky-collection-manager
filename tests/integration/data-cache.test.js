@@ -25,7 +25,7 @@ test(
       const colTag = initialCollection.headers.get('etag');
       assert.match(colTag, /^W\/"collection-[\w-]+"$/);
       assert.equal(initialCollection.headers.get('cache-control'), 'private, no-cache');
-      assert.equal((await initialCollection.json()).schemaVersion, 9);
+      assert.equal((await initialCollection.json()).schemaVersion, 10);
       const initialWarehouse = await get(ctx.base, '/api/warehouse');
       const whTag = initialWarehouse.headers.get('etag');
       assert.ok(whTag);

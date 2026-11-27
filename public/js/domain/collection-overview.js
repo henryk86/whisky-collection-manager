@@ -1,3 +1,4 @@
+import {bottlingName} from '../../../shared/bottling-name.js';
 /**
  * Presentation-only entries: one row per bottling or one row per physical
  * bottle.
@@ -61,6 +62,7 @@ export function matchesOverviewRating(bottling, filter = 'all') {
 function matchingBottlingText(bottling, distilleryNames) {
   return [
     bottling.name,
+    bottling.subtitle,
     distilleryNames(bottling),
     bottling.bottler,
     bottling.brand,
@@ -161,7 +163,7 @@ function compareEntries(left, right, sort, distilleryNames) {
   const a = left.bottling;
   const b = right.bottling;
   switch (sort) {
-    case 'nameDesc': return b.name.localeCompare(a.name, 'de');
+    case 'nameDesc': return bottlingName(b).localeCompare(bottlingName(a), 'de');
     case 'inventoryAsc': return comparePresent(left.bottle?.inventoryNumber || null, right.bottle?.inventoryNumber || null);
     case 'inventoryDesc': return comparePresent(left.bottle?.inventoryNumber || null, right.bottle?.inventoryNumber || null, true);
     case 'ageAsc': return comparePresent(asNumber(a.ageYears), asNumber(b.ageYears));
@@ -270,7 +272,7 @@ export function collectionOverviewEntries(collection, {
   entries.sort((left, right) => {
     const difference = compareEntries(left, right, sort, distilleryNames);
     if (difference) return difference;
-    const names = left.bottling.name.localeCompare(right.bottling.name, 'de');
+    const names = bottlingName(left.bottling).localeCompare(bottlingName(right.bottling), 'de');
     if (names) return names;
     // Sorting equal bottlings by a stable bottle identifier makes repeat views
     // predictable.

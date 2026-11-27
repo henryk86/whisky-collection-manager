@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {startTestServer, requestJson} from '../helpers/server.js';
 
 test(
-  'schema 9 bulk-import fixtures preserve valid bottling and bottle structures',
+  'schema 10 bulk-import fixtures preserve valid bottling and bottle structures',
   async () => {
     const server = await startTestServer();
     try {

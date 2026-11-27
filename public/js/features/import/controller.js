@@ -1,3 +1,4 @@
+import {bottlingName} from '../../../../shared/bottling-name.js';
 import {composeMarkup} from '../../ui/render-plan.js';
 import {appendContent, replaceContent} from '../../ui/dom-renderer.js';
 import {t} from '../../i18n/index.js';
@@ -31,6 +32,7 @@ export function createExternalImport({
     whiskyType: t('forms.bottling.whiskyCategory'),
     brand: t('forms.bottling.brandOrProductLine'),
     name: t('imports.preview.name'),
+    subtitle: t('forms.bottling.subtitle'),
     bottler: t('forms.bottling.bottler'),
     ageYears: t('imports.preview.ageYears'),
     distillationYear: t('forms.bottling.distillationYear'),
@@ -182,7 +184,7 @@ export function createExternalImport({
         navigate('detail', existing.id, {replace: true, });
         showModal(t("imports.import.alreadyExists"), renderTemplate('panel2', {
           existingBottlingPrefix: t("imports.import.existingBottlingPrefix", {source: safeSourceName}),
-          name: existing.name,
+          name: bottlingName(existing),
           importExistingPhoto: data.imageToken ? renderTemplate('importExistingPhoto', {
             preparedLocally: t("imports.images.preparedLocally", {source: safeSourceName}),
             formField: (existing.bottles || []).length ? renderTemplate('formField', {

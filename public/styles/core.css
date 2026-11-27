@@ -349,6 +349,11 @@ main {
   align-items: flex-start;
 }
 
+.detail-page-head > div:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .detail-head-actions {
   margin-left: auto;
   justify-content: flex-end;
@@ -555,6 +560,10 @@ h3 {
   font-weight: 400;
   min-height: 0;
   margin: 0 0 5px;
+  overflow-wrap: anywhere;
+}
+
+.card-subtitle {
   overflow-wrap: anywhere;
 }
 

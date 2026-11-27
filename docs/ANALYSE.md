@@ -1,6 +1,6 @@
 # Analysen und Statistiken
 
-Die Analyse (`/?view=analysis`) hat einen Überblick und **sieben Themenbereiche** (38 bisherige fachliche Auswertungen und die Versicherungsdokumentation). Die Seitennavigation wechselt mobil zum Auswahlfeld. Die Auswertungen lesen die aktuelle Collection (Schema 6) und für die Versicherungsdokumentation auch das Lager.
+Die Analyse (`/?view=analysis`) hat einen Überblick und **sieben Themenbereiche** (38 bisherige fachliche Auswertungen und die Versicherungsdokumentation). Die Seitennavigation wechselt mobil zum Auswahlfeld. Die Auswertungen lesen die aktuelle Collection (Schema 10) und für die Versicherungsdokumentation auch das Lager.
 
 | Abschnitt (`section`) | Inhalt |
 |---|---|

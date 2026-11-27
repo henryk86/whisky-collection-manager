@@ -101,6 +101,7 @@ export const apiErrorFallbacks = Object.freeze({
   "api.errors.invalidBottling": "Invalid bottling.",
   "api.errors.invalidBottlingAssignment": "Invalid bottling assignment.",
   "api.errors.invalidBrand": "Invalid brand.",
+  "api.errors.invalidSubtitle": "Invalid subtitle.",
   "api.errors.invalidCollectionSettings": "Invalid collection settings.",
   "api.errors.invalidCollectionStructure": "Invalid collection structure.",
   "api.errors.invalidCompartmentFront": "Invalid compartment front.",

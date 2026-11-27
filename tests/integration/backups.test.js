@@ -447,7 +447,7 @@ test(
       );
       assert.equal(apply.status, 200, JSON.stringify(apply.data));
       const upgraded = (await request(ctx.base, '/api/collection')).data;
-      assert.equal(upgraded.schemaVersion, 9);
+      assert.equal(upgraded.schemaVersion, 10);
       assert.equal(upgraded.bottlings[0].id, created.data.bottling.id);
       assert.equal(upgraded.bottlings[0].bottles[0].id, bottleId);
       assert.equal(upgraded.bottlings[0].bottles[0].comment, 'Do not discard');
@@ -686,7 +686,7 @@ test('confirmed restore waits for a suspended mutation and rejects new requests 
   }
 });
 
-test('schema 6 ZIP restore upgrades to 8 without modifying evidence files or warehouse', async () => {
+test('schema 6 ZIP restore upgrades to 10 without modifying evidence files or warehouse', async () => {
   const ctx = await fixture();
   const legacyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'whisky-v6-restore-'));
   try {

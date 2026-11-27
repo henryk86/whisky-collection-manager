@@ -1,5 +1,5 @@
 /**
- * Documentation contracts for the JSON format (schemaVersion 9).
+ * Documentation contracts for the JSON format (schemaVersion 10).
  * These JSDoc types do not add runtime validation or a build step.
  * Runtime validation lives in server/domain/validation.js.
  * Optional metadata is intentionally omitted from minimal examples.
@@ -64,6 +64,7 @@
  * @typedef {Object} Bottling
  * @property {string} id
  * @property {string} name
+ * @property {string|null} [subtitle] Optional release subtitle, up to 180 characters.
  * @property {string|null} [distilleryId] Legacy single-distillery reference.
  * @property {string|null} [whiskybaseUrl] External Whiskybase reference URL.
  * @property {string[]} distilleryIds Zero, one, or multiple known contributors.
@@ -105,6 +106,7 @@
  *
  * @typedef {Object} ExternalTastingBottling
  * @property {string} name Release name of an unowned whisky.
+ * @property {string} [subtitle] Optional release subtitle, up to 180 characters.
  * @property {string} distillery Optional free-text distillery.
  * @property {string} bottler Optional free-text bottler.
  * @property {number|null} ageYears
@@ -131,7 +133,7 @@
  * @property {string} updatedAt
  *
  * @typedef {Object} Collection
- * @property {9} schemaVersion
+ * @property {10} schemaVersion
  * @property {number} nextInventoryNumber
  * @property {string[]} reservedInventoryNumbers Historical numbers skipped
  * by automatic suggestions; may be manually reassigned once free.

@@ -1,3 +1,4 @@
+import {bottlingName} from '../../../../shared/bottling-name.js';
 import {displayedTastingRating, latestTasting} from '../../../../shared/tasting-records.js';
 import {bottlingOriginLabel} from '../../domain/bottling-origin.js';
 import {hasBottlingDetail} from '../../domain/bottling-details.js';
@@ -63,7 +64,7 @@ export function createCollectionEntryModels(entries, selectors) {
   return entries.map(({bottling, bottle}) => {
     const age = hasBottlingDetail(bottling.ageYears) ? t('home.facts.years', {count: bottling.ageYears}) : '';
     const abv = hasBottlingDetail(bottling.abv) ? `${bottling.abv} % Vol.` : '';
-    const bottleAccessibleName = bottle ? t('home.image.bottleAccessibleName', {name: bottling.name, number: bottle.inventoryNumber || t('home.inventory.withoutInventoryNumber')}) : null;
+    const bottleAccessibleName = bottle ? t('home.image.bottleAccessibleName', {name: bottlingName(bottling), number: bottle.inventoryNumber || t('home.inventory.withoutInventoryNumber')}) : null;
     const bottleInfo = bottle ? [
       bottle.inventoryNumber ? `#${String(bottle.inventoryNumber ?? '')}` : t('imports.bottles.noInventoryNumber'),
       bottle.volumeMl != null ? `${String(bottle.volumeMl ?? '')} ml` : '',

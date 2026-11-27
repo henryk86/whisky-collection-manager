@@ -1881,3 +1881,24 @@ test(
     });
   }
 );
+
+test('browser: optional release subtitle can be edited and found in the collection', async () => {
+  await session(async ({page, open, base}) => {
+    const created = await requestJson(base, '/api/bottlings', 'POST', {name: 'Kilchoman Genesis', subtitle: 'Fermenting – Stage 5', brand: 'Genesis'});
+    assert.equal(created.status, 201);
+    await open();
+    const card = page.locator('.whisky-card').filter({hasText: 'Kilchoman Genesis'});
+    await card.waitFor();
+    assert.equal(await card.locator('h3').textContent(), 'Kilchoman Genesis');
+    assert.equal(await card.locator('.card-subtitle').textContent(), 'Fermenting – Stage 5');
+    await card.click();
+    await page.locator('[data-act="edit-bottling"]').click();
+    const field = page.locator('#bottling-form input[name="subtitle"]');
+    assert.equal(await field.inputValue(), 'Fermenting – Stage 5');
+    assert.equal(await field.getAttribute('maxlength'), '180');
+    await field.fill('Distilling – Stage 6');
+    await page.locator('#bottling-form button[type="submit"]').click();
+    await page.locator('.detail-page-head').filter({hasText: 'Distilling – Stage 6'}).waitFor();
+    assert.equal((await requestJson(base, '/api/collection')).data.bottlings.find(b => b.id === created.data.bottling.id).subtitle, 'Distilling – Stage 6');
+  });
+});

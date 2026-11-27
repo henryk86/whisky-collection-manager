@@ -1,3 +1,4 @@
+import {bottlingName} from '../../../shared/bottling-name.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {t, currentLanguage} from '../i18n/index.js';
 import {chevronLeftIcon, chevronRightIcon, chevronsLeftIcon, chevronsRightIcon} from '../ui/action-icons.js';
@@ -72,7 +73,7 @@ export function collectionTableCell(columnId, model) {
   /** @type {import('../ui/render-plan.js').RenderPlan|string} */
   let value = '';
   switch (columnId) {
-    case 'name': value = renderTemplate('strong', {name: bottling.name, }); break;
+    case 'name': value = renderTemplate('strong', {name: bottlingName(bottling), }); break;
     case 'inventory': value = bottle?.inventoryNumber ? `#${String(bottle.inventoryNumber ?? '')}` : t('imports.bottles.noInventoryNumber'); break;
     case 'distillery': value = String(origin ?? ''); break;
     case 'age': value = overviewField(bottling.ageYears); break;

@@ -1,3 +1,4 @@
+import {bottlingName} from '../../../shared/bottling-name.js';
 import {replaceContent} from '../ui/dom-renderer.js';
 import {t} from '../i18n/index.js';
 import {query} from '../ui/dom.js';
@@ -91,7 +92,7 @@ export function createEditors({
     false} = {}) {
     const token = fromImport ? getPendingImageToken() : null;
     showModal(
-      `Weitere Flasche · ${bottling.name}`,
+      `Weitere Flasche · ${bottlingName(bottling)}`,
       bottleForm({}, bottling.id, {fromOverview, importPhoto: Boolean(token)}),
       true
     );

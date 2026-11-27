@@ -1,3 +1,4 @@
+import {bottlingName} from '../../../shared/bottling-name.js';
 import {createTastingEditorController} from './tasting-editor-controller.js';
 import {createTastingFlightController} from './tasting-flight-controller.js';
 import {createTastingPresentation} from './tasting-presentation.js';
@@ -81,7 +82,7 @@ export function createTastingsView({
           owned: composeMarkup(owned.map(b =>
             renderTemplate('homeOption', {
               id: b.id,
-              name: b.name,
+              name: bottlingName(b),
             }))),
           disabledAttributes: owned.length ? {} : {"disabled": true},
           fromCollection: t('tastings.fromCollection'),

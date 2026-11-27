@@ -16,7 +16,7 @@ test(
       const response = await fetch(context.base + '/api/import/json', {
         method: 'POST',
         headers: {'Content-Type': 'text/plain'},
-        body: JSON.stringify({schemaVersion: 9, bottlings: []}),
+        body: JSON.stringify({schemaVersion: 10, bottlings: []}),
       });
       assert.equal(response.status, 415);
       assert.equal(fs.readFileSync(file, 'utf8'), before);
@@ -46,7 +46,7 @@ test(
         const response = await fetch(context.base + '/api/import/json', {
           method: 'POST',
           headers: {'Content-Type': 'application/json', ...extraHeaders},
-          body: JSON.stringify({schemaVersion: 9, bottlings: []}),
+          body: JSON.stringify({schemaVersion: 10, bottlings: []}),
         });
         assert.equal(response.status, 403, JSON.stringify(extraHeaders));
         assert.equal(fs.readFileSync(file, 'utf8'), original);

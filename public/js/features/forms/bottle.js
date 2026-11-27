@@ -1,3 +1,4 @@
+import {bottlingName} from '../../../../shared/bottling-name.js';
 import {composeMarkup} from '../../ui/render-plan.js';
 import {actionButton} from '../../ui/buttons.js';
 import {t} from '../../i18n/index.js';
@@ -47,7 +48,7 @@ export function createBottleForm({state, selectors}) {
       ],
     ].filter(([, value]) => value && value !== 'Nicht angegeben');
     const context = renderTemplate('bottlingContext', {
-      name: owner.name,
+      name: bottlingName(owner),
       facts: composeMarkup(facts.map(([label, value]) => renderTemplate(
         'contextDiv',
         {
