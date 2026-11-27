@@ -1263,7 +1263,7 @@
   "forms.bottling.whiskyCategory": "Whisky category",
   "forms.bottling.whiskyNameRequired": "Whisky name *",
   "forms.bottling.subtitle": "Subtitle (optional)",
-  "forms.bottling.exampleSubtitle": "e.g. Fermenting – Stage 5",
+  "forms.bottling.exampleSubtitle": "e.g. Anthology - The Unicorn's Tale",
   "forms.bottling.whiskybaseId": "Whiskybase ID",
   "forms.bottling.whiskybaseUrl": "Whiskybase URL",
   "forms.common.createButton": "+ Create",
