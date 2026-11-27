@@ -14,7 +14,7 @@ export class RestoreGate {
    * Runs an ordinary request concurrently, or reserves exclusive access for a restore and drains active requests first.
    * @template T
    * @param {boolean} exclusive True only for the confirmed restore endpoint.
-   * @param {function(): (T|Promise<T>)} operation Request handler including its asynchronous side effects.
+   * @param {() => T|Promise<T>} operation Request handler including its asynchronous side effects.
    * @return {Promise<T>} Result of the operation.
    * @throws {import('../domain/errors.js').HttpError} If a restore is already waiting or running.
    */

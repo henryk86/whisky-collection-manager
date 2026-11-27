@@ -7,7 +7,7 @@ import {encodePhotoExport} from './export-image.js';
 /**
  * Persists the current photo draft, preserving source-specific adjustment settings.
  * @param {!Object} options Session, API action and modal callbacks.
- * @return {function(): !Promise<void>} Save operation.
+ * @return {() => Promise<void>} Save operation.
  */
 export function createPhotoSave({session, root, findPhoto, endpoint, syncSliders, action, closeModal}) {
   /**
@@ -40,7 +40,7 @@ export function createPhotoSave({session, root, findPhoto, endpoint, syncSliders
       /**
        * Commits source selection before running the optional image-save callback.
        *
-       * @param {function(): *=} callback Optional operation performed after saving the edited photo.
+       * @param {(() => *)=} callback Optional operation performed after saving the edited photo.
        * @return {*} Result of the guarded source-selection and save operation.
        */
       const commit = (callback = undefined) => action(async () => {

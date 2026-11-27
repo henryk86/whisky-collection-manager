@@ -5,7 +5,7 @@ import {themeSunIcon, themeMoonIcon} from '../ui/action-icons.js';
 /**
  * Theme is a local browser preference, not collection data.
  *
- * @param {function(!Element, *): void=} mountContent Content mount boundary.
+ * @param {((element: Element, content: *) => void)=} mountContent Content mount boundary.
  * @return {!Object} Theme application and switching operations.
  */
 export function createThemeController(mountContent = replaceContent) {

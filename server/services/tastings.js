@@ -31,7 +31,7 @@ function requireTasting(bottling, tastingId) {
 /**
  * Normalizes owned tasting fields and converts validation errors into HTTP 400.
  * @param {*} input Incoming tasting fields.
- * @param {Object} old Previous tasting fields.
+ * @param {Object=} old Previous tasting fields.
  * @return {Object} Normalized tasting fields.
  */
 function clean(input, old) {

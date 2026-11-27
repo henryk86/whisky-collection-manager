@@ -7,7 +7,7 @@
 /**
  * Resolves the requested visual comparison policy.
  * @param {!Array<string>=} args Command-line arguments.
- * @param {!Object<string, string|undefined>=} env Environment variables.
+ * @param {!Record<string, string|undefined>=} env Environment variables.
  * @return {'diagnostic'|'strict'} Effective pixel policy.
  * @throws {Error} For an unsupported configured policy.
  */
@@ -41,8 +41,8 @@ export function browserWarning(browser, baselineBrowser, mode) {
 /**
  * Compares the recorded rectangles and detects horizontal overflow.
  *
- * @param {?Object<string, *>} before Approved reference geometry.
- * @param {?Object<string, *>} after Current browser geometry.
+ * @param {?Record<string, *>} before Approved reference geometry.
+ * @param {?Record<string, *>} after Current browser geometry.
  * @return {!Array<string>} Blocking geometry failures.
  */
 export function compareGeometry(before, after) {

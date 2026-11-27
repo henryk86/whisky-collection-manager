@@ -10,7 +10,7 @@ const MAX_BUCKETS = 4096;
 
 /** @typedef {{failures: number, pending: number, at: number, until: number}} AttemptBucket */
 /** @typedef {'accepted'|'failed'|'aborted'} AttemptOutcome */
-/** @typedef {function(AttemptOutcome): void} FinishAttempt */
+/** @typedef {(outcome: AttemptOutcome) => void} FinishAttempt */
 
 /**
  * Tracks failed logins and reserves capacity before the asynchronous KDF starts.
@@ -19,7 +19,7 @@ const MAX_BUCKETS = 4096;
 export class LoginAttemptLimiter {
   /**
    * Creates a limiter with an injectable clock for expiry tests.
-   * @param {function(): number=} now Clock returning milliseconds.
+   * @param {(() => number)=} now Clock returning milliseconds.
    */
   constructor(now = Date.now) {
     this.now = now;

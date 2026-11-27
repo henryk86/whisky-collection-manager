@@ -10,6 +10,7 @@ import {fileURLToPath} from 'node:url';
 import {checkJSDoc, undocumentedExports} from '../../scripts/check-jsdoc.js';
 import {semanticTypeDiagnostics, auditContractFiles, checkedContractFiles} from '../../scripts/check-js-types.js';
 import {jsdocViolations} from '../../scripts/check-jsdoc-complete.js';
+import {formatJavaScript} from '../../scripts/format-js.js';
 import {
   separateFunctions, insertTrailingCommas
 } from '../../scripts/style-layout.js';
@@ -384,4 +385,32 @@ test('Semantic JSDoc: audit covers all production and tooling roots but no test 
     assert.deepEqual(files.sort(), ['docker/example.js', 'extension/example.js', 'public/js/domain/example.js', 'scripts/example.js', 'server/example.js', 'shared/example.js', 'worker/example.js']);
     assert.deepEqual(checkedContractFiles(dir).map(file => file.replaceAll('\\', '/')).sort(), files.sort());
   } finally {rmSync(dir, {recursive: true, force: true});}
+});
+
+
+test('Acorn formatter: normalizes spacing, indentation and semicolons idempotently', () => {
+  const source = 'function demo(a,b) {\n    const total=a+b\n    return total\n}\n';
+  const expected = 'function demo(a, b) {\n  const total = a + b;\n  return total;\n}\n';
+  assert.equal(formatJavaScript('sample.js', source), expected);
+  assert.equal(formatJavaScript('sample.js', expected), expected);
+});
+
+test('Acorn formatter: preserves template whitespace, strings and comments', () => {
+  const source = 'const html = `  <p>\n    ${name}\n  </p>`;\nconst list = [\n  "a,b", // keep\n  "c"\n];\n';
+  const expected = source.replace('  "c"\n', '  "c",\n');
+  assert.equal(formatJavaScript('sample.js', source), expected);
+  assert.equal(formatJavaScript('sample.js', expected), expected);
+});
+
+test('JSDoc contract: handles nested object types and rejects unclosed types', () => {
+  const source = `/** Reads a label.
+ * @param {{label: string}} options Label container.
+ * @return {string} Display label.
+ */
+export function label(options) {return options.label;}`;
+  assert.deepEqual(undocumentedExports('sample.js', source), []);
+  assert.deepEqual(jsdocViolations('sample.js', source), []);
+  const malformed = source.replace('{{label: string}}', '{{label: string}');
+  assert.ok(jsdocViolations('sample.js', malformed).some(issue => issue.includes('unclosed type')));
+  assert.deepEqual(undocumentedExports('sample.js', malformed), ['sample.js#label']);
 });

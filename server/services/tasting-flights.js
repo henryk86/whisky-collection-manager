@@ -25,7 +25,7 @@ const find = (collection, id) => {
 /**
  * Validates flight metadata and converts normalization errors into HTTP 400.
  * @param {*} body Incoming flight metadata.
- * @param {Object} old Previous flight metadata.
+ * @param {Object=} old Previous flight metadata.
  * @return {Object} Normalized flight fields.
  */
 const normalize = (body, old) => {

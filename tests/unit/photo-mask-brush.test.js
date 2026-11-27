@@ -69,3 +69,15 @@ test('rebuilding with one stroke removed restores the pre-brush cutout', () => {
   assert.equal(alpha(applyMaskStrokes(source, strokes).data, 80, 40, 40), 0);
   assert.equal(alpha(applyMaskStrokes(source, []).data, 80, 40, 40), 255);
 });
+
+test('mask replay copies shared input into an independent ArrayBuffer for ImageData', () => {
+  const data = new Uint8ClampedArray(new SharedArrayBuffer(4));
+  data.set([210, 60, 31, 255]);
+  const result = applyMaskStrokes({data, width: 1, height: 1}, []);
+  assert.ok(result.data.buffer instanceof ArrayBuffer);
+  assert.deepEqual(Array.from(result.data), [210, 60, 31, 255]);
+  assert.equal(result.width, 1);
+  assert.equal(result.height, 1);
+  result.data[3] = 0;
+  assert.equal(data[3], 255);
+});

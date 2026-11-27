@@ -44,6 +44,7 @@ function fixture(t) {
   write(dir, 'package.json', JSON.stringify({type: 'module', version: '1.4.0'}) + '\n');
   write(dir, 'package-lock.json', JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) + '\n');
   write(dir, 'README.md', '# Whisky Collection Manager v1.4.0\n');
+  write(dir, 'README.en.md', '# Whisky Collection Manager v1.4.0\n');
   write(dir, 'CHANGELOG.md', '# Changelog\n\n## 1.4.0 - 2026-11-16\n\n- Baseline\n');
   write(
     dir,
@@ -233,6 +234,7 @@ function legacyFixture(t, {tagCurrent = false, historicalSubjects = []} = {}) {
   write(dir, 'package.json', JSON.stringify({type: 'module', version: '1.3.3'}) + '\n');
   write(dir, 'package-lock.json', JSON.stringify({version: '1.3.3', packages: {'': {version: '1.3.3'}}}) + '\n');
   write(dir, 'README.md', '# Whisky Collection Manager v1.3.3\n');
+  write(dir, 'README.en.md', '# Whisky Collection Manager v1.3.3\n');
   write(dir, 'CHANGELOG.md', '# Changelog\n\n## 1.3.3 - 2026-11-15\n\n- Historical release\n');
   write(dir, 'docs/TESTSTATUS.md', '# Teststatus - Whisky Collection Manager v1.3.3\n');
   fs.mkdirSync(path.join(dir, 'scripts'), {recursive: true});
@@ -246,6 +248,7 @@ function legacyFixture(t, {tagCurrent = false, historicalSubjects = []} = {}) {
   write(dir, 'package.json', JSON.stringify({type: 'module', version: '1.4.0'}) + '\n');
   write(dir, 'package-lock.json', JSON.stringify({version: '1.4.0', packages: {'': {version: '1.4.0'}}}) + '\n');
   write(dir, 'README.md', '# Whisky Collection Manager v1.4.0\n');
+  write(dir, 'README.en.md', '# Whisky Collection Manager v1.4.0\n');
   write(
     dir,
     'CHANGELOG.md',

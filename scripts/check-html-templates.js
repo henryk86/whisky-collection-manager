@@ -1,7 +1,7 @@
 /** @fileoverview Enforces external HTML and verifies fragment references. */
 import fs from 'node:fs';
 import path from 'node:path';
-import ts from 'typescript';
+import {parseJavaScript, forEachChild} from './javascript-ast.js';
 import {listJavaScriptFiles} from './javascript-files.js';
 import {parseTemplates, resolveTemplateURL} from '../public/js/ui/templates.js';
 import {fileURLToPath} from 'node:url';
@@ -15,19 +15,20 @@ const referencedFiles = new Map();
 let templateCount = 0;
 for (const filename of files) {
   const file = filename.split(path.sep).join('/');
-  const source = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const source = fs.readFileSync(file, 'utf8');
+  const {program} = parseJavaScript(file, source);
   let templateFile;
   /**
    * Resolves the actual static template loader call before checking fragments.
-   * @param {!ts.Node} node JavaScript syntax node to inspect.
+   * @param {*} node JavaScript syntax node to inspect.
    */
   function findTemplate(node) {
-    if (ts.isCallExpression(node) && node.expression.getText(source) === 'loadTemplates') {
+    if (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'loadTemplates') {
       const [name] = node.arguments;
-      if (templateFile || node.arguments.length !== 1 || !name || !ts.isStringLiteral(name)) {
+      if (templateFile || node.arguments.length !== 1 || !name || !(name.type === 'Literal' && typeof name.value === 'string')) {
         throw new Error(`${file}: expected one static central template path`);
       }
-      templateFile = path.relative(process.cwd(), fileURLToPath(resolveTemplateURL(name.text))).split(path.sep).join('/');
+      templateFile = path.relative(process.cwd(), fileURLToPath(resolveTemplateURL(name.value))).split(path.sep).join('/');
       if (!templateFiles.has(templateFile)) throw new Error(`${file}: missing template ${templateFile}`);
       if (!referencedFiles.has(templateFile)) {
         referencedFiles.set(templateFile, {
@@ -36,48 +37,46 @@ for (const filename of files) {
         });
       }
     }
-    ts.forEachChild(node, findTemplate);
+    forEachChild(node, findTemplate);
   }
-  findTemplate(source);
+  findTemplate(program);
   const {templates, used} = referencedFiles.get(templateFile) || {templates: new Map(), used: new Set()};
   /**
    * Validates literal markup and named slot bindings in the syntax tree.
-   * @param {!ts.Node} node JavaScript syntax node to inspect.
+   * @param {*} node JavaScript syntax node to inspect.
    */
   function visit(node) {
-    const parts = ts.isTemplateExpression(node) ?
-      [node.head.text, ...node.templateSpans.map(span => span.literal.text)] :
-      ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) ? [node.text] : [];
+    const template = node.type === 'TemplateLiteral';
+    const literal = node.type === 'Literal' && typeof node.value === 'string';
+    const parts = template ? node.quasis.map(part => part.value.cooked ?? part.value.raw) : literal ? [node.value] : [];
     const marker = file.endsWith('/ui/dom-renderer.js') &&
-      (ts.isStringLiteral(node) && node.text === '<!--' ||
-        ts.isTemplateExpression(node) && node.head.text === '<!--wcm-slot-' && node.templateSpans.length === 1 &&
-        node.templateSpans[0].literal.text === '-end-->');
-    if (!marker && (parts.some(part => tag.test(part)) || ts.isTemplateExpression(node) && parts.some(part => /<\/?$/.test(part)))) {
-      const {line} = source.getLineAndCharacterOfPosition(node.getStart());
-      throw new Error(`${file}:${line + 1}: HTML belongs in a template`);
+      (literal && node.value === '<!--' || template && parts[0] === '<!--wcm-slot-' && parts.length === 2 && parts[1] === '-end-->');
+    if (!marker && (parts.some(part => tag.test(part)) || template && node.expressions.length > 0 && parts.some(part => /<\/?$/.test(part)))) {
+      const {line} = node.loc.start;
+      throw new Error(`${file}:${line}: HTML belongs in a template`);
     }
-    if (!file.endsWith('/ui/dom-renderer.js') && ts.isPropertyAccessExpression(node) &&
+    if (!file.endsWith('/ui/dom-renderer.js') && node.type === 'MemberExpression' &&
       ['innerHTML', 'outerHTML', 'insertAdjacentHTML',
-        'createContextualFragment'].includes(node.name.text)) {
-      const {line} = source.getLineAndCharacterOfPosition(node.getStart());
-      throw new Error(`${file}:${line + 1}: Use native template mounting`);
+        'createContextualFragment'].includes((node.computed ? node.property.value : node.property.name))) {
+      const {line} = node.loc.start;
+      throw new Error(`${file}:${line}: Use native template mounting`);
     }
-    if (ts.isCallExpression(node) && node.expression.getText(source) === 'renderTemplate') {
+    if (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'renderTemplate') {
       const [name, bindings] = node.arguments;
-      if (!name || !ts.isStringLiteral(name) || !templates.has(name.text)) {
+      if (!name || !(name.type === 'Literal' && typeof name.value === 'string') || !templates.has(name.value)) {
         throw new Error(`${file}: unknown or dynamic template reference`);
       }
-      used.add(name.text);
-      const slots = new Set([...templates.get(name.text).matchAll(/\{\{(?:content|attr|attrs|text|tag):([\w.]+)\}\}/g)].map(match => match[1]));
-      const properties = bindings && ts.isObjectLiteralExpression(bindings) ? bindings.properties : [];
-      const supplied = new Set(properties.map(prop => prop.name?.getText(source)));
+      used.add(name.value);
+      const slots = new Set([...templates.get(name.value).matchAll(/\{\{(?:content|attr|attrs|text|tag):([\w.]+)\}\}/g)].map(match => match[1]));
+      const properties = bindings && bindings.type === 'ObjectExpression' ? bindings.properties : [];
+      const supplied = new Set(properties.map(prop => prop.key && source.slice(prop.key.start, prop.key.end)));
       if (supplied.size !== properties.length || slots.size !== supplied.size || [...slots].some(slot => !supplied.has(slot))) {
-        throw new Error(`${file}: incorrect bindings for ${name.text}`);
+        throw new Error(`${file}: incorrect bindings for ${name.value}`);
       }
     }
-    ts.forEachChild(node, visit);
+    forEachChild(node, visit);
   }
-  visit(source);
+  visit(program);
 }
 for (const file of templateFiles) {
   const reference = referencedFiles.get(file);

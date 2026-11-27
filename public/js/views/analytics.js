@@ -129,8 +129,8 @@ export const ANALYSIS_PAGES = Object.freeze([
 /**
  * Creates the analytics page renderer using the latest filters and collection state.
  *
- * @param {{state: Object, shell: function(import('../ui/render-plan.js').RenderContent): void}} options Current application state and page mounting callback.
- * @return {function(): void} Renders and mounts the selected analytics section.
+ * @param {{state: Object, shell: (content: import('../ui/render-plan.js').RenderContent) => void}} options Current application state and page mounting callback.
+ * @return {() => void} Renders and mounts the selected analytics section.
  */
 export function createAnalyticsView({state, shell}) {
   return (

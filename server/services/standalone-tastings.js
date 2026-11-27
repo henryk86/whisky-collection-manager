@@ -11,7 +11,7 @@ import {normalizeTastingRecord, VALID_TASTING_FIELDS}
 /**
  * Normalizes an unowned tasting and converts validation errors to HTTP 400.
  * @param {*} input Proposed tasting fields.
- * @param {Object} old Previous record used for normalization.
+ * @param {Object=} old Previous record used for normalization.
  * @return {Object} Normalized standalone tasting fields.
  */
 function clean(input, old) {

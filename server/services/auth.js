@@ -88,7 +88,7 @@ function save(value) {
  * Queues account mutations; a rejected mutation does not block later mutations.
  *
  * @template T
- * @param {function(): (T|Promise<T>)} task Mutation to run after the preceding queued operation.
+ * @param {() => T|Promise<T>} task Mutation to run after the preceding queued operation.
  * @return {Promise<T>} Settles with the mutation result or its original rejection.
  */
 function serialize(task) {

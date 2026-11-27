@@ -46,11 +46,11 @@ function formatMessage(template, params, locale) {
  * Builds a key-based translator with an English fallback and locale-aware
  * placeholder expansion. Missing keys return the key itself.
  *
- * @param {!Object<string, string>=} messages Preferred message catalog.
- * @param {!Object<string, string>=} fallback Catalog used for missing or empty
+ * @param {!Record<string, string>=} messages Preferred message catalog.
+ * @param {!Record<string, string>=} fallback Catalog used for missing or empty
  *     entries.
  * @param {string=} locale Locale used for plural and number formatting.
- * @return {function(string, Object<string, *>=): string} Lookup function accepting a catalog key and optional interpolation values.
+ * @return {(key: string, params?: Record<string, *>) => string} Lookup function accepting a catalog key and optional interpolation values.
  */
 export function createTranslator(messages = {}, fallback = english,
   locale = DEFAULT_LANGUAGE) {
@@ -82,7 +82,7 @@ export const currentLanguage = () => language;
 /**
  * Lists the language options from the last loaded language registry.
  *
- * @return {!Object<string, string>} Frozen mapping of locale codes to labels.
+ * @return {!Record<string, string>} Frozen mapping of locale codes to labels.
  */
 export const availableLanguages = () => languages;
 

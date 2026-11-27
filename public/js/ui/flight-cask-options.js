@@ -29,7 +29,7 @@ const featureField = (group, dimension, value) => `flight-cask-feature-${group}-
 /**
  * Renders optional category-scoped criteria using shared form fields.
  * All groups and dimensions come from the same domain vocabulary.
- * @param {function(string): string} t Translation lookup.
+ * @param {(key: string) => string} t Translation lookup.
  * @return {!import('./render-plan.js').RenderPlan} Planner cask-category controls and initially hidden refinements.
  */
 export function flightCaskOptionsHtml(t) {
@@ -120,7 +120,7 @@ export function readFlightCaskFilters(root) {
  * Shows refinements only for selected categories in specific-cask mode.
  * @param {?Element} root Planner dialog root, if mounted.
  * @param {boolean} specific Whether specific-cask mode is active.
- * @param {function(string, Object=): string} t Translation lookup.
+ * @param {(key: string, params?: Object) => string} t Translation lookup.
  */
 export function syncFlightCaskOptions(root, specific, t) {
   const wrapper = /** @type {HTMLElement} */ (root?.querySelector('[data-flight-plan-cask-group-wrap]'));

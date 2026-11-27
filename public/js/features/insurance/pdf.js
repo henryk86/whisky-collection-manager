@@ -4,7 +4,7 @@ const encoder = new TextEncoder();
  * Wraps paragraphs at word boundaries, splitting only words wider than a line.
  * @param {string} text Untrusted plain report text.
  * @param {number} width Available horizontal space in pixels.
- * @param {function(string): number} measure Measures text in the current font.
+ * @param {(text: string) => number} measure Measures text in the current font.
  * @return {string[]} Wrapped lines, without dropping characters from long words.
  */
 export function wrapReportText(text, width, measure) {
@@ -112,7 +112,7 @@ export class TextPdf {
    * The browser supplies only a monochrome glyph mask, never a rasterized page.
    * @param {string} character Unicode grapheme, potentially outside WinAnsi.
    * @param {boolean} bold Font weight.
-   * @param {function(string, boolean): Glyph} render Local glyph renderer, with its em size in pixels.
+   * @param {(text: string, bold: boolean) => Glyph} render Local glyph renderer, with its em size in pixels.
    * @return {number} PDF font object number.
    */
   fallback(character, bold, render) {
@@ -137,8 +137,8 @@ export class TextPdf {
    * @param {number} y Baseline from the top.
    * @param {number} size Font size in logical pixels.
    * @param {boolean} bold Font weight.
-   * @param {function(string): number} measure Browser measurement for the selected font.
-   * @param {function(string, boolean): Glyph} render Unicode glyph fallback.
+   * @param {(text: string) => number} measure Browser measurement for the selected font.
+   * @param {(text: string, bold: boolean) => Glyph} render Unicode glyph fallback.
    */
   text(text, x, y, size, bold, measure, render) {
     const font = bold ? 4 : 3;

@@ -55,7 +55,7 @@ export function paintMaskSegment(current, reference, width, height, from, to,
  *
  * @param {MaskImageData} imageData Source RGBA image data, copied before applying the strokes.
  * @param {MaskStroke[]} strokes Ordered brush strokes with normalized points, size and paint mode.
- * @return {MaskImageData} New RGBA data at the original pixel dimensions.
+ * @return {{data: Uint8ClampedArray<ArrayBuffer>, width: number, height: number}} New RGBA data in an independent buffer at the original pixel dimensions.
  */
 export function applyMaskStrokes(imageData, strokes) {
   const output = new Uint8ClampedArray(imageData.data);

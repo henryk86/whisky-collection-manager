@@ -1,120 +1,82 @@
-/**
- * @fileoverview Syntax-aware function separation and trailing commas.
- *
- * No line-width wrapping or literal rewriting.
- */
-import ts from 'typescript';
+/** @fileoverview Syntax-aware function separation and trailing commas. */
+import {parseJavaScript, forEachChild, declarationOf, isFunction} from './javascript-ast.js';
 
 /**
- * Returns the zero-based offset of the start of the current line.
- *
- * @param {string} text JavaScript source.
- * @param {number} offset Source offset.
- * @return {number} Start of the containing line.
+ * Identifies declarations and class members that define a named function.
+ * @param {*} statement Statement or class member.
+ * @return {boolean} Whether this item is a function declaration or method.
  */
-function lineStart(text, offset) {
-  return text.lastIndexOf('\n', offset - 1) + 1;
+function namedFunction(statement) {
+  const node = declarationOf(statement);
+  return node?.type === 'FunctionDeclaration' || node?.type === 'MethodDefinition' ||
+    node?.type === 'VariableDeclaration' && node.declarations.some(item => isFunction(item.init));
 }
 
 /**
- * Inserts a blank line between adjacent top-level functions, arrow-function
- * declarations and class methods, keeping the next function's JSDoc attached.
- *
- * @param {string} filename Source file name for parser context.
+ * Inserts a blank line between adjacent function definitions without moving their comments.
+ * @param {string} filename File used for parser diagnostics.
  * @param {string} text JavaScript source.
- * @return {string} Source with consistent function separation.
+ * @return {string} Source with separated declarations and methods.
  */
 export function separateFunctions(filename, text) {
-  const file = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const {program} = parseJavaScript(filename, text);
   const edits = [];
   /**
-   * Checks whether function applies.
-   *
-   * @param {*} node Node to inspect or update.
-   * @return {*} Whether the requested condition is met.
-   */
-  function isFunction(node) {
-    return ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) || ts.isConstructorDeclaration(node) || ts.isGetAccessorDeclaration(node) ||
-      ts.isSetAccessorDeclaration(node) ||
-      (ts.isVariableStatement(node) && node.declarationList.declarations.some(
-        declaration => declaration.initializer &&
-          (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))));
-  }
-
-  /**
-   * Finds missing blank lines between adjacent documented functions in a syntax-node list.
-   * @param {readonly import('typescript').Node[]} nodes Sibling syntax nodes to inspect.
+   * Collects missing separators in a sibling declaration list.
+   * @param {!Array<*>} nodes Statements or class members in source order.
    */
   function examine(nodes) {
     for (let i = 1; i < nodes.length; i++) {
       const left = nodes[i - 1];
       const right = nodes[i];
-      if (!isFunction(left) || !isFunction(right)) continue;
-      const between = text.slice(left.end, right.getStart(file));
+      if (!namedFunction(left) || !namedFunction(right)) continue;
+      const between = text.slice(left.end, right.start);
       const docStart = between.indexOf('/**');
-      const nextStart = docStart >= 0 ? left.end + docStart : right.getStart(file);
-      const preceding = text.slice(left.end, nextStart);
-      if (/\n[ \t]*\n/.test(preceding)) continue;
-      // After a JSDoc block begins, its own lines do not count as separation.
-      const line = lineStart(text, nextStart);
-      if (line > left.end && /^[ \t]*$/.test(text.slice(line, nextStart))) {
-        edits.push(line);
-      }
+      const next = docStart >= 0 ? left.end + docStart : right.start;
+      if (/\n[ \t]*\n/.test(text.slice(left.end, next))) continue;
+      const line = text.lastIndexOf('\n', next - 1) + 1;
+      if (line > left.end && /^[ \t]*$/.test(text.slice(line, next))) edits.push(line);
     }
   }
 
   /**
-   * Visits statement and class-member lists to collect required function-separating whitespace edits.
-   *
-   * @param {*} node Node to inspect or update.
+   * Finds statement and class-member lists.
+   * @param {*} node Current syntax node.
    */
   function visit(node) {
-    if (ts.isSourceFile(node) || ts.isBlock(node)) examine([...node.statements]);
-    if (ts.isClassDeclaration(node) || ts.isClassExpression(node)) {
-      examine([...node.members]);
-    }
-    ts.forEachChild(node, visit);
+    if (['Program', 'BlockStatement', 'ClassBody'].includes(node.type)) examine(node.body);
+    forEachChild(node, visit);
   }
-  visit(file);
-  for (const offset of [...new Set(edits)].sort((a, b) => b - a)) {
-    text = text.slice(0, offset) + '\n' + text.slice(offset);
-  }
+  visit(program);
+  for (const offset of [...new Set(edits)].sort((a, b) => b - a)) text = text.slice(0, offset) + '\n' + text.slice(offset);
   return text;
 }
 
 /**
- * Adds Google's recommended trailing comma to multiline array/object literals.
- * Rest-binding patterns and elided array entries are deliberately excluded.
- *
- * @param {string} filename Source file name for syntax analysis.
- * @param {string} source JavaScript source.
- * @return {string} Source with safe trailing commas in multiline literals.
+ * Adds trailing commas to multiline object and array literals, never to binding patterns or array holes.
+ * @param {string} filename File used for parser diagnostics.
+ * @param {string} source Original JavaScript text.
+ * @return {string} Source with commas inserted at element boundaries.
  */
 export function insertTrailingCommas(filename, source) {
-  const parsed = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const {program, tokens} = parseJavaScript(filename, source);
   const insertions = [];
+  const commaOffsets = new Set(tokens.filter(token => token.type.label === ',').map(token => token.start));
   /**
-   * Visits object and array literals to collect safe trailing-comma edits.
-   *
-   * @param {*} node Node to inspect or update.
+   * Collects insertions only for literal expressions.
+   * @param {*} node Current syntax node.
    */
   function visit(node) {
-    ts.forEachChild(node, visit);
-    const object = ts.isObjectLiteralExpression(node);
-    const array = ts.isArrayLiteralExpression(node);
-    if (!object && !array) return;
-    const elements = [...(object ? node.properties : node.elements)];
-    if (!elements.length) return;
-    const last = elements.at(-1);
-    if (ts.isOmittedExpression(last)) return;
+    forEachChild(node, visit);
+    if (!['ObjectExpression', 'ArrayExpression'].includes(node.type)) return;
+    const last = (node.properties ?? node.elements).at(-1);
+    if (!last) return;
     const closing = node.end - 1;
     const between = source.slice(last.end, closing);
-    if (!between.includes('\n') || /^\s*,/.test(between) || source[closing] !== (object ? '}' : ']')) return;
+    if (!between.includes('\n') || [...commaOffsets].some(offset => offset >= last.end && offset < closing)) return;
     insertions.push(last.end);
   }
-  visit(parsed);
-  for (const position of [...new Set(insertions)].sort((a, b) => b - a)) {
-    source = source.slice(0, position) + ',' + source.slice(position);
-  }
+  visit(program);
+  for (const offset of [...new Set(insertions)].sort((a, b) => b - a)) source = source.slice(0, offset) + ',' + source.slice(offset);
   return source;
 }

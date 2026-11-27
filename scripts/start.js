@@ -47,7 +47,7 @@ export function needsNpmCi(root, {production = false} = {}) {
 /**
  * Parses environment assignments from the project's optional .env file.
  * @param {string} root Project root containing the environment file.
- * @return {Object<string,string>} Parsed assignments; empty when no file exists.
+ * @return {Record<string,string>} Parsed assignments; empty when no file exists.
  */
 function readEnvFile(root) {
   /** @type {Record<string, string>} */

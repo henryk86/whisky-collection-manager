@@ -250,7 +250,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
             index: (findFurniture(data, furnitureId)?.furniture.shelves.length || 0) + 1,
           }
         )
-      ), renderTemplate('formField3', {value: String((item?.capacity ?? '') ?? ''), }), choices(
+      ), renderTemplate('formField3', {value: String(item?.capacity ?? ''), }), choices(
         'front',
         t("warehouse.shelves.frontType"),
         [
@@ -276,7 +276,7 @@ export function createWarehouseFormController({w, currentRoom, selectedFurniture
           ['true', t('warehouse.walls.withFrame')],
         ],
         String(item?.glassFrame ?? '')
-      ), renderTemplate('formField4', {value: String((item?.heightCm ?? '') ?? ''), }), renderTemplate('hint8'));
+      ), renderTemplate('formField4', {value: String(item?.heightCm ?? ''), }), renderTemplate('hint8'));
     } else if (kind === 'furniture-copy') {
       const found = findFurniture(data, id);
       if (!found) return toast(t("warehouse.furniture.notFound"), true);

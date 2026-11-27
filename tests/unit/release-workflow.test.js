@@ -42,6 +42,7 @@ test(
     assert.equal(lock.version, expected);
     assert.equal(lock.packages[''].version, expected);
     assert.ok(read('README.md').startsWith(`# Whisky Collection Manager v${expected}\n`));
+    assert.ok(read('README.en.md').startsWith(`# Whisky Collection Manager v${expected}\n`));
     assert.ok(read('docs/TESTSTATUS.md').startsWith(`# Teststatus - Whisky Collection Manager v${expected}\n`));
     const changelog = read('CHANGELOG.md');
     assert.match(changelog, /^# Changelog\s*\n/);
@@ -126,6 +127,7 @@ test(
         })
       );
       fs.writeFileSync(path.join(temp, 'README.md'), '# Whisky Collection Manager v0.16.11\n');
+      fs.writeFileSync(path.join(temp, 'README.en.md'), '# Whisky Collection Manager v0.16.11\n');
       fs.writeFileSync(path.join(temp, 'CHANGELOG.md'), '# Changelog\n\n## 0.16.11 - 2026-11-12\n\n- Previous fix\n');
       fs.writeFileSync(
         path.join(temp, 'docs/TESTSTATUS.md'),
@@ -143,6 +145,11 @@ test(
       );
       execFileSync(process.execPath, [path.join(temp, 'scripts/release-version.js'), 'check'], {cwd: temp});
       assert.equal(JSON.parse(fs.readFileSync(path.join(temp, 'package.json'), 'utf8')).version, '0.16.12');
+      assert.match(fs.readFileSync(path.join(temp, 'README.en.md'), 'utf8'), /^# Whisky Collection Manager v0\.16\.12\n/);
+      fs.writeFileSync(path.join(temp, 'README.en.md'), '# Whisky Collection Manager\n\nEnglish text.\n');
+      assert.throws(() => verifyReleaseMetadata(temp), /README\.en\.md/);
+      execFileSync(process.execPath, [path.join(temp, 'scripts/release-version.js'), 'sync'], {cwd: temp});
+      assert.equal(fs.readFileSync(path.join(temp, 'README.en.md'), 'utf8'), '# Whisky Collection Manager v0.16.12\n\nEnglish text.\n');
       const status = fs.readFileSync(path.join(temp, 'docs/TESTSTATUS.md'), 'utf8');
       assert.match(status, /^# Teststatus - Whisky Collection Manager v0\.16\.12\n/);
       assert.match(status, /npm test[^\n]*Noch nicht ausgeführt/);

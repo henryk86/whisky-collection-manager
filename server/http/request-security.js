@@ -69,7 +69,7 @@ const HOST_REJECTION_MESSAGE =
  * Transforms the reject host text with the required substitutions.
  *
  * @param {*} raw Original Host header, used for diagnostics if hostname parsing failed.
- * @param {*} hostname Parsed hostname rejected by the host allowlist.
+ * @param {*=} hostname Parsed hostname rejected by the host allowlist.
  */
 function rejectHost(raw, hostname) {
   // Log once per rejected hostname, with a hard limit to prevent noisy requests

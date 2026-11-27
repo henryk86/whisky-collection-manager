@@ -7,13 +7,13 @@ import {displayPhotoPath} from '../../../shared/photo-images.js';
  * Live selectors. Returned records are references to the current collection,
  * not independent copies; callers must not mutate them as part of rendering.
  * @typedef {Object} CollectionSelectors
- * @property {function(string): string} distilleryName Name for an ID, with unknown fallback.
- * @property {function(Bottling): string[]} distilleryIds Contributor IDs.
- * @property {function(Bottling): string} distilleryNames Joined contributor labels.
- * @property {function(string): Bottle[]} bottles Physical bottles for a bottling.
- * @property {function(): Bottle[]} allBottles Flattened physical inventory.
- * @property {function(string): ?BottleOwner} findBottle Owner and bottle lookup.
- * @property {function(string): string} coverPhoto Effective photo path or empty text.
+ * @property {(id: string) => string} distilleryName Name for an ID, with unknown fallback.
+ * @property {(bottling: Bottling) => string[]} distilleryIds Contributor IDs.
+ * @property {(bottling: Bottling) => string} distilleryNames Joined contributor labels.
+ * @property {(id: string) => Bottle[]} bottles Physical bottles for a bottling.
+ * @property {() => Bottle[]} allBottles Flattened physical inventory.
+ * @property {(id: string) => BottleOwner|null} findBottle Owner and bottle lookup.
+ * @property {(id: string) => string} coverPhoto Effective photo path or empty text.
  */
 /**
  * Read-only selectors; always read the latest collection after a refresh.

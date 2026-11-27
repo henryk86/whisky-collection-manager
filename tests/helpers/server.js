@@ -65,10 +65,10 @@ export async function startTestServer({parentDirectory = os.tmpdir()} = {}) {
       }
 
       /**
-       * Updates the finish state for its caller.
+       * Settles readiness and removes the startup listeners.
        *
-       * @param {*} error Error to handle or propagate.
-       * @param {*} value Value to process.
+       * @param {Error|null} error Startup failure, or null when ready.
+       * @param {number} [value] Listening port on success; omitted on failure.
        */
       function finish(error, value) {
         cleanup();
@@ -124,7 +124,7 @@ export async function startTestServer({parentDirectory = os.tmpdir()} = {}) {
  * @param {*} base Base used by this operation.
  * @param {string} url URL of the requested resource.
  * @param {string=} method HTTP method for the operation.
- * @param {!Object} data Input data for the operation.
+ * @param {!Object=} data Input data for the operation.
  * @return {!Promise<!Object>} Promise fulfilled when the operation completes.
  */
 export async function requestJson(base, url, method = 'GET', data) {

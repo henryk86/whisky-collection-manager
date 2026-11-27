@@ -1,7 +1,7 @@
 /** @fileoverview Semantic JSDoc checks for first-party JavaScript contracts. */
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import ts from 'typescript';
+import {spawnSync} from 'node:child_process';
 import {listJavaScriptFiles, JAVASCRIPT_ROOTS} from './javascript-files.js';
 
 /**
@@ -12,22 +12,18 @@ import {listJavaScriptFiles, JAVASCRIPT_ROOTS} from './javascript-files.js';
  */
 export function semanticTypeDiagnostics(files) {
   const vendorTypes = fileURLToPath(new URL('../types/browser-vendors.d.ts', import.meta.url));
-  const program = ts.createProgram([...files, vendorTypes], {
-    allowJs: true, checkJs: true, noEmit: true, skipLibCheck: false,
-    target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.NodeNext,
-    moduleResolution: ts.ModuleResolutionKind.NodeNext, resolveJsonModule: true,
+  const compiler = fileURLToPath(new URL('../node_modules/typescript/bin/tsc', import.meta.url));
+  const result = spawnSync(process.execPath, [compiler, '--allowJs', '--checkJs', '--noEmit',
+    '--skipLibCheck', 'false', '--strict', 'false', '--types', 'node', '--target', 'ES2022',
+    '--module', 'NodeNext', '--moduleResolution', 'NodeNext', '--resolveJsonModule', '--pretty', 'false',
+    ...files.map(file => path.resolve(file)), vendorTypes], {
+    cwd: fileURLToPath(new URL('..', import.meta.url)), encoding: 'utf8', maxBuffer: 32 * 1024 * 1024,
   });
-  const diagnostics = [...program.getOptionsDiagnostics(), ...program.getGlobalDiagnostics()];
-  const configurationIssues = diagnostics.map(diagnostic =>
-    `TS${diagnostic.code} ${ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ')}`);
-  return [...configurationIssues, ...[...files, vendorTypes].flatMap(filename => {
-    const source = program.getSourceFile(filename);
-    if (!source) return [`${filename}: source file not found`];
-    return program.getSemanticDiagnostics(source).map(diagnostic => {
-      const {line} = source.getLineAndCharacterOfPosition(diagnostic.start ?? 0);
-      return `${filename}:${line + 1}: TS${diagnostic.code} ${ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ')}`;
-    });
-  })];
+  if (result.error) throw result.error;
+  if (result.signal) throw new Error(`TypeScript compiler terminated by ${result.signal}`);
+  if (result.status === 0) return [];
+  const output = [result.stdout, result.stderr].filter(Boolean).join('\n').trim();
+  return output ? output.split(/\r?\n(?=\S)/) : [`TypeScript compiler exited with status ${result.status}`];
 }
 
 /**

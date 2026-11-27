@@ -15,7 +15,7 @@ const renderTemplate = await loadTemplates('components/buttons.html');
  * @property {import('./render-plan.js').RenderContent} [icon] Optional icon.
  * @property {boolean} [iconOnly] Hide visible label while retaining the accessible name.
  * @property {boolean} [wrapLabel] Wrap the visible label for styling.
- * @property {Object<string, import('./render-plan.js').BindingScalar>} [data] Additional data attributes, without the data- prefix.
+ * @property {Record<string, import('./render-plan.js').BindingScalar>} [data] Additional data attributes, without the data- prefix.
  * @property {string} [title] Optional tooltip.
  * @property {string} [ariaLabel] Explicit accessible name.
  * @property {boolean} [disabled] Disable activation.
