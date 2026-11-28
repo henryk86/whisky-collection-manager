@@ -323,3 +323,58 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background: var(--ds-color-header-action-hover);
   color: var(--ds-color-header-action-hover-text);
 }
+
+/* A split action keeps the primary button independent of its disclosure. */
+.ds-split-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  position: relative;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.ds-split-button > .btn:first-child {
+  flex: 1 1 auto;
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.ds-split-button > .ds-split-toggle {
+  flex: 0 0 auto;
+  width: var(--ds-button-height);
+  min-width: var(--ds-button-height);
+  margin-inline-start: -1px;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.ds-split-button > .btn:focus-visible,
+.ds-split-button > .btn:hover {
+  z-index: 1;
+}
+
+.ds-split-menu {
+  position: absolute;
+  inset-block-start: calc(100% + 5px);
+  inset-inline-end: 0;
+  width: max-content;
+  max-width: min(290px,calc(100vw - 38px));
+  padding: 6px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 25px var(--ds-color-dropdown-shadow);
+  z-index: 20;
+}
+
+.ds-split-menu[hidden] {
+  display: none;
+}
+
+.ds-split-menu .btn.ds-split-menu-item {
+  width: 100%;
+  justify-content: flex-start;
+  white-space: normal;
+  text-align: start;
+  letter-spacing: normal;
+  border-color: transparent;
+}

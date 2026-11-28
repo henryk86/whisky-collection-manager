@@ -1,3 +1,4 @@
+import {chevronDownIcon} from './action-icons.js';
 import {loadTemplates} from './templates.js';
 
 const renderTemplate = await loadTemplates('components/buttons.html');
@@ -89,5 +90,69 @@ export function actionButton({
     attributes: attributes,
     trustedContent: trustedContent || icon,
     buttonLabel: trustedContent ? '' : iconOnly ? '' : wrapLabel ? renderTemplate('actionButtonSpan', {label: safe, }) : safe,
+  });
+}
+
+/**
+ * Combines a primary action with an independently opened secondary-action disclosure.
+ * The menu content consists of ordinary action buttons in the normal tab order.
+ * @param {{id: string, label: string, primary: !ButtonOptions, menu: import('./render-plan.js').RenderContent}} options Unique menu ID, accessible disclosure label and actions.
+ * @return {!import('./render-plan.js').RenderPlan} Shared split-button render plan.
+ */
+export function splitActionButton({id, label, primary, menu}) {
+  return renderTemplate('splitActionButton', {
+    primary: actionButton(primary),
+    toggle: actionButton({
+      label, icon: chevronDownIcon(), iconOnly: true, className: 'ds-split-toggle',
+      attributes: {'aria-expanded': 'false', 'aria-controls': id, 'data-split-toggle': ''},
+    }),
+    id, menu,
+  });
+}
+
+/**
+ * Opens or closes the secondary-action disclosure without changing its primary action.
+ * @param {!Element} group Split-button container.
+ * @param {boolean} open Whether the disclosure should be visible.
+ * @param {boolean=} restoreFocus Return keyboard focus to the disclosure button on close.
+ */
+function setSplitOpen(group, open, restoreFocus = false) {
+  const toggle = /** @type {HTMLButtonElement} */ (group.querySelector('[data-split-toggle]'));
+  const menu = /** @type {HTMLElement} */ (group.querySelector('.ds-split-menu'));
+  if (!toggle || !menu) return;
+  menu.hidden = !open;
+  toggle.setAttribute('aria-expanded', String(open));
+  if (restoreFocus) toggle.focus();
+}
+
+/**
+ * Delegates disclosure interactions so split buttons also work after a view rerender.
+ * @param {!Element} root Application root containing the split buttons.
+ */
+export function bindSplitButtons(root) {
+  root.addEventListener('click', event => {
+    const target = /** @type {Element} */ (event.target);
+    const toggle = target.closest?.('[data-split-toggle]');
+    const group = target.closest?.('.ds-split-button');
+    for (const open of root.querySelectorAll('.ds-split-button:has([aria-expanded="true"][data-split-toggle])')) {
+      if (open !== group) setSplitOpen(open, false);
+    }
+    if (!group) return;
+    if (toggle) setSplitOpen(group, toggle.getAttribute('aria-expanded') !== 'true');
+    else if (target.closest?.('.ds-split-menu button:not(:disabled)')) setSplitOpen(group, false, true);
+    else if (!target.closest?.('.ds-split-menu')) setSplitOpen(group, false);
+  });
+  root.addEventListener('focusout', (/** @type {FocusEvent} */ event) => {
+    const group = /** @type {Element} */ (event.target).closest?.('.ds-split-button');
+    if (group && event.relatedTarget instanceof Node && !group.contains(event.relatedTarget)) setSplitOpen(group, false);
+  });
+  root.addEventListener('keydown', (/** @type {KeyboardEvent} */ event) => {
+    if (event.key !== 'Escape') return;
+    const group = /** @type {Element} */ (event.target).closest?.('.ds-split-button');
+    if (group?.querySelector('[data-split-toggle][aria-expanded="true"]')) {
+      event.preventDefault();
+      event.stopPropagation();
+      setSplitOpen(group, false, true);
+    }
   });
 }

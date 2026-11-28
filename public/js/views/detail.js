@@ -1,7 +1,7 @@
 import {hasBottlingDetail} from '../domain/bottling-details.js';
 import {createDetailViewModel} from './models/detail.js';
 import {composeMarkup} from '../ui/render-plan.js';
-import {actionButton} from '../ui/buttons.js';
+import {actionButton, splitActionButton} from '../ui/buttons.js';
 import {headingTitle, headerActions, sectionHeader, pageHeader, backNavigation}
   from '../ui/headers.js';
 import {
@@ -54,7 +54,7 @@ const factLabel = label => FACT_KEYS[label] ? t(FACT_KEYS[label]) : label;
 import {
   editIcon, deleteIcon, arrowDownIcon, locationIcon, newBottlingIcon,
   addActionLabel, closeIcon, arrowLeftIcon, arrowRightIcon, gripIcon,
-  sparkleIcon
+  sparkleIcon, successIcon, minusIcon
 } from '../ui/action-icons.js';
 import {glencairnRatingSymbol} from '../ui/glencairn-icon.js';
 import {flavorChart} from '../ui/flavor-profile.js';
@@ -83,6 +83,7 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
     }
     const {bottling, latest, tastingCount, tastingNotes, physicalBottles, bottleRows, ratingFills, radar, cover,
       facts, originLabel, relatedDistilleries, statusText, description, whiskybaseUrl} = model;
+    const complete = bottling.completionStatus === 'complete';
     const tastingRadar = radar ? flavorChart(radar, {compact: true}) : '';
     const list = composeMarkup(bottleRows.map(({entry, entryPhotos, firstPhoto, storageShelfId, storageName, highlighted}) => {
       const photoGallery =
@@ -286,11 +287,18 @@ export function createDetailView({state, selectors, shell, navigate, action}) {
               title: t('detail.map.showRelatedDistilleries'),
               icon: locationIcon,
               wrapLabel: true,
-            }) : '', "\n    ", actionButton({
-              label: t('common.actions.edit'),
-              action: 'edit-bottling',
-              icon: editIcon,
-              wrapLabel: true,
+            }) : '', "\n    ", splitActionButton({
+              id: 'bottling-edit-actions',
+              label: t('detail.actions.moreEditActions'),
+              primary: {
+                label: t('common.actions.edit'), action: 'edit-bottling', icon: editIcon, wrapLabel: true,
+              },
+              menu: actionButton({
+                label: complete ? t('detail.actions.markIncomplete') : t('detail.actions.markComplete'),
+                action: 'set-bottling-completion', icon: complete ? minusIcon : successIcon,
+                wrapLabel: true, className: 'ds-split-menu-item',
+                data: {id: bottling.id, status: complete ? 'incomplete' : 'complete'},
+              }),
             }), "\n    ", actionButton({
               label: t('common.actions.delete'),
               action: 'delete-bottling',

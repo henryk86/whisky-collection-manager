@@ -10,6 +10,7 @@ import {destructiveFooter} from './ui/modal-layout.js';
 import {chooseLanguage, t} from './i18n/index.js';
 import {request} from './api.js';
 import {toast} from './ui/notifications.js';
+import {bindSplitButtons} from './ui/buttons.js';
 import {movePhoto} from './features/photo-order.js';
 import {bindFlightSorting} from './features/flight-order.js';
 import {preserveManualComposition, suggestSingleDistilleryComposition} from './features/forms/composition.js';
@@ -111,6 +112,56 @@ export function bindEvents(
     if (open) /** @type {HTMLElement} */ (drawer.querySelector('[data-act="close-menu"]'))?.focus();
     else button.focus();
   }
+  const pendingCompletion = new Set();
+  /**
+   * Saves only the completion flag, ignoring duplicate or obsolete actions.
+   * @param {string} id Bottling identity captured by the action, not the current selection.
+   * @param {string} status Requested completion status.
+   * @param {boolean=} offerUndo Whether to offer the inverse action on success.
+   * @param {HTMLButtonElement=} button Originating menu item, if invoked from the detail page.
+   * @return {!Promise<void>} Completion of the persisted change and view refresh.
+   */
+  async function setBottlingCompletion(id, status, offerUndo = true, button) {
+    if (!['complete', 'incomplete'].includes(status) || pendingCompletion.has(id)) return;
+    const bottling = state.collection.bottlings.find(entry => entry.id === id);
+    if (!bottling) return;
+    const previous = bottling.completionStatus === 'complete' ? 'complete' : 'incomplete';
+    if (previous === status) return;
+    pendingCompletion.add(id);
+    const group = button?.closest('.ds-split-button');
+    const controls = /** @type {!HTMLButtonElement[]} */ ([...group?.querySelectorAll('button') || []]);
+    const disabled = controls.map(control => control.disabled);
+    const restoreFocus = group?.contains(document.activeElement);
+    controls.forEach(control => {control.disabled = true;});
+    try {
+      const result = await action(() => request(`/api/bottlings/${encodeURIComponent(id)}`, {
+        method: 'PATCH', body: JSON.stringify({completionStatus: status}),
+      }), {scope: 'collection'});
+      if (!result.ok || result.refreshError) return;
+      const message = status === 'complete' ? t('detail.actions.markedComplete') : t('detail.actions.markedIncomplete');
+      toast(message, false, undefined, offerUndo ? {
+        label: t('common.actions.undo'),
+        /**
+         * Reverts the just-saved status if the record still has that value.
+         * @return {!Promise<void>} Completion of the inverse status change, if still applicable.
+         */
+        run: async () => {
+          // An undo refers to the original record and is valid only while
+          // the status still matches the change reported by this toast.
+          const current = state.collection.bottlings.find(entry => entry.id === id);
+          if (current?.completionStatus === status) await setBottlingCompletion(id, previous, false);
+        },
+      } : undefined);
+    } finally {
+      pendingCompletion.delete(id);
+      controls.forEach((control, index) => {control.disabled = disabled[index];});
+      if (restoreFocus && state.page === 'detail' && state.selected === id &&
+          (document.activeElement === document.body || group?.contains(document.activeElement))) {
+        /** @type {HTMLElement} */ (root.querySelector('.ds-split-button [data-split-toggle]'))?.focus();
+      }
+    }
+  }
+
   const handlers = {
     ...createCollectionActions({home, tastingsView}),
     ...createBackupActions({backup}),
@@ -269,6 +320,12 @@ export function bindEvents(
      * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
      */
     'edit-bottling': () => editors.editBottling(),
+    /**
+     * Applies the explicitly selected completion status without opening the editor.
+     * @param {!HTMLButtonElement} button Menu item identifying the record and target status.
+     * @return {!Promise<void>} Completion of the guarded status change.
+     */
+    'set-bottling-completion': button => setBottlingCompletion(button.dataset.id, button.dataset.status, true, button),
     /**
      * Adds a physical bottle to the current bottling.
      * @return {*} Delegated completion or result; the event dispatcher does not consume the value.
@@ -479,6 +536,7 @@ export function bindEvents(
      */
     import: () => settings.importJSON(),
   };
+  bindSplitButtons(root);
   bindFlightSorting(root, (from, to, after) => tastingsView.reorderFlightMember(from, to, after));
   root.addEventListener('click', async (/** @type {MouseEvent} */ event) => {
     const target = /** @type {Element} */ (event.target);

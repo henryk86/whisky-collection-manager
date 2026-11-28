@@ -355,6 +355,7 @@ main {
 }
 
 .detail-head-actions {
+  flex-shrink: 0;
   margin-left: auto;
   justify-content: flex-end;
   align-items: flex-start;
@@ -749,6 +750,30 @@ tr.clickable:hover {
   align-items: flex-start;
   gap: 12px;
   max-width: min(370px, calc(100vw - 48px));
+}
+
+.toast-with-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(370px,calc(100vw - 48px));
+}
+
+.toast-action {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 6px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.toast-action:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 .toast-message {
@@ -1216,6 +1241,22 @@ tr.clickable:hover {
     padding: 9px 8px;
     font-size: 12px;
     letter-spacing: .2px;
+  }
+
+  .detail-head-actions .ds-split-button > .btn:first-child {
+    width: auto;
+    flex: 1 1 0;
+  }
+
+  .detail-head-actions .ds-split-button > .ds-split-toggle {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+  }
+
+  .detail-head-actions .ds-split-menu {
+    inset-inline-start: 0;
+    inset-inline-end: auto;
   }
 
   .detail-head-actions [data-act="bottling-map"] {
