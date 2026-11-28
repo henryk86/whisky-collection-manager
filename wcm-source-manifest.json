@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.16.0",
+  "version": "1.16.1",
   "files": {
     "public/js/api.js": "1befce7f3cfa4dba4e3532893cc42a864da059e132c030ebdf915dabdee09f34",
     "public/js/browser-storage.js": "e1f6f77d46a01eb240d61fa498bba52019b6165d024f83230d1b6af15ab7b5cc",
