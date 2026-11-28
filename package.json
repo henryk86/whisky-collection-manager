@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@types/node": "26.6.6",
-    "acorn": "8.15.0",
+    "acorn": "8.19.0",
     "playwright-core": "1.65.1",
     "typescript": "7.0.2"
   }
