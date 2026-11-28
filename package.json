@@ -42,8 +42,8 @@
     "three": "0.187.0"
   },
   "devDependencies": {
-    "@types/node": "26.6.6",
-    "acorn": "8.15.0",
+    "@types/node": "26.6.7",
+    "acorn": "8.19.0",
     "playwright-core": "1.65.1",
     "typescript": "7.0.2"
   }
