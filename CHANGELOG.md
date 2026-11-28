@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.16.0 - 2026-11-28
+
+- fix: isolate browser storage access and assert expected transaction warnings
+- fix: stabilize expanded flight planner screenshots and validate modal backdrop rendering
+- feat: upgrade runtime and development tooling to Node.js 26 LTS
+
 ## 1.15.2 - 2026-11-28
 
 - fix: respect platform-specific optional dependencies during startup
