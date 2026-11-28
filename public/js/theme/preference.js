@@ -1,3 +1,5 @@
+import {getBrowserStorage} from '../browser-storage.js';
+
 /**
  * Browser preference only; never persisted in the collection JSON.
  *
@@ -6,8 +8,7 @@
  */
 export function getThemePreference(storage) {
   try {
-    // Accessing localStorage itself can throw in restricted browser contexts.
-    const source = storage === undefined ? globalThis.localStorage : storage;
+    const source = storage === undefined ? getBrowserStorage() : storage;
     const value = source?.getItem('whisky-theme');
     return value === 'dark' || value === 'light' ? value : 'system';
   }

@@ -43,7 +43,6 @@ test(
     const original = {
       window: globalThis.window,
       document: globalThis.document,
-      localStorage: globalThis.localStorage,
     };
     const saved = new Map([['whisky-theme', 'light']]);
     const attributes = {};
@@ -74,7 +73,7 @@ test(
           addEventListener() {},
         }),
       };
-      globalThis.localStorage = {
+      globalThis.window.localStorage = {
         /**
          * Retrieves item from the available state.
          *

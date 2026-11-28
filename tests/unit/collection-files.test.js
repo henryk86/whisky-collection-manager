@@ -119,17 +119,22 @@ test('a durable commit remains successful when removing its journal repeatedly f
     const before = fixture();
     writeCollectionFiles(directory, before);
     const after = changedFixture(before);
+    const failure = Error('cleanup failed');
+    const warn = t.mock.method(console, 'warn', () => {});
     const unlink = fs.unlinkSync;
     let fail = true;
     t.mock.method(fs, 'unlinkSync', filename => {
-      if (fail && path.basename(filename) === journalName) throw Error('cleanup failed');
+      if (fail && path.basename(filename) === journalName) throw failure;
       return unlink(filename);
     });
     assert.equal(writeCollectionFiles(directory, after, before), 'pending');
+    assert.equal(warn.mock.callCount(), 1);
+    assert.deepEqual(warn.mock.calls[0].arguments, ['Committed collection: journal cleanup failed.', failure]);
     assert.equal(hasCollectionTransaction(directory), true);
     assert.equal(JSON.parse(fs.readFileSync(path.join(directory, 'collection.json'))).nextInventoryNumber, 3);
     fail = false;
     assert.equal(recoverCollectionTransaction(directory), 'complete');
+    assert.equal(warn.mock.callCount(), 1);
     assert.deepEqual(loadCollectionFiles(directory).collection, after);
   } finally {fs.rmSync(directory, {recursive: true, force: true});}
 });
@@ -140,6 +145,8 @@ test('failure of final journal directory sync does not turn a completed commit i
     const before = fixture();
     writeCollectionFiles(directory, before);
     const after = changedFixture(before);
+    const failure = Error('final sync failed');
+    const warn = t.mock.method(console, 'warn', () => {});
     const sync = fs.fsyncSync;
     const unlink = fs.unlinkSync;
     let removed = false;
@@ -149,10 +156,12 @@ test('failure of final journal directory sync does not turn a completed commit i
       return result;
     });
     t.mock.method(fs, 'fsyncSync', fd => {
-      if (removed && fs.fstatSync(fd).isDirectory()) throw Error('final sync failed');
+      if (removed && fs.fstatSync(fd).isDirectory()) throw failure;
       return sync(fd);
     });
     assert.equal(writeCollectionFiles(directory, after, before), 'syncUnconfirmed');
+    assert.equal(warn.mock.callCount(), 1);
+    assert.deepEqual(warn.mock.calls[0].arguments, ['Committed collection: journal cleanup failed.', failure]);
     assert.equal(hasCollectionTransaction(directory), false);
     assert.deepEqual(loadCollectionFiles(directory).collection, after);
   } finally {fs.rmSync(directory, {recursive: true, force: true});}

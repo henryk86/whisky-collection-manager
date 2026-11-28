@@ -76,19 +76,19 @@ test('unavailable browser storage leaves collection display usable', () => {
 test(
   'a new application state restores the last selected collection display',
   () => {
-    const existing = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    const existing = Object.getOwnPropertyDescriptor(globalThis, 'window');
     const storage = fakeStorage();
     const route = {page: 'home', selected: null};
     try {
-      Object.defineProperty(globalThis, 'localStorage', {configurable: true, value: storage});
+      Object.defineProperty(globalThis, 'window', {configurable: true, value: {localStorage: storage}});
       assert.equal(createState(route).view, 'cards');
       assert.equal(saveCollectionViewPreference('table'), true);
       assert.equal(createState(route).view, 'table');
       assert.equal(saveCollectionViewPreference('cards'), true);
       assert.equal(createState(route).view, 'cards');
     } finally {
-      if (existing) Object.defineProperty(globalThis, 'localStorage', existing);
-      else delete globalThis.localStorage;
+      if (existing) Object.defineProperty(globalThis, 'window', existing);
+      else delete globalThis.window;
     }
   }
 );

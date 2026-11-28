@@ -1,3 +1,5 @@
+import {getBrowserStorage} from '../browser-storage.js';
+
 /** Per-browser preference for how the collection overview is displayed. */
 export const COLLECTION_VIEW_STORAGE_KEY = 'whisky-collection-view';
 
@@ -9,7 +11,7 @@ export const COLLECTION_VIEW_STORAGE_KEY = 'whisky-collection-view';
  */
 export function getCollectionViewPreference(storage) {
   try {
-    const source = storage === undefined ? globalThis.localStorage : storage;
+    const source = storage === undefined ? getBrowserStorage() : storage;
     return source?.getItem(COLLECTION_VIEW_STORAGE_KEY) === 'table' ? 'table' : 'cards';
   } catch {
     return 'cards';
@@ -26,7 +28,7 @@ export function getCollectionViewPreference(storage) {
 export function saveCollectionViewPreference(view, storage) {
   if (view !== 'cards' && view !== 'table') return false;
   try {
-    const target = storage === undefined ? globalThis.localStorage : storage;
+    const target = storage === undefined ? getBrowserStorage() : storage;
     if (!target) return false;
     target.setItem(COLLECTION_VIEW_STORAGE_KEY, view);
     return true;
