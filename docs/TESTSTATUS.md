@@ -1,6 +1,6 @@
-# Teststatus - Whisky Collection Manager v1.15.0
+# Teststatus - Whisky Collection Manager v1.15.2
 
-**Stand:** 2026-11-27. Automatischer Release-Snapshot aus Merge 948757303d51 (v1.14.2).
+**Stand:** 2026-11-28. Automatischer Release-Snapshot aus Merge e1c0eebb4ead (v1.15.1).
 
 ## Pruefungen
 

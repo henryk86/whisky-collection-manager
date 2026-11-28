@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.15.2 - 2026-11-28
+
+- fix: respect platform-specific optional dependencies during startup
+
+## 1.15.1 - 2026-11-27
+
+- fix: resolve TypeScript 7 semantic JSDoc diagnostics
+- fix: decouple quality tooling from TypeScript compiler API and synchronize English README releases
+- fix: synchronize English README with release metadata
+- chore(deps-dev): bump typescript from 5.8.3 to 7.0.2
+- build(deps-dev): bump @types/node from 22.15.33 to 26.6.6
+
 ## 1.15.0 - 2026-11-27
 
 - test: fix import form fixture for composition inference
