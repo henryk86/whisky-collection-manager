@@ -70,6 +70,39 @@ export function decodePNG(bytes) {
 }
 
 /**
+ * Rejects an expanded-modal screenshot with exposed, undimmed background pixels.
+ * A backdrop composited over white bounds each RGB channel regardless of the
+ * underlying page content. Exclude the dialog and its antialiased edges.
+ * @param {Buffer} bytes Captured PNG at device scale 1.
+ * @param {number} width Expected viewport width in pixels.
+ * @param {number} height Expected viewport height in pixels.
+ * @param {number[]} dialog Dialog bounds as left, top, right, bottom.
+ * @param {number[]} maximum Brightest possible backdrop RGB channels.
+ * @throws {Error} If dimensions differ or a pixel exceeds the backdrop bound.
+ */
+export function assertModalBackdrop(bytes, width, height, dialog, maximum) {
+  const image = decodePNG(bytes);
+  if (image.width !== width || image.height !== height) {
+    throw new Error(`Expanded flight screenshot dimensions ${image.width}x${image.height} != ${width}x${height}`);
+  }
+  const [left, top, right, bottom] = dialog;
+  const edge = 2;
+  // Allow minor rounding differences between Canvas and Chromium compositing.
+  const tolerance = 3;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (x >= left - edge && x < right + edge && y >= top - edge && y < bottom + edge) continue;
+      const offset = (y * width + x) * image.channels;
+      for (let channel = 0; channel < 3; channel++) {
+        if (image.pixels[offset + channel] > maximum[channel] + tolerance) {
+          throw new Error(`Expanded flight backdrop is not fully rendered at ${x},${y}`);
+        }
+      }
+    }
+  }
+}
+
+/**
  * Encodes packed RGB pixels as a PNG image.
  * @param {number} width Image width in pixels.
  * @param {number} height Image height in pixels.
