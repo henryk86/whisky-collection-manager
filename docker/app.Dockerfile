@@ -1,5 +1,5 @@
-FROM node:22-bookworm-slim
-# Debian-based Node.js 22 runtime for Raspberry Pi 4 (arm64). On Raspberry Pi OS
+FROM node:26-bookworm-slim
+# Debian-based Node.js 26 runtime for Raspberry Pi 4 (arm64). On Raspberry Pi OS
 # 64-bit, the Alpine/musl variant segfaulted before application startup.
 # Backup tools live in the same image. No SSH server; openssh-client is only
 # needed for optional SFTP backup destinations configured through Rclone.

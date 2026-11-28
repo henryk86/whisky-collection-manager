@@ -27,6 +27,10 @@ function formatSpacing(filename, source) {
   const edits = new Map();
   const operators = new Set();
   const objectBraces = new Set();
+  const propertyColons = new Set();
+  const openingBlocks = new Set();
+  const statementColons = new Set();
+  const functionParens = new Set();
   const blockBraces = new Set();
   const forSemicolons = new Set();
   /**
@@ -51,6 +55,21 @@ function formatSpacing(filename, source) {
       operatorBetween(node.test, node.consequent, '?');
       operatorBetween(node.consequent, node.alternate, ':');
     }
+    if (node.type === 'Property' && !node.shorthand && !node.method && node.kind === 'init') {
+      const colon = tokens.find(item => item.start >= node.key.end && item.end <= node.value.start && item.type.label === ':');
+      if (colon) propertyColons.add(colon.start);
+    }
+    if (node.type === 'SwitchCase' || node.type === 'LabeledStatement') {
+      const boundary = node.test?.end ?? node.label?.end ?? node.start;
+      const end = node.consequent?.[0]?.start ?? node.body?.start ?? node.end;
+      const colon = tokens.find(item => item.start >= boundary && item.end <= end && item.type.label === ':');
+      if (colon) statementColons.add(colon.start);
+    }
+    if (['FunctionDeclaration', 'FunctionExpression'].includes(node.type)) {
+      const end = node.params[0]?.start ?? node.body.start;
+      const paren = tokens.find(item => item.start >= (node.id?.end ?? node.start) && item.end <= end && item.type.label === '(');
+      if (paren) functionParens.add(paren.start);
+    }
     if (node.type === 'ForStatement') {
       const end = node.body.start;
       // Header semicolons are outside nested expressions; the two separators follow init and test.
@@ -64,8 +83,12 @@ function formatSpacing(filename, source) {
       objectBraces.add(node.start);
       objectBraces.add(node.end - 1);
     }
-    if (['BlockStatement', 'ClassBody', 'StaticBlock'].includes(node.type)) {
-      blockBraces.add(node.start);
+    if (['BlockStatement', 'ClassBody', 'StaticBlock', 'SwitchStatement'].includes(node.type)) {
+      const start = ['StaticBlock', 'SwitchStatement'].includes(node.type) ? tokens.find(item => item.start >= (node.discriminant?.end ?? node.start) && item.end <= node.end && item.type.label === '{')?.start : node.start;
+      if (start !== undefined) {
+        blockBraces.add(start);
+        openingBlocks.add(start);
+      }
       blockBraces.add(node.end - 1);
     }
     forEachChild(node, visit);
@@ -91,6 +114,13 @@ function formatSpacing(filename, source) {
       gap(prev, token, ' ');
       gap(token, next, ' ');
     }
+    if (propertyColons.has(token.start) || statementColons.has(token.start)) {
+      gap(prev, token, '');
+      gap(token, next, ' ');
+    }
+    if (openingBlocks.has(token.start) && [')', '=>', 'else', 'try', 'finally', 'catch', 'do', 'name', 'class'].includes(prev.type.label)) gap(prev, token, ' ');
+    if (functionParens.has(token.start) && ['name', 'function'].includes(prev.type.label)) gap(prev, token, '');
+    if (['else', 'catch', 'finally'].includes(label) && prev.type.label === '}') gap(prev, token, ' ');
     if (label === ',') {
       if (prev.type.label !== ',') gap(prev, token, '');
       if (![')', ']'].includes(next.type.label)) gap(token, next, ' ');

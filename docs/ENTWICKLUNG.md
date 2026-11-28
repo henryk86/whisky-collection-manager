@@ -2,7 +2,7 @@
 
 ## Schnellstart
 
-Node.js ≥ 20. `npm start` startet den Setup-/Starthelfer; `npm run dev` startet den Node-Server im Watch-Modus. Unit- und Integrationstests benötigen kein Chromium. Chromium nur für die Browser- und visuellen Tests installieren:
+Node.js ≥ 26 (CI und Docker: Node.js 26, Typdefinitionen: `@types/node` 26.x). `npm start` startet den Setup-/Starthelfer; `npm run dev` startet den Node-Server im Watch-Modus. Unit- und Integrationstests benötigen kein Chromium. Chromium nur für die Browser- und visuellen Tests installieren:
 
 ```bash
 npm ci

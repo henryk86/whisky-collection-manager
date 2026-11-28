@@ -57,6 +57,18 @@ export function verifyDeploymentConfiguration(read = name =>
   const pkg = JSON.parse(read('package.json'));
   const lock = JSON.parse(read('package-lock.json'));
 
+  // Keep the declared minimum, Node API types and all CI runtimes on the same major.
+  const nodeMajor = pkg.engines?.node?.match(/^>=(\d+)$/)?.[1];
+  check(nodeMajor && lock.packages?.['']?.engines?.node === pkg.engines.node, 'Node engine minimum must match the lockfile');
+  const nodeTypes = pkg.devDependencies?.['@types/node'];
+  check(nodeTypes?.split('.')[0] === nodeMajor && lock.packages?.['']?.devDependencies?.['@types/node'] === nodeTypes &&
+    lock.packages?.['node_modules/@types/node']?.version === nodeTypes, 'Node API types must match the supported runtime major and lockfile');
+  for (const workflow of [checkWorkflow, release, recover, read('.github/workflows/visual-regression.yml')]) {
+    const runtimes = [...workflow.matchAll(/^\s*node-version:\s*(\d+)\s*$/gm)];
+    check(runtimes.length && runtimes.every(match => match[1] === nodeMajor), 'GitHub Actions Node versions must match the supported runtime major');
+  }
+  requireText(docker, `FROM node:${nodeMajor}-bookworm-slim`, 'Docker Node runtime must match the supported major');
+
   // These are contracts on externally consumed configuration (not assertions
   // that a particular JavaScript module uses a particular method or variable).
   requireText(compose, 'services:\n  app:', 'one combined application service must exist');
@@ -93,7 +105,6 @@ export function verifyDeploymentConfiguration(read = name =>
   ])
     check(ignored.includes(ignoredPath), `local private data must be ignored: ${ignoredPath}`);
 
-  requireText(docker, 'FROM node:22-bookworm-slim', 'production image must use the supported Debian Node runtime');
   requireText(docker, 'npm ci --omit=dev', 'production dependencies must be locked');
   requireText(docker, 'restic rclone openssh-client', 'backup tools must be installed in the same container');
   requireText(

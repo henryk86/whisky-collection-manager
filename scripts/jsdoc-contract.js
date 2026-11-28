@@ -4,9 +4,11 @@ import {parameterBinding, returnsValue} from './javascript-ast.js';
 /**
  * Finds the end of a balanced braced type, accounting for nested object types and quoted keys.
  * @param {string} text Tag contents beginning with an opening brace.
- * @return {number} Offset immediately following the closing brace, or -1 for an incomplete type.
+ * @param {string=} opening Opening delimiter, defaulting to a type brace.
+ * @param {string=} closing Matching closing delimiter.
+ * @return {number} Offset immediately following the closing delimiter, or -1 when incomplete.
  */
-function typeEnd(text) {
+function typeEnd(text, opening = '{', closing = '}') {
   let depth = 0;
   let quote = '';
   for (let i = 0; i < text.length; i++) {
@@ -15,8 +17,8 @@ function typeEnd(text) {
       if (char === '\\') i++;
       else if (char === quote) quote = '';
     } else if (['\'', '"', '`'].includes(char)) quote = char;
-    else if (char === '{') depth++;
-    else if (char === '}' && --depth === 0) return i + 1;
+    else if (char === opening) depth++;
+    else if (char === closing && --depth === 0) return i + 1;
   }
   return -1;
 }
@@ -28,12 +30,38 @@ function typeEnd(text) {
  */
 export function parseJSDoc(comment) {
   const text = comment.value.slice(1).split(/\r?\n/).map(line => line.replace(/^\s*\* ?/, '').trim()).join('\n').trim();
-  const matches = [...text.matchAll(/(?:^|\s)@([\w]+)\b/g)];
+  // Tags may share a line, but inline links, braced types and code spans are not block tags.
+  const matches = [];
+  let depth = 0;
+  let code = false;
+  let quote = '';
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (quote) {
+      if (char === '\\') i++;
+      else if (char === quote) quote = '';
+      continue;
+    }
+    if (depth && ['"', "'", '`'].includes(char)) {quote = char; continue;}
+    if (!depth && char === '`') {code = !code; continue;}
+    if (code) continue;
+    if (char === '{') depth++;
+    else if (char === '}' && depth) depth--;
+    // A new line starts a new tag even after a malformed, unclosed type.
+    const lineStart = i === 0 || text[i - 1] === '\n';
+    if (char !== '@' || (!lineStart && (depth || !/\s/.test(text[i - 1])))) continue;
+    const match = /^@([\w]+)\b/.exec(text.slice(i));
+    if (match) {
+      matches.push({index: i, kind: match[1], length: match[0].length});
+      if (lineStart) depth = 0;
+      i += match[0].length - 1;
+    }
+  }
   const description = text.slice(0, matches[0]?.index ?? text.length).trim();
   const issues = [];
   const tags = matches.map((match, i) => {
-    const kind = match[1];
-    let body = text.slice(match.index + match[0].length, matches[i + 1]?.index ?? text.length).trim();
+    const kind = match.kind;
+    let body = text.slice(match.index + match.length, matches[i + 1]?.index ?? text.length).trim();
     let type = '';
     let name = '';
     let optional = false;
@@ -47,11 +75,13 @@ export function parseJSDoc(comment) {
       }
     }
     if (['param', 'arg', 'argument'].includes(kind)) {
-      const parameter = body.match(/^(\[[^\]]+\]|[^\s]+)(?:\s+|$)/);
-      if (parameter) {
-        optional = parameter[1].startsWith('[') && parameter[1].endsWith(']');
-        name = optional ? parameter[1].slice(1, -1).split('=')[0].trim() : parameter[1];
-        body = body.slice(parameter[0].length).trim();
+      const end = body.startsWith('[') ? typeEnd(body, '[', ']') : (body.match(/^\S+/)?.[0].length ?? 0);
+      if (end > 0) {
+        const parameter = body.slice(0, end);
+        optional = parameter.startsWith('[') && parameter.endsWith(']');
+        name = optional ? parameter.slice(1, -1).split('=')[0].trim() : parameter;
+        body = body.slice(end).trim();
+        if (!/^[$_\p{ID_Start}][$\p{ID_Continue}]*(?:\[\])?(?:\.[$_\p{ID_Start}][$\p{ID_Continue}]*(?:\[\])?)*$/u.test(name)) issues.push(`invalid name in @${kind}: ${name}`);
       } else issues.push(`missing name in @${kind}`);
       if (type.endsWith('=')) optional = true;
     }
@@ -100,11 +130,14 @@ export function hasTypedContract(fn, docs) {
   const tags = docs.flatMap(doc => doc.tags);
   const params = parameterTags(tags).filter(tag => tag.type && !tag.name.includes('.'));
   const names = new Set(params.map(tag => tag.name));
-  if (names.size !== fn.params.length) return false;
+  if (params.length !== fn.params.length || names.size !== fn.params.length) return false;
+  if (parameterTags(tags).some(tag => !tag.type) || new Set(parameterTags(tags).map(tag => tag.name)).size !== parameterTags(tags).length) return false;
   for (const [index, param] of fn.params.entries()) {
     const binding = parameterBinding(param);
-    if (binding.type === 'Identifier' ? !names.has(binding.name) : !params[index]) return false;
+    if (binding.type === 'Identifier' ? params[index]?.name !== binding.name : !params[index]) return false;
+    if (param.type === 'AssignmentPattern' && !params[index]?.optional) return false;
   }
   const returns = tags.filter(tag => tag.kind === 'return');
-  return returnsValue(fn) ? returns.some(tag => tag.type) : !returns.length || returns.some(tag => tag.type);
+  if (returns.length > 1 || tags.some(tag => tag.kind === 'returns')) return false;
+  return returnsValue(fn) ? returns.length === 1 && !!returns[0].type : !returns.length || !!returns[0].type;
 }

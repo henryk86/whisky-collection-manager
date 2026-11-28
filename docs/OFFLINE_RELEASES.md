@@ -4,7 +4,7 @@ Der GitHub-Release-Workflow erstellt neben dem normalen Quellcode-ZIP und dem GH
 
 | Release-Artefakt | Inhalt | Verwendung |
 | --- | --- | --- |
-| `whisky-collection-manager-vX.Y.Z-offline.zip` | Projektquellcode, vollständiger npm-Paketcache für die im Lockfile aufgeführten Pakete (einschließlich Dev-Abhängigkeiten), U²-Netp-Modell, ONNX-JavaScript- und WASM-Dateien, Lizenzen, SHA-256-Manifest | Offline-Installation mit bereits vorhandenem Node.js (20+, Release-Build: Node.js 22) und npm |
+| `whisky-collection-manager-vX.Y.Z-offline.zip` | Projektquellcode, vollständiger npm-Paketcache für die im Lockfile aufgeführten Pakete (einschließlich Dev-Abhängigkeiten), U²-Netp-Modell, ONNX-JavaScript- und WASM-Dateien, Lizenzen, SHA-256-Manifest | Offline-Installation mit bereits vorhandenem Node.js (26+, Release-Build: Node.js 26) und npm |
 | `whisky-collection-manager-vX.Y.Z-linux-arm64.tar.gz` | Vollständiges ARM64-Containerimage einschließlich Node.js, Webanwendung, KI-Dateien, Restic, Rclone und SSH-Client | Raspberry Pi OS 64 Bit |
 | `whisky-collection-manager-vX.Y.Z-linux-amd64.tar.gz` | Dasselbe Containerimage für AMD64 | Linux-Server / x86_64 |
 

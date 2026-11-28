@@ -108,7 +108,7 @@ Die Abbildungen zeigen Beispieldaten ohne private Sammlungsdaten. Für die Lager
 
 ### Lokal starten
 
-**Voraussetzung:** Node.js 20 oder neuer; für die erstmalige HTTPS-Zertifikatserstellung OpenSSL oder `mkcert`.
+**Voraussetzung:** Node.js 26 oder neuer; für die erstmalige HTTPS-Zertifikatserstellung OpenSSL oder `mkcert`.
 
 ```bash
 npm start
