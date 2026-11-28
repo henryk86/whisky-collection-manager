@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.16.1 - 2026-11-28
+
+- chore(deps-dev): bump @types/node from 26.6.6 to 26.6.7
+- chore(deps-dev): bump acorn from 8.15.0 to 8.19.0
+
 ## 1.16.0 - 2026-11-28
 
 - fix: isolate browser storage access and assert expected transaction warnings
