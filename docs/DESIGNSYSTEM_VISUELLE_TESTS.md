@@ -16,7 +16,11 @@ Modal-Fokus, Tab-Falle, Escape, verschachtelte Formulare und Hintergrundscroll.
 Der zusätzliche Zustand `modal-flight-expanded` öffnet sämtliche Fassgruppen
 und Untertypen über die echten Bedienelemente, aktiviert die Altersspanne und
 harte Filter und erfasst den vollständigen Dialog mit bedarfsgerechter Höhe.
-Abgeschnittene Inhalte und horizontaler Dialogüberlauf sind Fehler.
+Nach Änderungen der Viewport-Größe und des Themes wartet die Aufnahme auf
+zwei Browser-Frames. Beim erweiterten Dialog werden zusätzlich die Pixel
+außerhalb des Dialograhmens gegen die maximal mögliche Helligkeit des
+Modal-Hintergrunds geprüft. Abgeschnittene Inhalte, horizontaler Dialogüberlauf
+und nicht vollständig abgedunkelte Hintergründe sind Aufnahmefehler.
 Die Browser- und Aufnahmetests sind unabhängig von der visuellen Freigabe.
 Aufnahmefehler, horizontaler Überlauf und Interaktionsfehler lassen sich nicht
 mit einer visuellen Freigabe umgehen.

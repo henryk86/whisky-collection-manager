@@ -1,3 +1,5 @@
+import {getBrowserStorage} from '../browser-storage.js';
+
 /** Browser-only table layout preferences, separately for bottlings and bottles.
  * All columns remain available even when omitted from the initial view. */
 export const TABLE_COLUMNS = Object.freeze({
@@ -176,7 +178,7 @@ export function normalizeTableColumns(mode, value) {
  */
 export function loadTableColumns(storage) {
   try {
-    const source = storage === undefined ? globalThis.localStorage : storage;
+    const source = storage === undefined ? getBrowserStorage() : storage;
     const value = JSON.parse(source?.getItem(TABLE_COLUMNS_STORAGE_KEY) || '{}');
     return {
       bottlings: normalizeTableColumns('bottlings', value?.bottlings),
@@ -199,7 +201,7 @@ export function loadTableColumns(storage) {
  */
 export function saveTableColumns(preferences, storage) {
   try {
-    const target = storage === undefined ? globalThis.localStorage : storage;
+    const target = storage === undefined ? getBrowserStorage() : storage;
     if (!target) return false;
     target.setItem(TABLE_COLUMNS_STORAGE_KEY, JSON.stringify({
       bottlings: normalizeTableColumns('bottlings', preferences.bottlings),

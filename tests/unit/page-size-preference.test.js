@@ -73,17 +73,17 @@ test(
 test(
   'initial UI state restores the browser preference across new app instances',
   () => {
-    const oldStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    const oldStorage = Object.getOwnPropertyDescriptor(globalThis, 'window');
     const storage = fakeStorage({[PAGE_SIZE_STORAGE_KEY]: '96'});
     try {
-      Object.defineProperty(globalThis, 'localStorage', {configurable: true, value: storage});
+      Object.defineProperty(globalThis, 'window', {configurable: true, value: {localStorage: storage}});
       const route = {page: 'home', selected: null};
       assert.equal(createState(route).pageSize, 96);
       savePageSizePreference(12);
       assert.equal(createState(route).pageSize, 12);
     } finally {
-      if (oldStorage) Object.defineProperty(globalThis, 'localStorage', oldStorage);
-      else delete globalThis.localStorage;
+      if (oldStorage) Object.defineProperty(globalThis, 'window', oldStorage);
+      else delete globalThis.window;
     }
   }
 );

@@ -1,3 +1,5 @@
+import {getBrowserStorage} from '../browser-storage.js';
+
 import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS} from './pagination.js';
 
 /** Per-browser display preference; never store it in collection.json. */
@@ -22,7 +24,7 @@ function supportedPageSize(value) {
  */
 export function getPageSizePreference(storage) {
   try {
-    const source = storage === undefined ? globalThis.localStorage : storage;
+    const source = storage === undefined ? getBrowserStorage() : storage;
     return supportedPageSize(source?.getItem(PAGE_SIZE_STORAGE_KEY)) ?? DEFAULT_PAGE_SIZE;
   } catch {
     return DEFAULT_PAGE_SIZE;
@@ -40,7 +42,7 @@ export function savePageSizePreference(value, storage) {
   const size = supportedPageSize(value);
   if (size === null) return false;
   try {
-    const source = storage === undefined ? globalThis.localStorage : storage;
+    const source = storage === undefined ? getBrowserStorage() : storage;
     if (!source) return false;
     source.setItem(PAGE_SIZE_STORAGE_KEY, String(size));
     return true;

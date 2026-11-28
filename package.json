@@ -34,7 +34,7 @@
     "format:html:check": "node scripts/format-html-templates.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=26"
   },
   "license": "MIT",
   "dependencies": {

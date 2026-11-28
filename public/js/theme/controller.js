@@ -1,3 +1,4 @@
+import {getBrowserStorage} from '../browser-storage.js';
 import {replaceContent} from '../ui/dom-renderer.js';
 import {t} from '../i18n/index.js';
 import {getThemePreference, effectiveTheme, nextTheme} from './preference.js';
@@ -33,7 +34,7 @@ export function createThemeController(mountContent = replaceContent) {
   function toggleTheme() {
     themePreference = nextTheme(effectiveTheme(themePreference, themeMedia.matches));
     try {
-      localStorage.setItem('whisky-theme', themePreference);
+      getBrowserStorage()?.setItem('whisky-theme', themePreference);
     }
     catch {
     }

@@ -414,3 +414,59 @@ export function label(options) {return options.label;}`;
   assert.ok(jsdocViolations('sample.js', malformed).some(issue => issue.includes('unclosed type')));
   assert.deepEqual(undocumentedExports('sample.js', malformed), ['sample.js#label']);
 });
+
+
+test('Acorn formatter: restores property and block spacing without altering literals', () => {
+  const source = 'const x = {a:1, [key] :2, nested:{b : 3}};\nfunction f (){return x;}\nif (x){f();}else{f();}\nconst label = "a:1";\n';
+  const expected = 'const x = {a: 1, [key]: 2, nested: {b: 3}};\nfunction f() {return x;}\nif (x) {f();} else {f();}\nconst label = "a:1";\n';
+  assert.equal(formatJavaScript('sample.js', source), expected);
+  assert.equal(formatJavaScript('sample.js', expected), expected);
+});
+
+test('JSDoc contract: ignores inline links and code spans, accepts nested default arrays and quoted brackets', () => {
+  const source = `/** Reads a label using {@link labels} and code \` @param fake\`.
+ * @param {string[]} [labels=['x]']] Label list.
+ * @return {string} Display label.
+ */
+export function label(labels = ['x]']) {return labels[0];}`;
+  assert.deepEqual(undocumentedExports('sample.js', source), []);
+  assert.deepEqual(jsdocViolations('sample.js', source), []);
+});
+
+test('JSDoc contract: rejects duplicate, reordered and wrongly typed parameter contracts', () => {
+  const source = `/** Reads a label.
+ * @param {string} a First label.
+ * @param {string} b Second label.
+ * @return {string} Display label.
+ */
+export function label(a, b) {return a + b;}`;
+  assert.deepEqual(undocumentedExports('sample.js', source), []);
+  for (const invalid of [source.replace(' * @param {string} b', ' * @param {string} a Duplicate.\n * @param {string} b'),
+    source.replace(' a First', ' b First').replace(' b Second', ' a Second'),
+    source.replace('{string} b', 'b'), source.replace('{string} b', '{string} 123'),
+    source.replace(' * @return {string}', ' * @return {number} Duplicate.\n * @return {string}'),
+    source.replace('@return', '@returns')]) {
+    assert.deepEqual(undocumentedExports('sample.js', invalid), ['sample.js#label']);
+  }
+});
+
+test('JSDoc contract: requires defaults to be optional and rejects unclosed optional names', () => {
+  const source = `/** Reads a label.
+ * @param {string} [name='x'] Display label.
+ * @return {string} Display label.
+ */
+export function label(name = 'x') {return name;}`;
+  assert.deepEqual(undocumentedExports('sample.js', source), []);
+  for (const invalid of [source.replace("[name='x']", 'name'), source.replace("[name='x']", "[name='x'"), source.replace('{string}', '{}')]) {
+    assert.deepEqual(undocumentedExports('sample.js', invalid), ['sample.js#label']);
+    assert.ok(jsdocViolations('sample.js', invalid).length);
+  }
+});
+
+
+test('Acorn formatter: restores switch, label, class and static block spacing', () => {
+  const source = 'class A{static{f();} m (){return 1;}}\nswitch(x){case 1 :f();default :g();}\nlabel : for (const a of []){break label;}\n';
+  const expected = 'class A {static {f();} m() {return 1;}}\nswitch (x) {case 1: f();default: g();}\nlabel: for (const a of []) {break label;}\n';
+  assert.equal(formatJavaScript('sample.js', source), expected);
+  assert.equal(formatJavaScript('sample.js', expected), expected);
+});

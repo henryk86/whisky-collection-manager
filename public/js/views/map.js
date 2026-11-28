@@ -1,3 +1,4 @@
+import {getBrowserStorage} from '../browser-storage.js';
 import {createMapSidebarViewModel, createMapMissingModel, createMapDataModel} from './models/map.js';
 import {composeMarkup} from '../ui/render-plan.js';
 import {replaceContent, replaceElement} from '../ui/dom-renderer.js';
@@ -22,7 +23,7 @@ const ALL_SITES_PREF = 'wcm-map-all-distilleries';
  * @return {boolean} True if all distilleries should be shown; false when storage is unavailable.
  */
 const readAllSitesPreference = () => {
-  try {return localStorage.getItem(ALL_SITES_PREF) === '1';}
+  try {return getBrowserStorage()?.getItem(ALL_SITES_PREF) === '1';}
   catch {return false;}
 };
 
@@ -361,7 +362,7 @@ export function createMapView({state, shell, navigate, settings}) {
     else if (target.id === 'map-all-distilleries') {
       showAllDistilleries = target.checked;
       try {
-        localStorage.setItem(ALL_SITES_PREF, showAllDistilleries ? '1' : '0');
+        getBrowserStorage()?.setItem(ALL_SITES_PREF, showAllDistilleries ? '1' : '0');
       }
       catch { /* No persistent browser storage. */}
       refreshData();

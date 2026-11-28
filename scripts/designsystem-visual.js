@@ -17,7 +17,7 @@ import path from 'node:path';
 import {setTimeout as pause} from 'node:timers/promises';
 import {fileURLToPath} from 'node:url';
 import {startTestServer, requestJson} from '../tests/helpers/server.js';
-import {comparePNG} from './visual-png.js';
+import {assertModalBackdrop, comparePNG} from './visual-png.js';
 import {assessCapture, browserWarning, pixelMode} from './visual-policy.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -331,6 +331,49 @@ async function expandFlightPlanner() {
 }
 
 /**
+ * Waits for layout and a completed rendering opportunity after capture mutations.
+ * @return {Promise<void>} Resolves after two consecutive animation frames.
+ */
+async function settleCapture() {
+  await evaluate(`(async()=>{
+    await document.fonts?.ready;
+    document.body.getBoundingClientRect();
+    await new Promise(resolve => requestAnimationFrame(() =>
+      requestAnimationFrame(() => resolve())));
+  })()`);
+}
+
+/**
+ * Measures the backdrop and its brightest possible composited RGB values.
+ * @return {Promise<{dialog: number[], maximum: number[]}>} Viewport-relative dialog and backdrop colour bounds.
+ */
+async function expandedBackdrop() {
+  return await evaluate(`(()=>{
+    const dialog = document.querySelector('#modal-root .dialog');
+    const overlay = dialog.closest('.overlay');
+    const bounds = overlay.getBoundingClientRect();
+    if (bounds.left > 0 || bounds.top > 0 ||
+        bounds.right < innerWidth || bounds.bottom < innerHeight) {
+      throw new Error('Expanded flight backdrop does not cover the viewport');
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = getComputedStyle(overlay).backgroundColor;
+    ctx.fillRect(0, 0, 1, 1);
+    if (ctx.getImageData(0, 0, 1, 1).data[3] === 0) {
+      throw new Error('Expanded flight backdrop is transparent');
+    }
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, 1, 1);
+    const rect = dialog.getBoundingClientRect();
+    return {dialog: [rect.left, rect.top, rect.right, rect.bottom],
+      maximum: [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)]};
+  })()`);
+}
+
+/**
  * Enlarges only the expanded scenario to include the entire scrollable modal.
  * @param {number} width Viewport width in CSS pixels.
  * @return {!Promise<number>} Actual capture viewport height.
@@ -342,11 +385,13 @@ async function fitFlightPlanner(width) {
   })()`);
   const height = Math.max(1100, required);
   await command('Emulation.setDeviceMetricsOverride', {width, height, deviceScaleFactor: 1, mobile: false});
+  await evaluate(`document.querySelector('#modal-root .dialog').scrollTop = 0`);
+  await settleCapture();
   const complete = await evaluate(`(()=>{
     const dialog = document.querySelector('#modal-root .dialog');
-    dialog.scrollTop = 0;
     const rect = dialog.getBoundingClientRect();
-    return dialog.scrollHeight <= dialog.clientHeight + 1 &&
+    return innerWidth === ${width} && innerHeight === ${height} &&
+      dialog.scrollHeight <= dialog.clientHeight + 1 &&
       dialog.scrollWidth <= dialog.clientWidth + 1 &&
       rect.top >= 0 && rect.bottom <= innerHeight;
   })()`);
@@ -561,9 +606,8 @@ try {
         const id = `${name}__${width}__${theme}`;
         try {
           await evaluate(`document.documentElement.dataset.theme=${JSON.stringify(theme)};document.documentElement.style.colorScheme=${JSON.stringify(theme)}`);
-          // Force a layout flush before the screenshot; avoid arbitrary
-          // sleep-based waits.
-          await evaluate('document.body.getBoundingClientRect().width; document.fonts?.ready');
+          // Let viewport and theme changes reach the renderer before capture.
+          await settleCapture();
           let captureHeight = 1100;
           if (name === 'modal-flight-expanded') {
             captureHeight = await fitFlightPlanner(width);
@@ -572,10 +616,20 @@ try {
           if (name === 'modal-flight-expanded') {
             currentGeometry.captureHeight = captureHeight;
           }
+          const backdrop = name === 'modal-flight-expanded' ? await expandedBackdrop() : null;
           const image = Buffer.from(
             (await command('Page.captureScreenshot', {format: 'png', captureBeyondViewport: false})).data,
             'base64'
           );
+          if (backdrop) {
+            try {assertModalBackdrop(image, width, captureHeight, backdrop.dialog, backdrop.maximum);}
+            catch (error) {
+              const invalidDir = path.join(ARTIFACTS, 'invalid');
+              mkdirSync(invalidDir, {recursive: true});
+              writeFileSync(path.join(invalidDir, `${id}.png`), image);
+              throw error;
+            }
+          }
           const reference = path.join(BASELINES, `${id}.png`);
           const referenceGeometry = path.join(BASELINES, `${id}.json`);
           if (capture) {

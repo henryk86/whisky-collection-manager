@@ -17,7 +17,7 @@ Alle neuen Backups verwenden **ein einziges passwortgeschütztes ZIP-Format mit 
 
 ## Installation und Update
 
-Das Containerimage basiert auf `node:22-bookworm-slim`. Restic, Rclone und SSH-Client sind enthalten. Den tatsächlichen Start auf der Zielhardware prüfen.
+Das Containerimage basiert auf `node:26-bookworm-slim`. Restic, Rclone und SSH-Client sind enthalten. Den tatsächlichen Start auf der Zielhardware prüfen.
 
 Zum gezielten Pruefen eines neu geladenen Images:
 

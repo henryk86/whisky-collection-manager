@@ -29,6 +29,30 @@ test(
 
 for (const [description, file, search, replacement] of [
   [
+    'rejects a minimum Node version that disagrees with the lockfile',
+    'package.json',
+    '"node": ">=26"',
+    '"node": ">=22"',
+  ],
+  [
+    'rejects Node type definitions for a different runtime major',
+    'package.json',
+    '"@types/node": "26.',
+    '"@types/node": "24.',
+  ],
+  [
+    'rejects CI runtime major drift',
+    '.github/workflows/check.yml',
+    'node-version: 26',
+    'node-version: 24',
+  ],
+  [
+    'rejects Docker runtime major drift',
+    'docker/app.Dockerfile',
+    'FROM node:26-bookworm-slim',
+    'FROM node:24-bookworm-slim',
+  ],
+  [
     'rejects publishing plaintext HTTP',
     'docker-compose.yml',
     "HTTP_ENABLED: 'false'",

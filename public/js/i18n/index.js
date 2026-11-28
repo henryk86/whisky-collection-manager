@@ -1,3 +1,4 @@
+import {getBrowserStorage} from '../browser-storage.js';
 /**
  * Key-based UI localization: no matching against rendered German source text.
  */
@@ -110,7 +111,7 @@ function validLanguage(code) {return /^[a-z]{2}(?:-[A-Z]{2})?$/u.test(code);}
  * @return {?string} Stored locale or null when missing or inaccessible.
  */
 function savedLanguage() {
-  try {return localStorage.getItem(STORAGE_KEY);} catch {return null;}
+  try {return getBrowserStorage()?.getItem(STORAGE_KEY) ?? null;} catch {return null;}
 }
 
 /**
@@ -123,7 +124,7 @@ function savedLanguage() {
 export function chooseLanguage(code) {
   if (!Object.hasOwn(languages, code)) return false;
   try {
-    localStorage.setItem(STORAGE_KEY, code);
+    getBrowserStorage()?.setItem(STORAGE_KEY, code);
   } catch { /* private/restricted storage */}
   if (typeof location !== 'undefined') location.reload();
   return true;

@@ -110,7 +110,7 @@ Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright
 
 ### Run locally
 
-**Requirements:** Node.js 20 or newer; OpenSSL or `mkcert` for the initial HTTPS certificate generation.
+**Requirements:** Node.js 26 or newer; OpenSSL or `mkcert` for the initial HTTPS certificate generation.
 
 ```bash
 npm start

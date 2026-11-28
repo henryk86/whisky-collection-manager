@@ -116,7 +116,7 @@ test(
       document: globalThis.document,
       location: globalThis.location,
       history: globalThis.history,
-      localStorage: globalThis.localStorage,
+      window: globalThis.window,
     };
     const storage = makeStore();
     const state = {
@@ -136,7 +136,7 @@ test(
     };
     let html = '';
     try {
-      globalThis.localStorage = storage;
+      globalThis.window = {localStorage: storage};
       globalThis.location = {pathname: '/', search: ''};
       globalThis.history = {
         /**
